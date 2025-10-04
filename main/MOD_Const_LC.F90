@@ -4,19 +4,20 @@ MODULE MOD_Const_LC
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
-! Constant values set for land cover types
+!  Constant values set for land cover types
 !
-! Created by Hua Yuan, 08/2019
+!  Created by Hua Yuan, 08/2019
 !
 ! !REVISIONS:
-! Hua Yuan, 08/2019: initial version adapted from IniTimeConst.F90 of CoLM2014
-! Hua Yuan, 08/2019: added constants values for IGBP land cover types
-! Xingjie Lu, 05/2023: added Plant Hydraulics Paramters
+!  08/2019, Hua Yuan: initial version adapted from IniTimeConst.F90 of CoLM2014
+!  08/2019, Hua Yuan: added constants values for IGBP land cover types
+!  05/2023, Xingjie Lu: added Plant Hydraulics Parameters
 !
+!-----------------------------------------------------------------------
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
-   USE MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS
+   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    IMPLICIT NONE
    SAVE
@@ -24,7 +25,7 @@ MODULE MOD_Const_LC
 #ifdef LULC_USGS
 
 ! GLCC USGS Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Urban and Built-Up Land
 ! 2  Dryland Cropland and Pasture
@@ -50,6 +51,33 @@ MODULE MOD_Const_LC
 !22  Mixed Tundra
 !23  Bare Ground Tundra
 !24  Snow or Ice
+
+   character(len=256) :: patchclassname (0:N_land_classification) = &
+      (/'0 Ocean                                       ', &
+        '1 Urban and Built-Up Land                     ', &
+        '2 Dryland Cropland and Pasture                ', &
+        '3 Irrigated Cropland and Pasture              ', &
+        '4 Mixed Dryland/Irrigated Cropland and Pasture', &
+        '5 Cropland/Grassland Mosaic                   ', &
+        '6 Cropland/Woodland Mosaic                    ', &
+        '7 Grassland                                   ', &
+        '8 Shrubland                                   ', &
+        '9 Mixed Shrubland/Grassland                   ', &
+        '10 Savanna                                    ', &
+        '11 Deciduous Broadleaf Forest                 ', &
+        '12 Deciduous Needleleaf Forest                ', &
+        '13 Evergreen Broadleaf Forest                 ', &
+        '14 Evergreen Needleleaf Forest                ', &
+        '15 Mixed Forest                               ', &
+        '16 Inland Water                               ', &
+        '17 Herbaceous Wetland                         ', &
+        '18 Wooded Wetland                             ', &
+        '19 Barren or Sparsely Vegetated               ', &
+        '20 Herbaceous Tundra                          ', &
+        '21 Wooded Tundra                              ', &
+        '22 Mixed Tundra                               ', &
+        '23 Bare Ground Tundra                         ', &
+        '24 Snow or Ice                                '/)
 
    ! land patch types
    ! 0: soil, 1: urban, 2: wetland, 3: ice, 4: lake
@@ -109,13 +137,13 @@ MODULE MOD_Const_LC
            0.010, -0.300,  0.250,  0.010,  0.100,  0.010,  0.125, -0.300,&
           -0.300,  0.100,  0.010, -0.300, -0.300, -0.300, -0.300, -0.300/)
 
-   ! reflectance of green leaf in virsible band
+   ! reflectance of green leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhol_vis_usgs &
       = (/0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.100,&
           0.100,  0.105,  0.100,  0.070,  0.100,  0.070,  0.070,  0.105,&
           0.105,  0.100,  0.100,  0.105,  0.105,  0.105,  0.105,  0.105/)
 
-   ! reflectance of dead leaf in virsible band
+   ! reflectance of dead leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhos_vis_usgs &
       = (/0.360,  0.360,  0.360,  0.360,  0.360,  0.360,  0.360,  0.160,&
           0.160,  0.360,  0.160,  0.160,  0.160,  0.160,  0.160,  0.360,&
@@ -170,6 +198,12 @@ MODULE MOD_Const_LC
       = (/0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
           0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
           0.08, 0.08, 0.08, 0.05, 0.05, 0.05, 0.05, 0.05/)
+
+   !c3c4 flag
+   integer, parameter, dimension(N_land_classification) :: c3c4_usgs &
+      = (/1, 1, 1, 1, 1, 1, 1, 1,&
+          1, 1, 1, 1, 1, 1, 1, 1,&
+          1, 1, 1, 0, 0, 0, 0, 0/)
 
    ! conductance-photosynthesis slope parameter
    !TODO: no C4, 4.0 may have problem
@@ -258,7 +292,7 @@ MODULE MOD_Const_LC
           2.012,  1.964,  1.955,  1.953,  1.303,  2.175,  1.631,  2.608,&
           2.608,  1.631,  8.992,  8.992,  8.992,  8.992,  0.978,  2.608/)
 
-! Plant Hydraulics Paramters
+   ! Plant Hydraulics Parameters
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_usgs &
       = (/     0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
@@ -328,7 +362,7 @@ MODULE MOD_Const_LC
 #else
 
 ! MODIS IGBP Land Use/Land Cover System Legend
-!---------------------------
+!-----------------------------------------------------------------------
 ! 0  Ocean
 ! 1  Evergreen Needleleaf Forests
 ! 2  Evergreen Broadleaf Forests
@@ -347,6 +381,17 @@ MODULE MOD_Const_LC
 !15  Permanent Snow and Ice
 !16  Barren
 !17  Water Bodies
+
+   character(len=256) :: patchclassname (0:N_land_classification) = &
+      (/'0 Ocean                               ', '1 Evergreen Needleleaf Forests        ', &
+        '2 Evergreen Broadleaf Forests         ', '3 Deciduous Needleleaf Forests        ', &
+        '4 Deciduous Broadleaf Forests         ', '5 Mixed Forests                       ', &
+        '6 Closed Shrublands                   ', '7 Open Shrublands                     ', &
+        '8 Woody Savannas                      ', '9 Savannas                            ', &
+        '10 Grasslands                         ', '11 Permanent Wetlands                 ', &
+        '12 Croplands                          ', '13 Urban and Built-up Lands           ', &
+        '14 Cropland/Natural Vegetation Mosaics', '15 Permanent Snow and Ice             ', &
+        '16 Barren                             ', '17 Water Bodies                       ' /)
 
    ! land patch types
    ! 0: soil, 1: urban, 2: wetland, 3: ice, 4: lake
@@ -402,13 +447,13 @@ MODULE MOD_Const_LC
            0.010, -0.300,  0.100, -0.300,  0.010, -0.300,  0.010,  0.010,&
            0.010 /)
 
-   ! reflectance of green leaf in virsible band
+   ! reflectance of green leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhol_vis_igbp &
       = (/0.070,  0.100,  0.070,  0.100,  0.070,  0.105,  0.105,  0.105,&
           0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.105,  0.105,&
           0.105 /)
 
-   ! reflectance of dead leaf in virsible band
+   ! reflectance of dead leaf in visible band
    real(r8), parameter, dimension(N_land_classification) :: rhos_vis_igbp &
       = (/0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,&
           0.160,  0.360,  0.160,  0.360,  0.160,  0.360,  0.160,  0.160,&
@@ -463,6 +508,12 @@ MODULE MOD_Const_LC
       = (/0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
           0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
           0.08 /)
+   
+   !c3c4 flag
+   integer, parameter, dimension(N_land_classification) :: c3c4_igbp &
+      = (/1, 1, 1, 1, 1, 1, 1, 1,&
+          1, 1, 1, 1, 1, 1, 1, 1,&
+          1 /)
 
    ! conductance-photosynthesis slope parameter
    real(r8), parameter, dimension(N_land_classification) :: g1_igbp &
@@ -548,7 +599,7 @@ MODULE MOD_Const_LC
           1.627,  2.608,  2.608,  2.614,  2.614,  2.614,  2.608,  0.978,&
           2.608 /)
 
-! Plant Hydraulics Paramters
+   ! Plant Hydraulics Parameters
    real(r8), parameter, dimension(N_land_classification) :: kmax_sun0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
           2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
@@ -598,7 +649,7 @@ MODULE MOD_Const_LC
       = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95  /)
-!end plant hydraulic parameters
+   !end plant hydraulic parameters
 
    ! lambda for WUE stomata model
    real(r8), parameter, dimension(N_land_classification) :: lambda_igbp &
@@ -639,12 +690,14 @@ MODULE MOD_Const_LC
       d50,        &! depth at 50% roots
       beta         ! coefficient of root profile
 
+   integer, dimension(N_land_classification) :: c3c4 ! c3c4 flag
+
 ! Plant Hydraulic Parameters
    real(r8), dimension(N_land_classification) :: &
-      kmax_sun,   &! Plant Hydraulics Paramters (TODO@Xingjie Lu, please give more details and below)
-      kmax_sha,   &! Plant Hydraulics Paramters
-      kmax_xyl,   &! Plant Hydraulics Paramters
-      kmax_root,  &! Plant Hydraulics Paramters
+      kmax_sun,   &! Plant Hydraulics Parameters (TODO@Xingjie Lu, please give more details)
+      kmax_sha,   &! Plant Hydraulics Parameters
+      kmax_xyl,   &! Plant Hydraulics Parameters
+      kmax_root,  &! Plant Hydraulics Parameters
       psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
       psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
       psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
@@ -690,6 +743,7 @@ CONTAINS
       chil       (:) = chil_usgs       (:)
       vmax25     (:) = vmax25_usgs     (:) * 1.e-6
       effcon     (:) = effcon_usgs     (:)
+      c3c4       (:) = c3c4_usgs       (:)
       g1         (:) = g1_usgs         (:)
       g0         (:) = g0_usgs         (:)
       gradm      (:) = gradm_usgs      (:)
@@ -741,6 +795,7 @@ ENDIF
       chil       (:) = chil_igbp       (:)
       vmax25     (:) = vmax25_igbp     (:) * 1.e-6
       effcon     (:) = effcon_igbp     (:)
+      c3c4       (:) = c3c4_igbp       (:)
       g1         (:) = g1_igbp         (:)
       g0         (:) = g0_igbp         (:)
       gradm      (:) = gradm_igbp      (:)

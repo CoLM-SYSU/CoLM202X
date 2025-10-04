@@ -1,5 +1,5 @@
- NX        1440
- NY         720
+ NX         360
+ NY         200
  NLFP          10
  REGIONALL           1
- NSEQMAX      252383
+ NSEQMAX       41455

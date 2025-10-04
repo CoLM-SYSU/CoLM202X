@@ -25,20 +25,20 @@ CONTAINS
                             fevpg, fevpg_soil, fevpg_snow, tref, qref, &
                             z0m, z0hg, zol, rib, ustar, qstar, tstar, fm, fh, fq)
 
-!=======================================================================
-! this is the main SUBROUTINE to execute the calculation of thermal processes
-! and surface fluxes
+!-----------------------------------------------------------------------
+!  This is the main SUBROUTINE to execute the calculation of thermal
+!  processes and surface fluxes
 !
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+!  Original author: Yongjiu Dai, 09/15/1999; 08/30/2002
 !
-! REVISIONS:
-! 09/2019, Hua Yuan: removed sigf to be consistant with PFT runs, removed
-!          fsena, fevpa, renamed z0ma to z0m.
+! !REVISIONS:
+!  09/2019, Hua Yuan: removed sigf to be consistent with PFT runs, removed
+!           fsena, fevpa, renamed z0ma to z0m.
 !
-! 05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
-!          surface turbulence scheme (LZD2022); make a proper update of um.
+!  05/2023, Shaofeng Liu: add option to call moninobuk_leddy, the LargeEddy
+!           surface turbulence scheme (LZD2022); make a proper update of um.
 !
-!=======================================================================
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Const_Physical, only: cpair,vonkar,grav
@@ -48,7 +48,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
           zlnd,      &! roughness length for soil [m]
           zsno,      &! roughness length for snow [m]
@@ -108,13 +108,13 @@ CONTAINS
           fh,        &! integral of profile FUNCTION for heat
           fq          ! integral of profile FUNCTION for moisture
 
-  !------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer niters,   &! maximum number of iterations for surface temperature
          iter,       &! iteration index
          nmozsgn      ! number of times moz changes sign
 
    real(r8) :: &
-         beta,       &! coefficient of conective velocity [-]
+         beta,       &! coefficient of convective velocity [-]
          displax,    &! zero-displacement height [m]
          dth,        &! diff of virtual temp. between ref. height and surface
          dqh,        &! diff of humidity between ref. height and surface
@@ -130,23 +130,23 @@ CONTAINS
          fq2m,       &! relation for specific humidity at 2m
          fm10m,      &! integral of profile FUNCTION for momentum at 10m
          thvstar,    &! virtual potential temperature scaling parameter
-         um,         &! wind speed including the stablity effect [m/s]
+         um,         &! wind speed including the stability effect [m/s]
          wc,         &! convective velocity [m/s]
          wc2,        &! wc**2
          zeta,       &! dimensionless height used in Monin-Obukhov theory
          zii,        &! convective boundary height [m]
-         zldis,      &! reference height "minus" zero displacement heght [m]
+         zldis,      &! reference height "minus" zero displacement height [m]
          z0mg,       &! roughness length over ground, momentum [m]
          z0qg         ! roughness length over ground, latent heat [m]
 
-  !----------------------- Dummy argument --------------------------------
+!-----------------------------------------------------------------------
   ! initial roughness length
       ! 09/2019, yuan: change to a combination of zlnd and zsno
       z0mg = (1.-fsno)*zlnd + fsno*zsno
       z0hg = z0mg
       z0qg = z0mg
 
-  ! potential temperatur at the reference height
+  ! potential temperature at the reference height
       beta = 1.      ! -  (in computing W_*)
       zii  = 1000.   ! m  (pbl height)
       z0m  = z0mg
@@ -174,7 +174,7 @@ CONTAINS
       !----------------------------------------------------------------
          displax = 0.
          IF (DEF_USE_CBL_HEIGHT) THEN
-           CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+           CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,hpbl, &
                                 ustar,fh2m,fq2m,fm10m,fm,fh,fq)
          ELSE
            CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
@@ -187,7 +187,7 @@ CONTAINS
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
          z0qg = z0hg
 
-  ! 2023.04.06, weinan
+         ! 2023.04.06, weinan
          !thvstar=tstar+0.61*th*qstar
          thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
          zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)
@@ -218,7 +218,7 @@ CONTAINS
       ENDDO ITERATION                         ! END stability iteration
       !----------------------------------------------------------------
 
-  ! Get derivative of fluxes with repect to ground temperature
+  ! Get derivative of fluxes with respect to ground temperature
       ram  = 1./(ustar*ustar/um)
       rah  = 1./(vonkar/fh*ustar)
       raw  = 1./(vonkar/fq*ustar)

@@ -8,8 +8,8 @@
 ! 2. Land subgrid type classification:
 !    Select one of the following options.
 #undef LULC_USGS
-#define LULC_IGBP
-#undef LULC_IGBP_PFT
+#undef LULC_IGBP
+#define LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
 ! 2.1 3D Urban model (put it temporarily here):
@@ -26,7 +26,7 @@
 ! 3. If defined, debug information is output.
 #define CoLMDEBUG
 ! 3.1 If defined, range of variables is checked.
-#define RangeCheck
+#undef RangeCheck
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
 #undef SrfdataDiag
 
@@ -39,8 +39,8 @@
 
 ! 5. Hydrological process options.
 ! 5.1 Two soil hydraulic models can be used.
-#undef   Campbell_SOIL_MODEL
-#define  vanGenuchten_Mualem_SOIL_MODEL
+#define   Campbell_SOIL_MODEL
+#undef  vanGenuchten_Mualem_SOIL_MODEL
 ! 5.2 If defined, lateral flow is modeled.
 #define CatchLateralFlow
 !    Conflicts :
@@ -49,14 +49,20 @@
 #endif
 
 ! 6. If defined, CaMa-Flood model will be used.
+#define CaMa_Flood
+#if (defined SinglePoint)
 #undef CaMa_Flood
+#endif
+
 
 ! 7. If defined, BGC model is used.
-#undef BGC
+#define BGC
 
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
+#ifndef LULC_IGBP_PC
 #undef BGC
+#endif
 #endif
 ! 7.1 If defined, CROP model is used
 #define CROP
@@ -70,16 +76,15 @@
 
 ! 9. If defined, data assimilation is used.
 #undef DataAssimilation
-
-! 10. Vector write model.
-!     1) "VectorInOneFileP" : write vector data in one file in parallel mode;
-!     2) "VectorInOneFileS" : write vector data in one file in serial mode;
-!     3) Neither "VectorInOneFileS" nor "VectorInOneFileP" is defined :
-!        write vector data in separate files.
-#undef VectorInOneFileP
-!     Conflict
-#ifdef VectorInOneFileP
-#undef VectorInOneFileS
+#if (defined DataAssimilation)
+#define LULC_IGBP
+#undef LULC_USGS
+#undef LULC_IGBP_PFT
+#undef LULC_IGBP_PC
 #endif
 
+! 10. Interface to AI model.
 #undef USESplitAI
+
+! 11. External lake models.
+#undef EXTERNAL_LAKE

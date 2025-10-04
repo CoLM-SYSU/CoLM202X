@@ -2,10 +2,10 @@
 #ifdef BGC
 
 MODULE MOD_BGC_CNCStateUpdate1
-  
-!-------------------------------------------------------------------------------------------------      
+
+!-------------------------------------------------------------------------------------------------
 ! !DESCRIPTION:
-! First updates in vegetation and soil carbon. Thre major updates are included in bgc_CNCStateUpdate1Mod
+! First updates in vegetation and soil carbon. The major updates are included in bgc_CNCStateUpdate1Mod
 !  1. Update phenology-associated veg and soil C pool size changes, including plant growth
 !  2. Update decomposition-associated soil C pool size changes
 !  3. Record the accumulated C transfers associated to phenology and decomposition for semi-analytic spinup
@@ -14,12 +14,12 @@ MODULE MOD_BGC_CNCStateUpdate1
 ! The Community Land Model version 5.0 (CLM5.0)
 !
 ! REVISION:
-! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure. 
+! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure.
 !                   2) Record the accumulated phenology-associated C transfer for veg and soil C semi-analytic spinup
 !                   3) Record the accumulated decomposition-associated C transfer for soil C semi-analytic spinup
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
    USE MOD_Const_PFT, only: woody
    USE MOD_BGC_Vars_TimeInvariants, only: &
@@ -32,10 +32,10 @@ MODULE MOD_BGC_CNCStateUpdate1
             AKX_cwd_to_cel_c_vr_acc    , AKX_cwd_to_lig_c_vr_acc    , AKX_soil1_to_soil3_c_vr_acc, AKX_soil2_to_soil1_c_vr_acc, &
             AKX_soil2_to_soil3_c_vr_acc, AKX_soil3_to_soil1_c_vr_acc, &
             AKX_met_exit_c_vr_acc      , AKX_cel_exit_c_vr_acc      , AKX_lig_exit_c_vr_acc      , AKX_cwd_exit_c_vr_acc      , &
-            AKX_soil1_exit_c_vr_acc    , AKX_soil2_exit_c_vr_acc    , AKX_soil3_exit_c_vr_acc 
- 
+            AKX_soil1_exit_c_vr_acc    , AKX_soil2_exit_c_vr_acc    , AKX_soil3_exit_c_vr_acc
+
    USE MOD_BGC_Vars_1DFluxes, only: &
-! decomposition pools flux varables (in)
+! decomposition pools flux variables (in)
             decomp_cpools_sourcesink, decomp_ctransfer_vr, decomp_hr_vr      , &
             phenology_to_met_c      , phenology_to_cel_c , phenology_to_lig_c
 
@@ -54,32 +54,32 @@ MODULE MOD_BGC_CNCStateUpdate1
 ! crop variables (in)
             harvdate_p         , cropprod1c_p        , &
 
-! SASU variables           
+! SASU variables
             I_leafc_p_acc     , I_leafc_st_p_acc     , I_frootc_p_acc    , I_frootc_st_p_acc    , &
             I_livestemc_p_acc , I_livestemc_st_p_acc , I_deadstemc_p_acc , I_deadstemc_st_p_acc , &
             I_livecrootc_p_acc, I_livecrootc_st_p_acc, I_deadcrootc_p_acc, I_deadcrootc_st_p_acc, &
             I_grainc_p_acc    , I_grainc_st_p_acc    , &
- 
+
             AKX_leafc_xf_to_leafc_p_acc           , AKX_frootc_xf_to_frootc_p_acc           , AKX_livestemc_xf_to_livestemc_p_acc     , &
             AKX_deadstemc_xf_to_deadstemc_p_acc   , AKX_livecrootc_xf_to_livecrootc_p_acc   , AKX_deadcrootc_xf_to_deadcrootc_p_acc   , &
             AKX_grainc_xf_to_grainc_p_acc         , AKX_livestemc_to_deadstemc_p_acc        , AKX_livecrootc_to_deadcrootc_p_acc      , &
-            
+
             AKX_leafc_st_to_leafc_xf_p_acc        , AKX_frootc_st_to_frootc_xf_p_acc        , AKX_livestemc_st_to_livestemc_xf_p_acc  , &
             AKX_deadstemc_st_to_deadstemc_xf_p_acc, AKX_livecrootc_st_to_livecrootc_xf_p_acc, AKX_deadcrootc_st_to_deadcrootc_xf_p_acc, &
             AKX_livestemc_st_to_livestemc_xf_p_acc, AKX_grainc_st_to_grainc_xf_p_acc        , &
- 
+
             AKX_leafc_exit_p_acc                  , AKX_frootc_exit_p_acc                   , AKX_livestemc_exit_p_acc                , &
             AKX_deadstemc_exit_p_acc              , AKX_livecrootc_exit_p_acc               , AKX_deadcrootc_exit_p_acc               , &
             AKX_grainc_exit_p_acc                 , &
- 
+
             AKX_leafc_st_exit_p_acc               , AKX_frootc_st_exit_p_acc                , AKX_livestemc_st_exit_p_acc             , &
             AKX_deadstemc_st_exit_p_acc           , AKX_livecrootc_st_exit_p_acc            , AKX_deadcrootc_st_exit_p_acc            , &
             AKX_grainc_st_exit_p_acc              , &
- 
+
             AKX_leafc_xf_exit_p_acc               , AKX_frootc_xf_exit_p_acc                , AKX_livestemc_xf_exit_p_acc             , &
             AKX_deadstemc_xf_exit_p_acc           , AKX_livecrootc_xf_exit_p_acc            , AKX_deadcrootc_xf_exit_p_acc            , &
             AKX_grainc_xf_exit_p_acc
-           
+
 
    USE MOD_BGC_Vars_1DPFTFluxes, only: &
 ! vegetation carbon flux variables (in)
@@ -124,7 +124,7 @@ MODULE MOD_BGC_CNCStateUpdate1
             cpool_leaf_storage_gr_p     , cpool_froot_storage_gr_p     , &
             cpool_livestem_storage_gr_p , cpool_deadstem_storage_gr_p  , &
             cpool_livecroot_storage_gr_p, cpool_deadcroot_storage_gr_p , &
- 
+
             cpool_grain_gr_p            , cpool_grain_storage_gr_p     , &
 
 ! maintenance respiration fluxes (in)
@@ -135,11 +135,11 @@ MODULE MOD_BGC_CNCStateUpdate1
             transfer_leaf_gr_p     , transfer_froot_gr_p    , &
             transfer_livestem_gr_p , transfer_deadstem_gr_p , &
             transfer_livecroot_gr_p, transfer_deadcroot_gr_p, &
-            transfer_grain_gr_p    , xsmrpool_to_atm_p      
+            transfer_grain_gr_p    , xsmrpool_to_atm_p
 
 
    IMPLICIT NONE
- 
+
    PUBLIC :: CStateUpdate1
 
 CONTAINS
@@ -167,7 +167,7 @@ CONTAINS
          decomp_cpools_sourcesink(j,i_lig_lit,i) = phenology_to_lig_c(j,i) *deltim
          decomp_cpools_sourcesink(j,i_cwd    ,i) = 0._r8
       ENDDO
-  
+
       IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          DO j=1,nl_soil
             I_met_c_vr_acc(j,i) = I_met_c_vr_acc(j,i) + phenology_to_met_c(j,i) *deltim
@@ -175,15 +175,15 @@ CONTAINS
             I_lig_c_vr_acc(j,i) = I_lig_c_vr_acc(j,i) + phenology_to_lig_c(j,i) *deltim
          ENDDO
       ENDIF
-  
+
       DO k = 1, ndecomp_transitions
          DO j = 1,nl_soil
             decomp_cpools_sourcesink(j,donor_pool(k),i) = &
                  decomp_cpools_sourcesink(j,donor_pool(k),i) &
                  - (decomp_hr_vr(j,k,i) + decomp_ctransfer_vr(j,k,i)) * deltim
          ENDDO
-      ENDDO 
-  
+      ENDDO
+
       DO k = 1,ndecomp_transitions
          IF ( receiver_pool(k) /= 0 ) THEN  ! skip terminal transitions
             DO j = 1,nl_soil
@@ -193,7 +193,7 @@ CONTAINS
             ENDDO
          ENDIF
       ENDDO
-  
+
       IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
          DO j = 1, nl_soil
             AKX_met_to_soil1_c_vr_acc  (j,i) = AKX_met_to_soil1_c_vr_acc  (j,i) + decomp_ctransfer_vr(j, 1,i) * deltim
@@ -206,7 +206,7 @@ CONTAINS
             AKX_soil2_to_soil1_c_vr_acc(j,i) = AKX_soil2_to_soil1_c_vr_acc(j,i) + decomp_ctransfer_vr(j, 8,i) * deltim
             AKX_soil2_to_soil3_c_vr_acc(j,i) = AKX_soil2_to_soil3_c_vr_acc(j,i) + decomp_ctransfer_vr(j, 9,i) * deltim
             AKX_soil3_to_soil1_c_vr_acc(j,i) = AKX_soil3_to_soil1_c_vr_acc(j,i) + decomp_ctransfer_vr(j,10,i) * deltim
-  
+
             AKX_met_exit_c_vr_acc      (j,i) = AKX_met_exit_c_vr_acc      (j,i) + (decomp_hr_vr(j, 1,i) + decomp_ctransfer_vr(j, 1,i)) * deltim
             AKX_cel_exit_c_vr_acc      (j,i) = AKX_cel_exit_c_vr_acc      (j,i) + (decomp_hr_vr(j, 2,i) + decomp_ctransfer_vr(j, 2,i)) * deltim
             AKX_lig_exit_c_vr_acc      (j,i) = AKX_lig_exit_c_vr_acc      (j,i) + (decomp_hr_vr(j, 3,i) + decomp_ctransfer_vr(j, 3,i)) * deltim
@@ -219,7 +219,7 @@ CONTAINS
             AKX_soil3_exit_c_vr_acc    (j,i) = AKX_soil3_exit_c_vr_acc    (j,i) + (decomp_hr_vr(j,10,i) + decomp_ctransfer_vr(j,10,i)) * deltim
          ENDDO
       ENDIF
-  
+
       DO m = ps , pe
          ivt = pftclass(m)
          leafc_p      (m) = leafc_p      (m) + leafc_xfer_to_leafc_p  (m) * deltim
@@ -243,7 +243,7 @@ CONTAINS
             grainc_p        (m)  = grainc_p        (m) + grainc_xfer_to_grainc_p      (m) * deltim
             grainc_xfer_p   (m)  = grainc_xfer_p   (m) - grainc_xfer_to_grainc_p      (m) * deltim
          ENDIF
-  
+
          IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
             AKX_leafc_xf_to_leafc_p_acc  (m) = AKX_leafc_xf_to_leafc_p_acc  (m) + leafc_xfer_to_leafc_p  (m) * deltim
             AKX_frootc_xf_to_frootc_p_acc(m) = AKX_frootc_xf_to_frootc_p_acc(m) + frootc_xfer_to_frootc_p(m) * deltim
@@ -266,11 +266,11 @@ CONTAINS
                AKX_grainc_xf_exit_p_acc           (m) = AKX_grainc_xf_exit_p_acc           (m) + grainc_xfer_to_grainc_p      (m) * deltim
             ENDIF
          ENDIF
-  
+
 ! phenology: litterfall fluxes
          leafc_p (m) = leafc_p (m) - leafc_to_litter_p (m) * deltim
          frootc_p(m) = frootc_p(m) - frootc_to_litter_p(m) * deltim
-  
+
 ! livewood turnover fluxes
          IF (woody(ivt) == 1) THEN
             livestemc_p (m) = livestemc_p (m) - livestemc_to_deadstemc_p  (m) * deltim
@@ -283,7 +283,7 @@ CONTAINS
             grainc_p           (m) = grainc_p           (m) - (grainc_to_food_p(m) + grainc_to_seed_p(m)) * deltim
             cropseedc_deficit_p(m) = cropseedc_deficit_p(m) - crop_seedc_to_leaf_p(m) * deltim + grainc_to_seed_p(m) * deltim
          ENDIF
-  
+
          IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
             AKX_leafc_exit_p_acc (m) = AKX_leafc_exit_p_acc (m) + leafc_to_litter_p (m) * deltim
             AKX_frootc_exit_p_acc(m) = AKX_frootc_exit_p_acc(m) + frootc_to_litter_p(m) * deltim
@@ -391,7 +391,7 @@ CONTAINS
             cpool_p  (m) = cpool_p     (m) - cpool_livestem_gr_p (m) * deltim
             cpool_p  (m) = cpool_p     (m) - cpool_grain_gr_p    (m) * deltim
          ENDIF
-  
+
          gresp_xfer_p(m) = gresp_xfer_p(m) - transfer_leaf_gr_p (m) * deltim
          gresp_xfer_p(m) = gresp_xfer_p(m) - transfer_froot_gr_p(m) * deltim
          IF (woody(ivt) == 1) THEN
@@ -417,11 +417,11 @@ CONTAINS
             cpool_p    (m) = cpool_p        (m) - cpool_livestem_storage_gr_p (m) * deltim
             cpool_p    (m) = cpool_p        (m) - cpool_grain_storage_gr_p    (m) * deltim
          ENDIF
-            
+
      ! growth respiration stored for release during transfer growth
          cpool_p        (m) = cpool_p        (m) - cpool_to_gresp_storage_p(m) * deltim
          gresp_storage_p(m) = gresp_storage_p(m) + cpool_to_gresp_storage_p(m) * deltim
-  
+
      ! move storage pools into transfer pools
          leafc_storage_p (m) = leafc_storage_p (m) - leafc_storage_to_xfer_p (m) * deltim
          leafc_xfer_p    (m) = leafc_xfer_p    (m) + leafc_storage_to_xfer_p (m) * deltim
@@ -430,7 +430,7 @@ CONTAINS
          IF (woody(ivt) == 1) THEN
             gresp_storage_p     (m) = gresp_storage_p    (m) - gresp_storage_to_xfer_p(m) * deltim
             gresp_xfer_p        (m) = gresp_xfer_p       (m) + gresp_storage_to_xfer_p(m) * deltim
-        
+
             livestemc_storage_p (m) = livestemc_storage_p (m) - livestemc_storage_to_xfer_p (m) * deltim
             livestemc_xfer_p    (m) = livestemc_xfer_p    (m) + livestemc_storage_to_xfer_p (m) * deltim
             deadstemc_storage_p (m) = deadstemc_storage_p (m) - deadstemc_storage_to_xfer_p (m) * deltim

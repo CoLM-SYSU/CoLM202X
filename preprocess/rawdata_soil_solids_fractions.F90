@@ -5,21 +5,23 @@ SUBROUTINE soil_solids_fractions(BD,gravels,SOC,SAND,CLAY,&
            vf_quartz_mineral_s,BD_mineral_s,OM_density,BD_ave)
 
 !-------------------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate soil porocity and The volumetric fractions of soil solids needed for soil parameter estimations.
-! Theta = 1 - BD/PD
+! !DESCRIPTION:
+!  Calculate soil porocity and The volumetric fractions of soil solids needed
+!  for soil parameter estimations.
+!  Theta = 1 - BD/PD
 !
-! REFERENCE:
-! Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
-! for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
+! !REFERENCE:
+!  Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and
+!  Thermal Properties for Land Surface Modeling. J. of Advances in Modeling
+!  Earth Systems, DOI: 10.1029/2019MS001784
 !
-! Original author: Yongjiu Dai, 01/2018
+!  Original author: Yongjiu Dai, 01/2018
 !
-! Revisions:
-! Nan Wei, 06/2018: add to CoLM/mksrfdata
-! Nan Wei, 01/2020: update paticle size of soil solids and gravel porosity
+! !REVISIONS:
+!  Nan Wei, 06/2018: add to CoLM/mksrfdata
+!  Nan Wei, 01/2020: update paticle size of soil solids and gravel porosity
 !-------------------------------------------------------------------------------
-use MOD_Precision
+USE MOD_Precision
 
 IMPLICIT NONE
       real(r8), intent(in) :: BD ! bulk density of fine earth (mineral+organic)(g/cm^3)
@@ -46,15 +48,15 @@ IMPLICIT NONE
       real(r8), intent(out) :: OM_density   ! OC density (kg/m^3)
       real(r8), intent(out) :: BD_ave       ! bulk density of soil (GRAVELS + MINERALS + ORGANIC MATTER) (g/cm^3)
 
-      real(r8) wf_om_fine_earth ! weight fraction of organic matter within fine earth
-      real(r8) wf_silt_s    ! weight fraction of silt within soil soilds
+      real(r8) wf_om_fine_earth             ! weight fraction of organic matter within fine earth
+      real(r8) wf_silt_s                    ! weight fraction of silt within soil soilds
 
-      real(r8) BD_om        ! particle density of organic matter (g/cm3)
-      real(r8) BD_minerals  ! particle density of soil minerals (g/cm3)
-      real(r8) BD_gravels   ! particle density of gravels (g/cm3)
-      real(r8) BD_particle  ! particle density of the soil (g/cm3)
-      real(r8) BD_particle_inverse  ! 1/BD_particle
-      real(r8) vf_pores_gravels     ! volumetric pore space within gravels
+      real(r8) BD_om                        ! particle density of organic matter (g/cm3)
+      real(r8) BD_minerals                  ! particle density of soil minerals (g/cm3)
+      real(r8) BD_gravels                   ! particle density of gravels (g/cm3)
+      real(r8) BD_particle                  ! particle density of the soil (g/cm3)
+      real(r8) BD_particle_inverse          ! 1/BD_particle
+      real(r8) vf_pores_gravels             ! volumetric pore space within gravels
       real(r8) a, SILT
       logical Peters_Lidard_Scheme
 
@@ -106,10 +108,10 @@ IMPLICIT NONE
 
 ! POROSITY OF SOIL
       vf_pores_s = 1.0 - BD_ave*BD_particle_inverse
-      if(vf_pores_s <= 0.0) then
+      IF(vf_pores_s <= 0.0) THEN
          write(6,*)"Error: negative soil porosity. BD, PD = ",BD_ave,BD_particle
-         stop
-      end if
+         STOP
+      ENDIF
 
 ! Bulk density of mineral soil
       BD_mineral_s = (BD_ave - vf_om_s*BD_om - vf_gravels_s*BD_gravels) &
@@ -120,36 +122,36 @@ IMPLICIT NONE
 ! Check
       a = vf_gravels_s + vf_om_s + vf_sand_s + vf_clay_s + vf_silt_s
       a = a - (1.0-vf_pores_s)
-      if(abs(a) > 1.0e-3)then
+      IF(abs(a) > 1.0e-3)THEN
          print*, 'Error in soil volumetric calculation 1', a,vf_gravels_s,vf_om_s,vf_sand_s,vf_clay_s,vf_silt_s,vf_pores_s
-         call abort
-      endif
+         CALL abort
+      ENDIF
 
 ! The volumetric fraction of quartz (vf_quartz_mineral_s) within mineral soil
 
       Peters_Lidard_Scheme = .true.
 
-      if(Peters_Lidard_Scheme)then ! (1) Peters-Lidard et al. (1998)
+      IF(Peters_Lidard_Scheme)THEN ! (1) Peters-Lidard et al. (1998)
          a = SAND+CLAY
-         if(a >= 1.0)then
+         IF(a >= 1.0)THEN
             CALL vf_quartz(SAND,CLAY,vf_quartz_mineral_s)
-         else
+         ELSE
             vf_quartz_mineral_s = 0.0
-         endif
-      else                         ! (2) Calvet et al. (2016)
+         ENDIF
+      ELSE                         ! (2) Calvet et al. (2016)
          wf_sand_fine_earth = SAND/100.0*(1.0-wf_om_fine_earth)
          a = wf_sand_fine_earth / max(wf_om_fine_earth, 1.0e-6)
-         if(a < 40.0)then
+         IF(a < 40.0)THEN
           ! vf_quartz_fine_earth = 0.12 + 0.0134*a
             vf_quartz_fine_earth = 0.15 + 0.572*wf_sand_fine_earth
-         else
+         ELSE
             vf_quartz_fine_earth = 0.04 + 0.386*wf_sand_fine_earth
-         endif
+         ENDIF
 
          a = 1.0 - vf_pores_s - vf_om_s
          vf_quartz_fine_earth = min(vf_quartz_fine_earth,a)
          vf_quartz_mineral_s = min(vf_quartz_fine_earth,a)/(1.0-vf_om_fine_earth)
-      endif
+      ENDIF
 
 END SUBROUTINE soil_solids_fractions
 
@@ -163,7 +165,7 @@ SUBROUTINE vf_quartz(sand,clay,vf_quartz_s)
 !
 ! Yongjiu Dai, 02/2014
 ! --------------------------------------------------------------------------------------------
-use MOD_Precision
+USE MOD_Precision
 
 IMPLICIT NONE
       real(r8), intent(in) :: sand
@@ -172,32 +174,32 @@ IMPLICIT NONE
 
       real(r8) silt
       integer, parameter :: PNUM=12  ! number of polygons(texture classes)
-      logical c(PNUM)   ! indicate wheather a soil is in an class
+      logical c(PNUM)   ! indicate whether a soil is in an class
       integer i
 
       vf_quartz_s = 0.0
       silt = 100.0-sand-clay
 
-      if(sand<0. .or. silt<0. .or. clay<0.)then
+      IF(sand<0. .or. silt<0. .or. clay<0.)THEN
          print*,'Each of the 3 variables should be >= 0: check the data'
-         call abort
-      end if
+         CALL abort
+      ENDIF
 
       CALL USDA_soil_classes(silt,clay,c)
 
 ! Quartz content
-      if(c(1))  vf_quartz_s = 0.25   ! clay
-      if(c(2))  vf_quartz_s = 0.1    ! silty clay
-      if(c(3))  vf_quartz_s = 0.52   ! sandy clay
-      if(c(4))  vf_quartz_s = 0.35   ! clay loam
-      if(c(5))  vf_quartz_s = 0.1    ! silty clay loam
-      if(c(6))  vf_quartz_s = 0.6    ! sandy clay loam
-      if(c(7))  vf_quartz_s = 0.4    ! loam
-      if(c(8))  vf_quartz_s = 0.25   ! silty loam
-      if(c(9))  vf_quartz_s = 0.6    ! sandy loam
-      if(c(10)) vf_quartz_s = 0.1    ! silt
-      if(c(11)) vf_quartz_s = 0.82   ! loamy sand
-      if(c(12)) vf_quartz_s = 0.92   ! sand
+      IF(c(1))  vf_quartz_s = 0.25   ! clay
+      IF(c(2))  vf_quartz_s = 0.1    ! silty clay
+      IF(c(3))  vf_quartz_s = 0.52   ! sandy clay
+      IF(c(4))  vf_quartz_s = 0.35   ! clay loam
+      IF(c(5))  vf_quartz_s = 0.1    ! silty clay loam
+      IF(c(6))  vf_quartz_s = 0.6    ! sandy clay loam
+      IF(c(7))  vf_quartz_s = 0.4    ! loam
+      IF(c(8))  vf_quartz_s = 0.25   ! silty loam
+      IF(c(9))  vf_quartz_s = 0.6    ! sandy loam
+      IF(c(10)) vf_quartz_s = 0.1    ! silt
+      IF(c(11)) vf_quartz_s = 0.82   ! loamy sand
+      IF(c(12)) vf_quartz_s = 0.92   ! sand
 
 END SUBROUTINE vf_quartz
 
@@ -208,7 +210,7 @@ SUBROUTINE USDA_soil_classes(x,y,c)
 ! USDA major soil textural classes based on the relative percentage of sand, silt and clay
 ! Initial Author : Wei Shangguan and Yongjiu Dai, 02/2014
 ! --------------------------------------------------------------------------------------------
-use MOD_Precision
+USE MOD_Precision
 
 IMPLICIT NONE
    integer, parameter :: TNUM=26   ! number of points in the triangle
@@ -216,17 +218,17 @@ IMPLICIT NONE
    integer, parameter :: PONUM(PNUM)=(/5,3,4,6,4,5,5,8,7,4,4,3/) ! number of points in a polygon (texture class)
    real(r8), intent(in) :: x       ! x(silt) of a soil
    real(r8), intent(in) :: y       ! y(clay) of a soil
-   logical, intent(out) :: c(PNUM) ! indicate wheather a soil is in an class
+   logical, intent(out) :: c(PNUM) ! indicate whether a soil is in an class
 
    integer i,j
    real(r8) :: xpos(TNUM)          ! x(silt) coordinates of the  points in the triangle
    real(r8) :: ypos(TNUM)          ! y(clay) coordinates of the  points in the triangle
-   integer :: points(PNUM,8)       ! sequence number of the points in a poygon (texture class)
+   integer :: points(PNUM,8)       ! sequence number of the points in a polygon (texture class)
                                    ! 8 is the maximun number of the points
    character(len=15) :: tnames(PNUM)  ! name of a texture class
    integer :: tcodes(PNUM)         ! code of a texture class, may be change accordingly
-   real(r8) :: xpol(8)             ! x(silt) coordinates of the  points in a poygon
-   real(r8) :: ypol(8)             ! y(clay) coordinates of the  points in a poygon
+   real(r8) :: xpol(8)             ! x(silt) coordinates of the  points in a polygon
+   real(r8) :: ypol(8)             ! y(clay) coordinates of the  points in a polygon
 
    xpos = (/ 0.0,  40.0,   0.0,  20.0,  15.0,  40.0,  60.0,   0.0,  27.5,  27.5,  50.0,  52.5,&
             72.5,   0.0,   0.0,  40.0,  50.0,  80.0,  87.5,  15.0,  30.0,  50.0,  80.0,   0.0,&
@@ -263,15 +265,15 @@ IMPLICIT NONE
 
    tcodes=(/1,2,3,4,5,6,7,8,9,10,11,12/)
 !  -------------------------------------
-   do i = 1, PNUM
+   DO i = 1, PNUM
       xpol(:) = 0
-      do j = 1, PONUM(i)
+      DO j = 1, PONUM(i)
          xpol(j) = xpos(points(i,j))
          ypol(j) = ypos(points(i,j))
-      end do
+      ENDDO
 
-      call pointinpolygon(x,y,xpol(1:PONUM(i)),ypol(1:PONUM(i)),PONUM(i),c(i))
-   end do
+      CALL pointinpolygon(x,y,xpol(1:PONUM(i)),ypol(1:PONUM(i)),PONUM(i),c(i))
+   ENDDO
 
 END SUBROUTINE USDA_soil_classes
 
@@ -287,14 +289,14 @@ SUBROUTINE pointinpolygon(xp,yp,xpol,ypol,ponum,c)
 !
 ! Initial Author :  Wei Shangguan, 02/2014
 ! --------------------------------------------------------
-use MOD_Precision
+USE MOD_Precision
 
 IMPLICIT NONE
 
    integer, intent(in) :: ponum ! number of points in a polygon
    real(r8), intent(in) :: xp, yp   ! x, y of a point
    real(r8), intent(in) :: xpol(ponum), ypol(ponum)
-   logical, intent(out) :: c    ! indicate wheather a soil is in an class
+   logical, intent(out) :: c    ! indicate whether a soil is in an class
 
    integer i, i1   ! point index; i1 = i-1 mod n
    real(r8) x      ! x intersection of e with ray
@@ -306,52 +308,52 @@ IMPLICIT NONE
    Lcross = 0
    c2 = ''
 
-! For each edge e=(i-1,i), see if crosses ray.
-   do i = 1, ponum
-! First see if q=(0,0) is a vertex.
-      if(( xpol(i) - xp )==0 .AND. ( ypol(i) - yp )==0 )then
+! For each edge e=(i-1,i), see IF crosses ray.
+   DO i = 1, ponum
+! First see IF q=(0,0) is a vertex.
+      IF(( xpol(i) - xp )==0 .and. ( ypol(i) - yp )==0 )THEN
            c2 = 'v'
-           exit
-      end if
+           EXIT
+      ENDIF
       i1 = mod(( i-2 + ponum ), ponum) + 1
 
-! if e "straddles" the x-axis...
-      if( (( ypol(i) - yp ) > 0 ) .NEQV. (( ypol(i1) - yp ) > 0 ) )then
+! IF e "straddles" the x-axis...
+      IF( (( ypol(i) - yp ) > 0 ) .NEQV. (( ypol(i1) - yp ) > 0 ) )THEN
           ! e straddles ray, so compute intersection with ray.
           x = ( (xpol(i)-xp)*(ypol(i1)-yp) - (xpol(i1)-xp )*(ypol(i)-yp) ) &
               / (ypol(i1)-ypol(i))
-          ! crosses ray if strictly positive intersection.
-          if(x > 0)then
+          ! crosses ray IF strictly positive intersection.
+          IF(x > 0)THEN
              Rcross=Rcross+1
-          end if
-      end if
+          ENDIF
+      ENDIF
 
-! if e straddles the x-axis when reversed...
-      if( (( ypol(i) - yp ) < 0 ) .NEQV. (( ypol(i1) - yp ) < 0 ) )then
+! IF e straddles the x-axis when reversed...
+      IF( (( ypol(i) - yp ) < 0 ) .NEQV. (( ypol(i1) - yp ) < 0 ) )THEN
     ! e straddles ray, so compute intersection with ray.
           x = ( (xpol(i)-xp)*(ypol(i1)-yp) - (xpol(i1)-xp)*(ypol(i)-yp) ) &
               / (ypol(i1)-ypol(i))
-    ! crosses ray if strictly positive intersection.
-          if(x < 0)then
+    ! crosses ray IF strictly positive intersection.
+          IF(x < 0)THEN
              Lcross=Lcross+1
-          end if
-      end if
+          ENDIF
+      ENDIF
 
-   end do
+   ENDDO
 
-    ! q on the edge if left and right cross are not the same parity /
-    if(c2=='v')then
+    ! q on the edge IF left and right cross are not the same parity /
+    IF(c2=='v')THEN
        c = .true.
-    else if( mod(Rcross,2) .NE. mod(Lcross, 2) )then
+    ELSEIF( mod(Rcross,2) .NE. mod(Lcross, 2) )THEN
        c = .true.
        c2 = 'e'
-    ! q inside iff an odd number of crossings.
-    else if( mod(Rcross,2) == 1 )then
+    ! q inside IF an odd number of crossings.
+    ELSEIF( mod(Rcross,2) == 1 )THEN
        c = .true.
        c2 = 'i'
-    else
+    ELSE
        c = .false.
        c2 = 'o'
-    end if
+    ENDIF
 
 END SUBROUTINE pointinpolygon

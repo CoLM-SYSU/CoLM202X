@@ -4,10 +4,10 @@ MODULE MOD_BGC_Soil_BiogeochemLittVertTransp
 
 !----------------------------------------------------------------------------------------------------
 ! !DESCRIPTION:
-! Simulate the soil and litter CN veritical mixing (diffusion and advection) processes. Solve the dynamics
+! Simulate the soil and litter CN vertical mixing (diffusion and advection) processes. Solve the dynamics
 ! of soil and litter vertical profile with a tridiagonal matrix.
 !
-! !REFERENCE:
+! !REFERENCES:
 ! Koven, C.D., Riley, W.J., Subin, Z.M., Tang, J.Y., Torn, M.S., Collins, W.D., Bonan, G.B., Lawrence,
 ! D.M. and Swenson, S.C., 2013. The effect of vertically resolved soil biogeochemistry and alternate
 ! soil C and N models on C dynamics of CLM4. Biogeosciences, 10(11), 7109-7131.
@@ -20,11 +20,11 @@ MODULE MOD_BGC_Soil_BiogeochemLittVertTransp
 ! The Community Land Model version 5.0 (CLM5)
 !
 ! !REVISION:
-! Xingjie Lu, 2021, 1) Revised the CLM5 code to be compatible with CoLM code sturcture.
+! Xingjie Lu, 2021, 1) Revised the CLM5 code to be compatible with CoLM code structure.
 !                   2) Record accumulated organic CN vertical transfer rates for semi-analytic spin-up.
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_BGC_Vars_TimeInvariants, only: &
        is_cwd, som_adv_flux, som_diffus, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
    USE MOD_BGC_Vars_TimeVariables, only: &
@@ -36,9 +36,9 @@ MODULE MOD_BGC_Soil_BiogeochemLittVertTransp
        decomp_cpools_sourcesink, decomp_npools_sourcesink, &
        decomp_cpools_transport_tendency, decomp_npools_transport_tendency
    USE MOD_Utils, only: tridia
- 
+
    IMPLICIT NONE
- 
+
    PUBLIC SoilBiogeochemLittVertTransp
 
 CONTAINS
@@ -83,10 +83,10 @@ CONTAINS
    real(r8) :: epsilon                                 ! small number
 
       aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patankar, Table 5.2, pg 95
-  
+
       epsilon = 1.e-30
       spinup_term = 1._r8
-  
+
       IF  (( max(altmax(i), altmax_lastyear(i)) <= max_altdepth_cryoturbation ) .and. &
           ( max(altmax(i), altmax_lastyear(i)) > 0._r8) ) THEN
         ! use mixing profile modified slightly from Koven et al. (2009): constant through active layer, linear decrease from base of active layer to zero at a fixed depth
@@ -124,13 +124,13 @@ CONTAINS
             som_diffus_coef(j,i) = 0._r8
          ENDDO
       ENDIF
-  
+
         ! Set the distance between the node and the one ABOVE it
       dz_node(1) = z_soi(1)
       DO j = 2, nl_soil+1
          dz_node(j)= z_soi(j) - z_soi(j-1)
       ENDDO
-  
+
       DO s = 1, ndecomp_pools
          IF ( .not. is_cwd(s) ) THEN
             DO j = 1,nl_soil+1
@@ -147,20 +147,20 @@ CONTAINS
                ENDIF
               !
             ENDDO
-  
+
                     ! Set Pe (Peclet #) and D/dz throughout column
             conc_trcr_c(0) = 0._r8
             conc_trcr_n(0) = 0._r8
             conc_trcr_c(nbedrock+1:nl_soil+1) = 0._r8
             conc_trcr_n(nbedrock+1:nl_soil+1) = 0._r8
-  
+
             DO j = 1,nl_soil+1
                conc_trcr_c(j) = decomp_cpools_vr(j,s,i)
                conc_trcr_n(j) = decomp_npools_vr(j,s,i)
-  
+
                ! dz_tracer below is the difference between gridcell edges  (dz_soi)
                ! dz_node_tracer is difference between cell centers
-  
+
                ! Calculate the D and F terms in the Patankar algorithm
                IF (j == 1) THEN
                   d_m1_zm1(j) = 0._r8
@@ -211,14 +211,14 @@ CONTAINS
                   pe_p1(j) = f_p1(j) / d_p1_zp1(j) ! Peclet #
                ENDIF
             ENDDO ! j; nl_soil
-  
+
             ! Calculate the tridiagonal coefficients
             DO j = 0,nl_soil +1
-  
+
                IF (j > 0 .and. j < nl_soil+1) THEN
                   a_p_0 =  dz_soi(j) / deltim
                ENDIF
-  
+
                IF (j == 0) THEN ! top layer (atmosphere)
                   a_tri(j)   = 0._r8
                   b_tri(j)   = 1._r8
@@ -238,13 +238,13 @@ CONTAINS
                      diagVX_n_vr_acc (j,s,i) = diagVX_n_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)! EXIT flux
                   ENDIF
                ELSEIF (j < nl_soil+1) THEN
-  
+
                   a_tri(j) = -(d_m1_zm1(j) * aaa(pe_m1(j)) + max( f_m1(j), 0._r8)) ! Eqn 5.47 Patankar
                   c_tri(j) = -(d_p1_zp1(j) * aaa(pe_p1(j)) + max(-f_p1(j), 0._r8))
                   b_tri(j) = - a_tri(j) - c_tri(j) + a_p_0
                   r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_c(j)
                   r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_n(j)
-  
+
                   IF(DEF_USE_SASU .or. DEF_USE_DiagMatrix)THEN
                      IF(j .le. nbedrock)THEN
                         lowerVX_c_vr_acc(j,s,i) = lowerVX_c_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j-1)
@@ -270,18 +270,18 @@ CONTAINS
                   r_tri_n(j) = 0._r8
                ENDIF
             ENDDO ! j; nl_soil
-  
+
             jtop = 0
-  
+
             ! subtract initial concentration and source terms for tendency calculation
             DO j = 1, nl_soil
                decomp_cpools_transport_tendency(j,s,i) = 0.-(conc_trcr_c(j) + decomp_cpools_sourcesink(j,s,i))
                decomp_npools_transport_tendency(j,s,i) = 0.-(conc_trcr_n(j) + decomp_npools_sourcesink(j,s,i))
             ENDDO
-  
+
             CALL tridia(nl_soil+2, a_tri  (:), b_tri(:), c_tri(:), r_tri_c(:), conc_trcr_c(0:nl_soil+1))
             CALL tridia(nl_soil+2, a_tri  (:), b_tri(:), c_tri(:), r_tri_n(:), conc_trcr_n(0:nl_soil+1))
-  
+
             ! add post-transport concentration to calculate tendency term
             DO j = 1, nl_soil
                decomp_cpools_transport_tendency(j,s,i) = decomp_cpools_transport_tendency(j,s,i) + conc_trcr_c(j)
@@ -308,7 +308,7 @@ CONTAINS
                ENDIF
             ENDDO
          ENDIF ! not CWD
-  
+
          DO j = 1,nl_soil
             decomp_cpools_vr(j,s,i) = conc_trcr_c(j)
             decomp_npools_vr(j,s,i) = conc_trcr_n(j)

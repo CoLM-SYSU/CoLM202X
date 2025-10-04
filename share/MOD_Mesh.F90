@@ -3,10 +3,10 @@
 MODULE MOD_Mesh
 
 !------------------------------------------------------------------------------------
-! DESCRIPTION:
+! !DESCRIPTION:
 !
 !    MESH refers to the set of largest elements in CoLM.
-! 
+!
 !    In CoLM, the global/regional area is divided into a hierarchical structure:
 !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
 !       ELEMENT >>> PATCH
@@ -15,21 +15,21 @@ MODULE MOD_Mesh
 !    If Plant Function Type classification is used, PATCH is further divided into PFT.
 !    If Plant Community classification is used,     PATCH is further divided into PC.
 !
-!    To represent ELEMENT in CoLM, the land surface is first divided into pixels, 
+!    To represent ELEMENT in CoLM, the land surface is first divided into pixels,
 !    which are rasterized points defined by fine-resolution data.
-! 
-!    ELEMENT in MESH is set of pixels:
-!    1. If GRIDBASED,    ELEMENT is set of pixels in a longitude-latitude rectangle. 
-!    2. If UNSTRUCTURED, ELEMENT is set of pixels in an irregular area (usually polygon). 
-!    3. If CATCHMENT,    ELEMENT is set of pixels in a catchment whose area is less than
-!       a predefined value. 
 !
-!    If GRIDBASED is defined, MESH is built by using input files containing mask of 
+!    ELEMENT in MESH is set of pixels:
+!    1. If GRIDBASED,    ELEMENT is set of pixels in a longitude-latitude rectangle.
+!    2. If UNSTRUCTURED, ELEMENT is set of pixels in an irregular area (usually polygon).
+!    3. If CATCHMENT,    ELEMENT is set of pixels in a catchment whose area is less than
+!       a predefined value.
+!
+!    If GRIDBASED is defined, MESH is built by using input files containing mask of
 !    land area or by defining the resolution of longitude-latitude grid.
-!    If CATCHMENT or UNSTRUCTURED is defined, MESH is built by using input files 
+!    If CATCHMENT or UNSTRUCTURED is defined, MESH is built by using input files
 !    containing index of elements.
 !
-! Created by Shupeng Zhang, May 2023
+!  Created by Shupeng Zhang, May 2023
 !------------------------------------------------------------------------------------
 
    USE MOD_Precision
@@ -120,9 +120,6 @@ CONTAINS
    USE MOD_Utils
    USE MOD_DataType
    USE MOD_CatchmentDataReadin
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
 
    IMPLICIT NONE
 
@@ -163,30 +160,6 @@ CONTAINS
 
    integer, allocatable :: elmindx(:), order(:)
 
-#ifdef SinglePoint
-
-      numelm = 1
-      allocate (mesh(1))
-      mesh(1)%indx = 1
-
-      mesh(1)%npxl = 1
-
-      allocate(mesh(1)%ilat(1))
-      mesh(1)%ilat(1) = find_nearest_south (SITE_lat_location, pixel%nlat, pixel%lat_s)
-
-      allocate(mesh(1)%ilon(1))
-      CALL normalize_longitude (SITE_lon_location)
-      mesh(1)%ilon(1) = find_nearest_west  (SITE_lon_location, pixel%nlon, pixel%lon_w)
-
-      mesh(1)%xblk = find_nearest_west  (pixel%lon_w(mesh(1)%ilon(1)), gblock%nxblk, gblock%lon_w)
-      mesh(1)%yblk = find_nearest_south (pixel%lat_s(mesh(1)%ilat(1)), gblock%nyblk, gblock%lat_s)
-
-      allocate(nelm_blk(gblock%nxblk,gblock%nyblk))
-      nelm_blk(:,:) = 0
-      nelm_blk(mesh(1)%xblk,mesh(1)%yblk) = 1
-
-      RETURN
-#endif
 
       IF (p_is_io) THEN
          CALL allocate_block_data (gridmesh, datamesh)
@@ -412,7 +385,7 @@ CONTAINS
 
                   xlist2(ixloc,iyloc) = ix
                   ylist2(ixloc,iyloc) = iy
-                  elist2(ixloc,iyloc) = elmid 
+                  elist2(ixloc,iyloc) = elmid
 
                   IF (dlonp < 1.0e-6_r8) THEN
                      elist2(ixloc,iyloc) = 0
@@ -575,7 +548,7 @@ CONTAINS
                         ENDIF
                         iaddr(iloc) = nelm
 
-                        meshtmp(iaddr(iloc))%indx = elmid 
+                        meshtmp(iaddr(iloc))%indx = elmid
                         meshtmp(iaddr(iloc))%npxl = npxl
                      ELSE
                         meshtmp(iaddr(iloc))%npxl = meshtmp(iaddr(iloc))%npxl + npxl
@@ -695,7 +668,7 @@ CONTAINS
             idest = gblock%pio (meshtmp(ie)%xblk, meshtmp(ie)%yblk)
 
             ! send(09)
-            elmtag = meshtmp(ie)%indx
+            elmtag = mod(meshtmp(ie)%indx, 30000)
             smesg(1:5) = (/p_iam_glb, elmtag, meshtmp(ie)%xblk, meshtmp(ie)%yblk, meshtmp(ie)%npxl/)
             CALL mpi_send (smesg(1:5), 5, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
 
@@ -729,7 +702,7 @@ CONTAINS
                xblk   = rmesg(3)
                yblk   = rmesg(4)
                npxl   = rmesg(5)
-            
+
                CALL mpi_recv (elmid, 1, MPI_INTEGER8, isrc, elmtag, p_comm_glb, p_stat, p_err)
 
                blkcnt(xblk,yblk) = blkcnt(xblk,yblk) + 1
@@ -842,15 +815,13 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         write(*,'(A)') 'Making mesh elements :'
+         write(*,'(A)') 'Making mesh elements:'
       ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 
       IF (p_is_io) THEN
-
-         write(*,'(I19,A,I6)') numelm, ' elements on IO ', p_iam_glb
 
          CALL mpi_reduce (numelm, nelm_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_io, p_err)
          IF (p_iam_io == p_root) THEN
@@ -862,6 +833,15 @@ CONTAINS
          IF (p_iam_io == p_root) THEN
             write(*,'(A,I12,A)') 'Maximum : ', nelm_max_blk, &
                ' elements in one block (More than 3600 is recommended).'
+            write(*,'(/,A)') '   -----------------------------------------------------------------'
+            write(*,'(A)')   '   |  Examples for setting of blocks and processor groupsize:      |'
+            write(*,'(A)')   '   |  Resolution  DEF_nx_blocks  DEF_ny_blocks  DEF_PIO_groupsize  |'
+            write(*,'(A)')   '   |         2x2             18              9                 15  |'
+            write(*,'(A)')   '   |         1x1             18              9                 24  |'
+            write(*,'(A)')   '   |     0.5x0.5             18              9                 36  |'
+            write(*,'(A)')   '   |   0.25x0.25             30             15                 45  |'
+            write(*,'(A)')   '   |     0.1x0.1             72             36                 64  |'
+            write(*,'(A,/)') '   -----------------------------------------------------------------'
          ENDIF
 
       ENDIF
@@ -908,11 +888,11 @@ CONTAINS
             ENDDO
          ENDDO
 
-         write(wfmt,'(A,I0,A)') '(A,I6,A,', p_np_group-1, '(X,I0))'
-         write(*,wfmt) 'Numbers of elements by workers in group ', p_iam_glb, ' are ', nelm_worker
          IF (any(nelm_worker == 0)) THEN
             write(*,'(A,/,A)') 'Warning: there are idle workers, please use less processors ' // &
                'OR larger working group ', '  (set by DEF_PIO_groupsize in CoLM namelist).'
+            write(wfmt,'(A,I0,A)') '(A,I6,A,', p_np_group-1, '(X,I0))'
+            write(*,wfmt) 'Numbers of elements by workers in group ', p_iam_glb, ' are ', nelm_worker
          ENDIF
 
          DO iproc = 1, p_np_group-1

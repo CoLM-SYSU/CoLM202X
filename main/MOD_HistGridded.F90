@@ -2,18 +2,18 @@
 
 MODULE MOD_HistGridded
 
-   !----------------------------------------------------------------------------
-   ! DESCRIPTION:
-   !
-   !     Write out gridded model results to history files.
-   !
-   ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !
-   ! REVISIONS:
-   ! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
-   !
-   ! TODO...(need complement)
-   !----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! !DESCRIPTION:
+!
+!     Write out gridded model results to history files.
+!
+!  Original version: Yongjiu Dai, September 15, 1999, 03/2014
+!
+! !REVISIONS:
+!  Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+!
+!  TODO...(need complement)
+!----------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -40,7 +40,6 @@ MODULE MOD_HistGridded
 !--------------------------------------------------------------------------
 CONTAINS
 
-   !---------------------------------------
    SUBROUTINE hist_gridded_init (dir_hist, lulcc_call)
 
    USE MOD_SPMD_Task
@@ -51,7 +50,7 @@ CONTAINS
    USE MOD_LandUrban
 #endif
    USE MOD_Vars_1DAccFluxes
-   USE MOD_Forcing, only : gforc
+   USE MOD_Forcing, only: gforc
 #ifdef SinglePoint
    USE MOD_SingleSrfData
 #endif
@@ -112,13 +111,12 @@ CONTAINS
 
    END SUBROUTINE hist_gridded_init
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_2d ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
 
    USE MOD_Block
-   USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
@@ -137,7 +135,6 @@ CONTAINS
    integer :: iblkme, xblk, yblk, xloc, yloc
    integer :: compress
 
-      IF (p_is_worker)  WHERE (acc_vec /= spval)  acc_vec = acc_vec / nac
       IF (p_is_io)      CALL allocate_block_data (ghist, flux_xy_2d)
 
       CALL mp2g_hist%pset2grid (acc_vec, flux_xy_2d, spv = spval, msk = filter)
@@ -172,7 +169,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_2d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_urb_2d ( &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
          longname, units)
@@ -232,7 +229,7 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_urb_2d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_3d ( &
          acc_vec, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, sumarea, filter, &
          longname, units)
@@ -300,14 +297,13 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_3d
 
-   ! -------
+
    SUBROUTINE flux_map_and_write_4d ( &
          acc_vec, file_hist, varname, itime_in_file, &
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, &
          sumarea, filter, longname, units)
 
    USE MOD_Block
-   USE MOD_Vars_1DAccFluxes,  only: nac
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
@@ -328,9 +324,6 @@ CONTAINS
    integer :: iblkme, xblk, yblk, xloc, yloc, i1, i2
    integer :: compress
 
-      IF (p_is_worker) THEN
-         WHERE(acc_vec /= spval)  acc_vec = acc_vec / nac
-      ENDIF
       IF (p_is_io) THEN
          CALL allocate_block_data (ghist, flux_xy_4d, ndim1, ndim2, lb1 = lb1, lb2 = lb2)
       ENDIF
@@ -371,82 +364,15 @@ CONTAINS
 
    END SUBROUTINE flux_map_and_write_4d
 
-   ! -------
-   SUBROUTINE flux_map_and_write_ln ( &
-         acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
-         longname, units)
 
-   USE MOD_Block
-   USE MOD_Vars_1DAccFluxes,  only: nac_ln
-   USE MOD_Vars_Global, only: spval
-   IMPLICIT NONE
-
-   real(r8), intent(inout) :: acc_vec(:)
-   character(len=*), intent(in) :: file_hist
-   character(len=*), intent(in) :: varname
-   integer, intent(in) :: itime_in_file
-
-   type(block_data_real8_2d), intent(in) :: sumarea
-   logical,  intent(in) :: filter(:)
-   character (len=*), intent(in), optional :: longname
-   character (len=*), intent(in), optional :: units
-
-   ! Local variables
-   type(block_data_real8_2d) :: flux_xy_2d
-   integer :: i, iblkme, xblk, yblk, xloc, yloc
-   integer :: compress
-
-      IF (p_is_worker) THEN
-         DO i = lbound(acc_vec,1), ubound(acc_vec,1)
-            IF ((acc_vec(i) /= spval) .and. (nac_ln(i) > 0)) THEN
-               acc_vec(i) = acc_vec(i) / nac_ln(i)
-            ENDIF
-         ENDDO
-      ENDIF
-
-      IF (p_is_io) THEN
-         CALL allocate_block_data (ghist, flux_xy_2d)
-      ENDIF
-
-      CALL mp2g_hist%pset2grid (acc_vec, flux_xy_2d, spv = spval, msk = filter)
-
-      IF (p_is_io) THEN
-         DO iblkme = 1, gblock%nblkme
-            xblk = gblock%xblkme(iblkme)
-            yblk = gblock%yblkme(iblkme)
-
-            DO yloc = 1, ghist%ycnt(yblk)
-               DO xloc = 1, ghist%xcnt(xblk)
-
-                  IF ((sumarea%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) &
-                     .and. (flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) /= spval)) THEN
-                     flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) &
-                        = flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) &
-                        / sumarea%blk(xblk,yblk)%val(xloc,yloc)
-                  ELSE
-                     flux_xy_2d%blk(xblk,yblk)%val(xloc,yloc) = spval
-                  ENDIF
-
-               ENDDO
-            ENDDO
-
-         ENDDO
-      ENDIF
-
-      compress = DEF_HIST_CompressLevel
-      CALL hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy_2d, &
-         compress, longname, units)
-
-   END SUBROUTINE flux_map_and_write_ln
-
-   !------------------------------
    SUBROUTINE hist_gridded_write_time ( &
-         filename, dataname, time, itime)
+         filename, filelast, dataname, time, itime)
 
    USE MOD_Block
    IMPLICIT NONE
 
    character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
    character (len=*), intent(in) :: dataname
 
    integer, intent(in)  :: time(3)
@@ -461,12 +387,12 @@ CONTAINS
          IF (p_is_master) THEN
 #ifdef USEMPI
             IF (DEF_HIST_WriteBack) THEN
-               CALL hist_writeback_latlon_time (filename, dataname, time, hist_concat)
+               CALL hist_writeback_latlon_time (filename, filelast, dataname, time, hist_concat)
                itime = 1
             ELSE
 #endif
             inquire (file=filename, exist=fexists)
-            IF (.not. fexists) THEN
+            IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
 
                CALL ncio_create_file (trim(filename))
                CALL ncio_define_dimension(filename, 'time', 0)
@@ -516,7 +442,7 @@ CONTAINS
                CALL get_filename_block (filename, iblk, jblk, fileblock)
 
                inquire (file=fileblock, exist=fexists)
-               IF (.not. fexists) THEN
+               IF ((.not. fexists) .or. (trim(filename) /= trim(filelast))) THEN
                   CALL ncio_create_file (trim(fileblock))
                   CALL ncio_define_dimension (fileblock, 'time', 0)
                   CALL hist_write_grid_info  (fileblock, ghist, iblk, jblk)
@@ -535,7 +461,7 @@ CONTAINS
 
    END SUBROUTINE hist_gridded_write_time
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_2d ( &
          filename, dataname, grid, itime, wdata, compress, longname, units)
 
@@ -595,8 +521,13 @@ CONTAINS
                ENDDO
 
             ELSE
-               CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  2, 'lon', 'lat', 'time', '', '', compress, longname, units)
+               IF (itime == -1) THEN
+                  CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
+                     2, 'lon', 'lat', '', '', '', compress, longname, units)
+               ELSE
+                  CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
+                     3, 'lon', 'lat', 'time', '', '', compress, longname, units)
+               ENDIF
             ENDIF
 #else
             allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
@@ -624,17 +555,16 @@ CONTAINS
 #ifdef USEMPI
             IF (.not. DEF_HIST_WriteBack) THEN
 #endif
-               IF (.not. &
-                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+               IF (itime >= 1) THEN
 
                   CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
                      'lon', 'lat', 'time', compress)
 
-               ELSEIF (itime == 1) THEN
+               ELSEIF (itime == -1) THEN
                   CALL ncio_write_serial (filename, dataname, vdata, 'lon', 'lat', compress)
                ENDIF
 
-               IF (itime == 1) THEN
+               IF (itime <= 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
                   CALL ncio_put_attr (filename, dataname, 'units', units)
                   CALL ncio_put_attr (filename, dataname, 'missing_value', spval)
@@ -697,13 +627,12 @@ CONTAINS
 
                CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-               IF (.not. &
-                  ((trim(dataname) == 'landarea') .or. (trim(dataname) == 'landfraction'))) THEN
+               IF (itime >= 1) THEN
 
                   CALL ncio_write_serial_time (fileblock, dataname, itime, &
                      wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
 
-               ELSEIF (itime == 1) THEN
+               ELSEIF (itime == -1) THEN
                   CALL ncio_write_serial (fileblock, dataname, &
                      wdata%blk(iblk,jblk)%val, 'lon', 'lat', compress)
                ENDIF
@@ -715,7 +644,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_2d
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_3d ( &
          filename, dataname, dim1name, grid, itime, wdata, compress, longname, units)
 
@@ -737,7 +666,7 @@ CONTAINS
 
    ! Local variables
    integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
-   integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp, idim1
    integer :: rmesg(4), smesg(4), isrc
    character(len=256) :: fileblock
    real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
@@ -766,26 +695,28 @@ CONTAINS
 
                   allocate (rbuf (ndim1,xcnt,ycnt))
 
-                  CALL mpi_recv (rbuf, ndim1 * xcnt * ycnt, MPI_DOUBLE, &
+                  CALL mpi_recv (rbuf, ndim1*xcnt*ycnt, MPI_DOUBLE, &
                      isrc, hist_data_id, p_comm_glb, p_stat, p_err)
 
                   IF (idata == 1) THEN
-                     allocate (vdata (ndim1, hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
+                     allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat, ndim1))
                      vdata(:,:,:) = spval
                   ENDIF
 
-                  vdata (:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
+                  DO idim1 = 1, ndim1
+                     vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt, idim1) = rbuf(idim1,:,:)
+                  ENDDO
 
                   deallocate (rbuf)
                ENDDO
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  3, dim1name, 'lon', 'lat', 'time', '', compress, longname, units)
+                  4, 'lon', 'lat', dim1name, 'time', '', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
-            allocate (vdata (ndim1, hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
+            allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat, ndim1))
             vdata(:,:,:) = spval
 
             DO iyseg = 1, hist_concat%nyseg
@@ -800,8 +731,10 @@ CONTAINS
                      xcnt = hist_concat%xsegs(ixseg)%cnt
                      ycnt = hist_concat%ysegs(iyseg)%cnt
 
-                     vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
-                        wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     DO idim1 = 1, ndim1
+                        vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,idim1) = &
+                           wdata%blk(iblk,jblk)%val(wdata%lb1+idim1-1,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     ENDDO
                   ENDIF
                ENDDO
             ENDDO
@@ -814,7 +747,7 @@ CONTAINS
                CALL ncio_define_dimension (filename, dim1name, ndim1)
 
                CALL ncio_write_serial_time (filename, dataname, itime, &
-                  vdata, dim1name, 'lon', 'lat', 'time', compress)
+                  vdata, 'lon', 'lat', dim1name, 'time', compress)
 
                IF (itime == 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
@@ -846,7 +779,7 @@ CONTAINS
                      ndim1 = size(wdata%blk(iblk,jblk)%val,1)
 
                      allocate (sbuf (ndim1,xcnt,ycnt))
-                     sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     sbuf = wdata%blk(iblk,jblk)%val(:, xbdsp+1:xbdsp+xcnt, ybdsp+1:ybdsp+ycnt)
 
                      IF (.not. DEF_HIST_WriteBack) THEN
                         smesg = (/p_iam_glb, ixseg, iyseg, ndim1/)
@@ -891,7 +824,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_3d
 
-   !----------------------------------------------------------------------------
+
    SUBROUTINE hist_write_var_real8_4d ( &
          filename, dataname, dim1name, dim2name, grid, itime, wdata, compress, longname, units)
 
@@ -913,7 +846,7 @@ CONTAINS
 
    ! Local variables
    integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
-   integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp
+   integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp, idim1, idim2
    integer :: rmesg(5), smesg(5), isrc
    character(len=256) :: fileblock
    real(r8), allocatable :: rbuf(:,:,:,:), sbuf(:,:,:,:), vdata(:,:,:,:)
@@ -947,23 +880,27 @@ CONTAINS
                      isrc, hist_data_id, p_comm_glb, p_stat, p_err)
 
                   IF (idata == 1) THEN
-                     allocate (vdata (ndim1,ndim2,hist_concat%ginfo%nlon,hist_concat%ginfo%nlat))
+                     allocate (vdata (hist_concat%ginfo%nlon,hist_concat%ginfo%nlat,ndim1,ndim2))
                      vdata(:,:,:,:) = spval
                   ENDIF
 
-                  vdata (:,:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
+                  DO idim1 = 1, ndim1
+                     DO idim2 = 1, ndim2
+                        vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt, idim1, idim2) = rbuf(idim1,idim2,:,:)
+                     ENDDO
+                  ENDDO
 
                   deallocate (rbuf)
                ENDDO
 
             ELSE
                CALL hist_writeback_var_header (hist_data_id, filename, dataname, &
-                  4, dim1name, dim2name, 'lon', 'lat', 'time', compress, longname, units)
+                  5, 'lon', 'lat', dim1name, dim2name, 'time', compress, longname, units)
             ENDIF
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
             ndim2 = wdata%ub2 - wdata%lb2 + 1
-            allocate (vdata (ndim1,ndim2,hist_concat%ginfo%nlon,hist_concat%ginfo%nlat))
+            allocate (vdata (hist_concat%ginfo%nlon,hist_concat%ginfo%nlat,ndim1,ndim2))
             vdata(:,:,:,:) = spval
 
             DO iyseg = 1, hist_concat%nyseg
@@ -978,8 +915,12 @@ CONTAINS
                      xcnt = hist_concat%xsegs(ixseg)%cnt
                      ycnt = hist_concat%ysegs(iyseg)%cnt
 
-                     vdata (:,:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
-                        wdata%blk(iblk,jblk)%val(:,:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                     DO idim1 = 1, ndim1
+                        DO idim2 = 1, ndim2
+                           vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt, idim1, idim2) = &
+                              wdata%blk(iblk,jblk)%val(idim1,idim2,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                        ENDDO
+                     ENDDO
                   ENDIF
                ENDDO
             ENDDO
@@ -993,7 +934,7 @@ CONTAINS
                CALL ncio_define_dimension (filename, dim2name, ndim2)
 
                CALL ncio_write_serial_time (filename, dataname, itime, vdata, &
-                  dim1name, dim2name, 'lon', 'lat', 'time', compress)
+                  'lon', 'lat', dim1name, dim2name, 'time', compress)
 
                IF (itime == 1) THEN
                   CALL ncio_put_attr (filename, dataname, 'long_name', longname)
@@ -1071,7 +1012,7 @@ CONTAINS
 
    END SUBROUTINE hist_write_var_real8_4d
 
-   !------------------
+
    SUBROUTINE hist_write_grid_info (fileblock, grid, iblk, jblk)
 
    USE MOD_Block

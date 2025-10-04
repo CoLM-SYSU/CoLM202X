@@ -15,18 +15,18 @@ MODULE MOD_Urban_Vars_TimeVariables
    IMPLICIT NONE
    SAVE
 ! -----------------------------------------------------------------
-! Time-varying state variables which reaquired by restart run
+! Time-varying state variables which required by restart run
 
    real(r8), allocatable :: fwsun          (:) !sunlit fraction of walls [-]
    real(r8), allocatable :: dfwsun         (:) !change of sunlit fraction of walls [-]
 
    ! shortwave absorption
-   real(r8), allocatable :: sroof      (:,:,:) !roof aborption [-]
+   real(r8), allocatable :: sroof      (:,:,:) !roof absorption [-]
    real(r8), allocatable :: swsun      (:,:,:) !sunlit wall absorption [-]
    real(r8), allocatable :: swsha      (:,:,:) !shaded wall absorption [-]
-   real(r8), allocatable :: sgimp      (:,:,:) !impervious absorptioin [-]
-   real(r8), allocatable :: sgper      (:,:,:) !pervious absorptioin [-]
-   real(r8), allocatable :: slake      (:,:,:) !urban lake absorptioin [-]
+   real(r8), allocatable :: sgimp      (:,:,:) !impervious absorption [-]
+   real(r8), allocatable :: sgper      (:,:,:) !pervious absorption [-]
+   real(r8), allocatable :: slake      (:,:,:) !urban lake absorption [-]
 
    ! net longwave radiation for last time temperature change
    real(r8), allocatable :: lwsun          (:) !net longwave of sunlit wall [W/m2]
@@ -88,7 +88,7 @@ MODULE MOD_Urban_Vars_TimeVariables
    !TODO: rename the below variables
    real(r8), allocatable :: Fhac           (:) !sensible flux from heat or cool AC [W/m2]
    real(r8), allocatable :: Fwst           (:) !waste heat flux from heat or cool AC [W/m2]
-   real(r8), allocatable :: Fach           (:) !flux from inner and outter air exchange [W/m2]
+   real(r8), allocatable :: Fach           (:) !flux from inner and outer air exchange [W/m2]
    real(r8), allocatable :: Fahe           (:) !flux from metabolism and vehicle [W/m2]
    real(r8), allocatable :: Fhah           (:) !sensible heat flux from heating [W/m2]
    real(r8), allocatable :: vehc           (:) !flux from vehicle [W/m2]
@@ -304,7 +304,7 @@ CONTAINS
 
    SUBROUTINE WRITE_UrbanTimeVariables (file_restart)
 
-   USE MOD_Namelist, only : DEF_REST_CompressLevel
+   USE MOD_Namelist, only: DEF_REST_CompressLevel
    USE MOD_LandUrban
    USE MOD_NetCDFVector
    USE MOD_Vars_Global
@@ -502,5 +502,5 @@ CONTAINS
    END SUBROUTINE deallocate_UrbanTimeVariables
 
 END MODULE MOD_Urban_Vars_TimeVariables
-! ---------- EOP ------------
 #endif
+! ---------- EOP ------------

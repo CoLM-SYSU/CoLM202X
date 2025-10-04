@@ -2,21 +2,21 @@
 MODULE MOD_LeafInterception
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
-! For calculating vegetation canopy preciptation interception.
+! For calculating vegetation canopy precipitation interception.
 !
 ! This MODULE is the coupler for the colm and CaMa-Flood model.
 
 !ANCILLARY FUNCTIONS AND SUBROUTINES
 !-------------------
-   !* :SUBROUTINE:"LEAF_interception_CoLM2014"   : interception and drainage of precipitation schemes based on colm2014 version
-   !* :SUBROUTINE:"LEAF_interception_CoLM202x"   : interception and drainage of precipitation schemes besed on new colm version (under development)
-   !* :SUBROUTINE:"LEAF_interception_CLM4"       : interception and drainage of precipitation schemes modified from CLM4
-   !* :SUBROUTINE:"LEAF_interception_CLM5"       : interception and drainage of precipitation schemes modified from CLM5
-   !* :SUBROUTINE:"LEAF_interception_NOAHMP"     : interception and drainage of precipitation schemes modified from Noah-MP
-   !* :SUBROUTINE:"LEAF_interception_MATSIRO"    : interception and drainage of precipitation schemes modified from MATSIRO 2021 version
-   !* :SUBROUTINE:"LEAF_interception_VIC"        : interception and drainage of precipitation schemes modified from VIC
-   !* :SUBROUTINE:"LEAF_interception_JULES"      : interception and drainage of precipitation schemes modified from JULES
-   !* :SUBROUTINE:"LEAF_interception_pftwrap"    : wapper for pft land use classification
+   !* :SUBROUTINE:"LEAF_interception_CoLM2014" : Leaf interception and drainage schemes based on colm2014 version
+   !* :SUBROUTINE:"LEAF_interception_CoLM202x" : Leaf interception and drainage schemes besed on new colm version (under development)
+   !* :SUBROUTINE:"LEAF_interception_CLM4"     : Leaf interception and drainage schemes modified from CLM4
+   !* :SUBROUTINE:"LEAF_interception_CLM5"     : Leaf interception and drainage schemes modified from CLM5
+   !* :SUBROUTINE:"LEAF_interception_NOAHMP"   : Leaf interception and drainage schemes modified from Noah-MP
+   !* :SUBROUTINE:"LEAF_interception_MATSIRO"  : Leaf interception and drainage schemes modified from MATSIRO 2021 version
+   !* :SUBROUTINE:"LEAF_interception_VIC"      : Leaf interception and drainage schemes modified from VIC
+   !* :SUBROUTINE:"LEAF_interception_JULES"    : Leaf interception and drainage schemes modified from JULES
+   !* :SUBROUTINE:"LEAF_interception_pftwrap"  : wrapper for pft land use classification
 
 !REVISION HISTORY:
 !----------------
@@ -31,10 +31,7 @@ MODULE MOD_LeafInterception
    ! 2002.08.31  Yongjiu Dai
    USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz, denh2o, denice, cpliq, cpice, hfus
-   USE MOD_Namelist, only: DEF_Interception_scheme, DEF_USE_IRRIGATION, DEF_VEG_SNOW
-#ifdef CROP
-   USE MOD_Irrigation, only: CalIrrigationApplicationFluxes
-#endif
+   USE MOD_Namelist, only: DEF_Interception_scheme, DEF_VEG_SNOW
 
    IMPLICIT NONE
 
@@ -81,15 +78,10 @@ MODULE MOD_LeafInterception
    real(r8)  :: int_rain
    real(r8)  :: int_snow
 
-   real(r8) :: qflx_irrig_drip
-   real(r8) :: qflx_irrig_sprinkler
-   real(r8) :: qflx_irrig_flood
-   real(r8) :: qflx_irrig_paddy
-
 CONTAINS
 
    SUBROUTINE LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                          prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
+                                          prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,bifall,&
                                           ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 !DESCRIPTION
 !===========
@@ -102,25 +94,30 @@ CONTAINS
 
 !References:
 !-------------------
-   !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning, A.S.,
-   !   Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003.
-   !   The common land model. Bulletin of the American Meteorological Society, 84(8), pp.1013-1024.
+   !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh,
+   !   M.G., Denning, A.S., Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson,
+   !   K.W., 2003.  The common land model. Bulletin of the American
+   !   Meteorological Society, 84(8), pp.1013-1024.
 
-   !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
-   !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.  The
+   !   partitioning of evapotranspiration into transpiration, soil evaporation,
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction.
+   !   Journal of Hydrometeorology, 8(4), pp.862-880.
 
-   !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R., Dirmeyer, P., Hoffman,
-   !   F., Houser, P., Levis, S., Niu, G.Y. and Thornton, P., 2004.
-   !   Technical description of the community land model (CLM).
+   !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R.,
+   !   Dirmeyer, P., Hoffman, F., Houser, P., Levis, S., Niu, G.Y. and
+   !   Thornton, P., 2004.  Technical description of the community land model
+   !   (CLM).
 
-   !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, D.A., Zhang, C.,
-   !   Collelo, G.D. and Bounoua, L., 1996. A revised land surface parameterization (SiB2) for atmospheric GCMs.
-   !   Part I: Model formulation. Journal of climate, 9(4), pp.676-705.
+   !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B.,
+   !   Dazlich, D.A., Zhang, C., Collelo, G.D. and Bounoua, L., 1996. A revised
+   !   land surface parameterization (SiB2) for atmospheric GCMs.  Part I:
+   !   Model formulation. Journal of climate, 9(4), pp.676-705.
 
-   !---Sellers, P.J., Tucker, C.J., Collatz, G.J., Los, S.O., Justice, C.O., Dazlich, D.A. and Randall, D.A., 1996.
-   !   A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II:
-   !   The generation of global fields of terrestrial biophysical parameters from satellite data.
+   !---Sellers, P.J., Tucker, C.J., Collatz, G.J., Los, S.O., Justice, C.O.,
+   !   Dazlich, D.A. and Randall, D.A., 1996.  A revised land surface
+   !   parameterization (SiB2) for atmospheric GCMs. Part II: The generation of
+   !   global fields of terrestrial biophysical parameters from satellite data.
    !   Journal of climate, 9(4), pp.706-737.
 
 
@@ -144,10 +141,11 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: qflx_irrig_sprinkler ! irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in) :: bifall       !bulk density of newly fallen dry snow [kg/m3]
    real(r8), intent(in) :: sigf         !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in) :: lai          !leaf area index [-]
@@ -166,6 +164,8 @@ CONTAINS
    real(r8), intent(out) :: qintr       !interception [kg/(m2 s)]
    real(r8), intent(out) :: qintr_rain  !rainfall interception (mm h2o/s)
    real(r8), intent(out) :: qintr_snow  !snowfall interception (mm h2o/s)
+
+!-----------------------------------------------------------------------
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -236,8 +236,10 @@ CONTAINS
             ! assume no fall down of the intercepted snowfall in a time step
             ! drainage
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
-                     - (satcap-ldew) * xs
+                     - max(0., (satcap-ldew)) * xs
             tex_rain = max( tex_rain, 0. )
+            ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+            tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
             tex_snow = 0.
 
             ! 04/11/2024, yuan:
@@ -257,8 +259,10 @@ CONTAINS
                ENDIF
 
                tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
-                        - (satcap_rain-ldew_rain) * xs
+                        - max(0., (satcap_rain-ldew_rain)) * xs
                tex_rain = max( tex_rain, 0. )
+               ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+               tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
 
                ! re-calculate the snow loading rate
 
@@ -281,14 +285,14 @@ CONTAINS
                tex_snow = tex_snow * deltim
             ENDIF
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10 .and. .not.DEF_VEG_SNOW) THEN
-               write(6,*) 'tex_ + tti_ > p0 in interception code : '
+               write(6,*) 'tex_ + tti_ > p0 in interception code : ',ldew,tex_rain,tex_snow,tti_rain,tti_snow,p0
             ENDIF
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -318,16 +322,16 @@ CONTAINS
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
-            write(6,*) 'something wrong in interception code : '
+            write(6,*) 'something wrong in interception code: '
             write(6,*) w, ldew, (pg_rain+pg_snow)*deltim, satcap
             CALL abort
          ENDIF
 
          IF (DEF_VEG_SNOW .and. abs(ldew-ldew_rain-ldew_snow) > 1.e-6) THEN
-            write(6,*) 'something wrong in interception code when DEF_VEG_SNOW : '
+            write(6,*) 'something wrong in interception code when DEF_VEG_SNOW: '
             write(6,*) ldew, ldew_rain, ldew_snow
             CALL abort
          ENDIF
@@ -361,7 +365,7 @@ CONTAINS
    END SUBROUTINE LEAF_interception_CoLM2014
 
    SUBROUTINE LEAF_interception_CoLM202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                          prc_rain,prc_snow,prl_rain,prl_snow,&
+                                          prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                           ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,&
                                           qintr,qintr_rain,qintr_snow)
 !DESCRIPTION
@@ -395,10 +399,11 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: qflx_irrig_sprinkler ! irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in) :: sigf         !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in) :: lai          !leaf area index [-]
    real(r8), intent(in) :: sai          !stem area index [-]
@@ -470,14 +475,14 @@ CONTAINS
             ENDIF
 
             ! assume no fall down of the intercepted snowfall in a time step drainage
-            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
-
-            !       tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
-            !                - (satcap-ldew) * xs
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
+                     - max(0., (satcap-ldew)) * xs
             tex_rain = max( tex_rain, 0. )
+            ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+            tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
             tex_snow = 0.
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -508,7 +513,7 @@ CONTAINS
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -540,7 +545,7 @@ CONTAINS
    END SUBROUTINE LEAF_interception_CoLM202x
 
    SUBROUTINE LEAF_interception_CLM4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                       prc_rain,prc_snow,prl_rain,prl_snow,&
+                                       prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                        pg_snow,qintr,qintr_rain,qintr_snow)
 !DESCRIPTION
@@ -556,7 +561,7 @@ CONTAINS
 !-------------------
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
    !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
 
 !ANCILLARY FUNCTIONS AND SUBROUTINES
 !-------------------
@@ -576,10 +581,11 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: qflx_irrig_sprinkler !irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in) :: sigf         !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in) :: lai          !leaf area index [-]
    real(r8), intent(in) :: sai          !stem area index [-]
@@ -630,18 +636,20 @@ CONTAINS
 
             ! assume no fall down of the intercepted snowfall in a time step
             ! drainage
-            tex_rain = (prc_rain+prl_rain)*deltim * fpi + ldew - satcap
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi + max(0., ldew - satcap)
             tex_rain = max(tex_rain, 0. )
+            ! Ensure physical constraint: tex_rain + tti_rain <= total rain input
+            tex_rain = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
             tex_snow = 0.
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -664,7 +672,7 @@ CONTAINS
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -697,7 +705,7 @@ CONTAINS
    END SUBROUTINE LEAF_interception_CLM4
 
    SUBROUTINE LEAF_interception_CLM5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                    prc_rain,prc_snow,prl_rain,prl_snow,&
+                                    prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                     ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,&
                                     qintr,qintr_rain,qintr_snow)
 
@@ -714,7 +722,7 @@ CONTAINS
 !-------------------
    !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
    !   The partitioning of evapotranspiration into transpiration, soil evaporation,
-   !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
+   !   and canopy evaporation in a GCM: Impacts on land-atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
    !---Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., Ghimire, B.,
    !   van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. The Community Land Model version 5:
    !   Description of new features, benchmarking, and impact of forcing uncertainty.
@@ -741,10 +749,11 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: qflx_irrig_sprinkler !irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in) :: sigf         !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in) :: lai          !leaf area index [-]
    real(r8), intent(in) :: sai          !stem area index [-]
@@ -803,18 +812,19 @@ CONTAINS
             fpi_snow   = alpha_snow * ( 1.-exp(-0.5*lsai) )
             tti_rain   = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1.-fpi_rain )
             tti_snow   = (prc_snow+prl_snow)*deltim * ( 1.-fpi_snow )
-            tex_rain   = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi_rain -satcap_rain         !*(prc_rain+prl_rain)/p0 !(satcap-ldew) * xs
-            tex_snow   = (prc_snow+prl_snow)*deltim * fpi_snow -satcap_snow         ! (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
-            tex_rain   = max( tex_rain, 0. )
-            tex_snow   = max( tex_snow, 0. )
+            tex_rain   = max(0., (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi_rain - satcap_rain)
+            tex_snow   = max(0., (prc_snow+prl_snow)*deltim * fpi_snow - satcap_snow)
+            ! Ensure physical constraint
+            tex_rain   = min( tex_rain, (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim - tti_rain )
+            tex_snow   = min( tex_snow, (prc_snow+prl_snow)*deltim - tti_snow )
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
 #endif
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -839,7 +849,7 @@ CONTAINS
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -873,7 +883,7 @@ CONTAINS
    END SUBROUTINE LEAF_interception_CLM5
 
    SUBROUTINE LEAF_interception_NOAHMP(deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                       prc_rain,prc_snow,prl_rain,prl_snow,&
+                                       prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 !DESCRIPTION
 !===========
@@ -913,10 +923,11 @@ CONTAINS
    real(r8), intent(in)    :: forc_us    !wind speed
    real(r8), intent(in)    :: forc_vs    !wind speed
    real(r8), intent(in)    :: chil       !leaf angle distribution factor
-   real(r8), intent(in)    :: prc_rain   !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_rain   !convective rainfall [mm/s]
    real(r8), intent(in)    :: prc_snow   !convective snowfall [mm/s]
    real(r8), intent(in)    :: prl_rain   !large-scale rainfall [mm/s]
    real(r8), intent(in)    :: prl_snow   !large-scale snowfall [mm/s]
+   real(r8), intent(in)    :: qflx_irrig_sprinkler !irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in)    :: sigf       !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in)    :: lai        !leaf area index [-]
    real(r8), intent(in)    :: sai        !stem area index [-]
@@ -1004,13 +1015,13 @@ CONTAINS
 
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*fvegc*deltim  - int_rain
             tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
 #endif
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1037,7 +1048,7 @@ CONTAINS
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1073,7 +1084,7 @@ CONTAINS
 
 
    SUBROUTINE LEAF_interception_MATSIRO (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                         prc_rain,prc_snow,prl_rain,prl_snow,&
+                                         prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                          ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,&
                                          qintr_rain,qintr_snow)
 !DESCRIPTION
@@ -1111,10 +1122,11 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: qflx_irrig_sprinkler !irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in) :: sigf         !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in) :: lai          !leaf area index [-]
    real(r8), intent(in) :: sai          !stem area index [-]
@@ -1139,7 +1151,7 @@ CONTAINS
 
       !the canopy water capacity per leaf area index is set to 0.2mm
       dewmx_MATSIRO = 0.2
-      !the fracrtion of the convective precipitation area is assumed to be uniform (0.1)
+      !the fraction of the convective precipitation area is assumed to be uniform (0.1)
       Ac            = 0.1
 
       IF (lai+sai > 1e-6) THEN
@@ -1246,14 +1258,14 @@ CONTAINS
             !-------------------------------------------------------------------------
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1279,7 +1291,7 @@ CONTAINS
 
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1312,7 +1324,7 @@ CONTAINS
    END SUBROUTINE LEAF_interception_MATSIRO
 
    SUBROUTINE LEAF_interception_VIC (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                       prc_rain,prc_snow,prl_rain,prl_snow,&
+                                       prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                        pg_snow,qintr,qintr_rain,qintr_snow)
 !DESCRIPTION
@@ -1352,10 +1364,11 @@ CONTAINS
    real(r8), intent(in) :: forc_us      !wind speed
    real(r8), intent(in) :: forc_vs      !wind speed
    real(r8), intent(in) :: chil         !leaf angle distribution factor
-   real(r8), intent(in) :: prc_rain     !convective ranfall [mm/s]
+   real(r8), intent(in) :: prc_rain     !convective rainfall [mm/s]
    real(r8), intent(in) :: prc_snow     !convective snowfall [mm/s]
    real(r8), intent(in) :: prl_rain     !large-scale rainfall [mm/s]
    real(r8), intent(in) :: prl_snow     !large-scale snowfall [mm/s]
+   real(r8), intent(in) :: qflx_irrig_sprinkler !irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in) :: sigf         !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in) :: lai          !leaf area index [-]
    real(r8), intent(in) :: sai          !stem area index [-]
@@ -1387,7 +1400,7 @@ CONTAINS
          MaxInt=0.1*lsai
          IF (tair>-272.15) THEN
             Lr=4.0
-         ELSE IF (tair<=-272.15 .and. tair>=-270.15) THEN
+         ELSEIF (tair<=-272.15 .and. tair>=-270.15) THEN
             Lr=1.5*(tair-273.15)+5.5
          ELSE
             Lr=1.0
@@ -1487,14 +1500,14 @@ CONTAINS
                tex_snow  = tex_snow  + Overload*IntSnowFract
             ENDIF
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
 #endif
 
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1516,9 +1529,9 @@ CONTAINS
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
 
-         qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+         qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1551,7 +1564,7 @@ CONTAINS
    END SUBROUTINE LEAF_interception_VIC
 
    SUBROUTINE LEAF_interception_JULES(deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                       prc_rain,prc_snow,prl_rain,prl_snow,&
+                                       prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
    !DESCRIPTION
    !===========
@@ -1564,10 +1577,10 @@ CONTAINS
 
    !References:
    !-------------------
-      !---Best et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
-      !   Part 1: Energy and water fluxes. Geosci. Model Dev. 4:677–699.
-      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description –
-      !   Part 2: Carbon fluxes and vegetation dynamics. Geosci. Model Dev. 4:701–722.
+      !---Best et al. (2011): The Joint UK Land Environment Simulator (JULES), model description -
+      !   Part 1: Energy and water fluxes. Geosci. Model Dev. 4:677-699.
+      !---Clark et al. (2011): The Joint UK Land Environment Simulator (JULES), model description -
+      !   Part 2: Carbon fluxes and vegetation dynamics. Geosci. Model Dev. 4:701-722.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
@@ -1585,10 +1598,11 @@ CONTAINS
    real(r8), intent(in)    :: forc_us    !wind speed
    real(r8), intent(in)    :: forc_vs    !wind speed
    real(r8), intent(in)    :: chil       !leaf angle distribution factor
-   real(r8), intent(in)    :: prc_rain   !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_rain   !convective rainfall [mm/s]
    real(r8), intent(in)    :: prc_snow   !convective snowfall [mm/s]
    real(r8), intent(in)    :: prl_rain   !large-scale rainfall [mm/s]
    real(r8), intent(in)    :: prl_snow   !large-scale snowfall [mm/s]
+   real(r8), intent(in)    :: qflx_irrig_sprinkler !irrigation and sprinkler water flux [mm/s]
    real(r8), intent(in)    :: sigf       !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in)    :: lai        !leaf area index [-]
    real(r8), intent(in)    :: sai        !stem area index [-]
@@ -1621,7 +1635,7 @@ CONTAINS
          satcap_snow       = 4.4 *lsai
          satcap_rain       = 0.1 *lsai
 
-         ! Caution here: JULES is PFT based, fvegc is not exxisitng
+         ! Caution here: JULES is PFT based, fvegc is not existing
          fvegc       = max(0.05,1.0-exp(-0.52*lsai))
 
          p0          = (prc_rain + prc_snow + prl_rain + prl_snow+qflx_irrig_sprinkler)*deltim
@@ -1683,13 +1697,13 @@ CONTAINS
 
             tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*fvegc*deltim  - int_rain
             tex_snow = (prc_snow+prl_snow)*fvegc*deltim - int_snow
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
 #endif
          ELSE
-            ! all intercepted by canopy leves for very small precipitation
+            ! all intercepted by canopy leaves for very small precipitation
             tti_rain = 0.
             tti_snow = 0.
             tex_rain = 0.
@@ -1710,7 +1724,7 @@ CONTAINS
 
          qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1742,7 +1756,7 @@ CONTAINS
    END SUBROUTINE LEAF_interception_JULES
 
    SUBROUTINE LEAF_interception_wrap(deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                                    prc_rain,prc_snow,prl_rain,prl_snow,bifall, &
+                               prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,bifall, &
                                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain, &
                                                             pg_snow,qintr,qintr_rain,qintr_snow )
 !DESCRIPTION
@@ -1769,10 +1783,11 @@ CONTAINS
    real(r8), intent(in)    :: forc_us    !wind speed
    real(r8), intent(in)    :: forc_vs    !wind speed
    real(r8), intent(in)    :: chil       !leaf angle distribution factor
-   real(r8), intent(in)    :: prc_rain   !convective ranfall [mm/s]
+   real(r8), intent(in)    :: prc_rain   !convective rainfall [mm/s]
    real(r8), intent(in)    :: prc_snow   !convective snowfall [mm/s]
    real(r8), intent(in)    :: prl_rain   !large-scale rainfall [mm/s]
    real(r8), intent(in)    :: prl_snow   !large-scale snowfall [mm/s]
+   real(r8), intent(in)    :: qflx_irrig_sprinkler !irrigation and sprinkler water [mm/s]
    real(r8), intent(in)    :: bifall     !bulk density of newly fallen dry snow [kg/m3]
    real(r8), intent(in)    :: sigf       !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), intent(in)    :: lai        !leaf area index [-]
@@ -1795,45 +1810,45 @@ CONTAINS
 
       IF (DEF_Interception_scheme==1) THEN
          CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,bifall,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
       ELSEIF (DEF_Interception_scheme==2) THEN
          CALL LEAF_interception_CLM4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
       ELSEIF (DEF_Interception_scheme==3) THEN
          CALL LEAF_interception_CLM5(deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
       ELSEIF (DEF_Interception_scheme==4) THEN
          CALL LEAF_interception_NoahMP (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
       ELSEIF  (DEF_Interception_scheme==5) THEN
          CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
 
       ELSEIF  (DEF_Interception_scheme==6) THEN
          CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
 
       ELSEIF  (DEF_Interception_scheme==7) THEN
          CALL LEAF_interception_JULES (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
 
       ELSEIF  (DEF_Interception_scheme==8) THEN
          CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
       ENDIF
@@ -1842,7 +1857,7 @@ CONTAINS
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    SUBROUTINE LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,&
-                               prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
+                               prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,bifall,&
                                ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
 ! -----------------------------------------------------------------
@@ -1879,6 +1894,7 @@ CONTAINS
    real(r8), intent(in)    :: prc_snow   !convective snowfall [mm/s]
    real(r8), intent(in)    :: prl_rain   !large-scale rainfall [mm/s]
    real(r8), intent(in)    :: prl_snow   !large-scale snowfall [mm/s]
+   real(r8), intent(in)    :: qflx_irrig_sprinkler !irrigation and sprinkler water [mm/s]
    real(r8), intent(in)    :: bifall     ! bulk density of newly fallen dry snow [kg/m3]
 
    real(r8), intent(inout) :: ldew       !depth of water on foliage [mm]
@@ -1900,82 +1916,74 @@ CONTAINS
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
 
-      IF(.not. DEF_USE_IRRIGATION) qflx_irrig_sprinkler = 0._r8
-
-#ifdef CROP
-      IF(DEF_USE_IRRIGATION)THEN
-         CALL CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=1)
-      ENDIF
-#endif
-
       IF (DEF_Interception_scheme==1) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                                prc_rain,prc_snow,prl_rain,prl_snow,bifall,&
+                                                prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,bifall,&
                                                 ldew_p(i),ldew_rain_p(i),ldew_snow_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==2) THEN
+      ELSEIF (DEF_Interception_scheme==2) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==3) THEN
+      ELSEIF (DEF_Interception_scheme==3) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==4) THEN
+      ELSEIF (DEF_Interception_scheme==4) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==5) THEN
+      ELSEIF (DEF_Interception_scheme==5) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_MATSIRO (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==6) THEN
+      ELSEIF (DEF_Interception_scheme==6) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_VIC (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==7) THEN
+      ELSEIF (DEF_Interception_scheme==7) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_JULES (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
          ENDDO
-      ELSE IF (DEF_Interception_scheme==8) THEN
+      ELSEIF (DEF_Interception_scheme==8) THEN
          DO i = ps, pe
             p = pftclass(i)
             CALL LEAF_interception_CoLM202x (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
-                                             prc_rain,prc_snow,prl_rain,prl_snow,&
+                                             prc_rain,prc_snow,prl_rain,prl_snow,qflx_irrig_sprinkler,&
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)

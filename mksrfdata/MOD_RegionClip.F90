@@ -1,16 +1,17 @@
 #include <define.h>
 
 MODULE MOD_RegionClip
-!-----------------------------------------------------------------------------------------
-! DESCRIPTION:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
 !
-!    This module includes subroutines to clip surface data from an existing data
-!    in a larger region.
+!    This module includes subroutines to clip surface data from an existing
+!    data in a larger region.
 !
-!    Please use namelist variable "USE_srfdata_from_larger_region" to call these subroutines.
+!    Please use namelist variable "USE_srfdata_from_larger_region" to call
+!    these subroutines.
 !
-! Created by Shupeng Zhang, May 2023
-!-----------------------------------------------------------------------------------------
+!  Created by Shupeng Zhang, May 2023
+!-----------------------------------------------------------------------
 
 CONTAINS
 
@@ -627,7 +628,7 @@ CONTAINS
    integer, allocatable :: data_i4_out1 (:)
    integer, allocatable :: data_i4_out2 (:,:)
    integer, allocatable :: data_i4_out3 (:,:,:)
-   
+
    integer*8, allocatable :: data_i8_in1  (:)
    integer*8, allocatable :: data_i8_out1 (:)
 

@@ -5,8 +5,7 @@ MODULE MOD_Urban_LUCY
 ! !DESCRIPTION:
 !  Anthropogenic model to calculate anthropogenic heat flux for the rest
 !
-! !ORIGINAL:
-!  Wenzong Dong, May, 2022
+!  Original: Wenzong Dong, May, 2022
 !
 ! -----------------------------------------------------------------------
 ! !USE
@@ -18,15 +17,15 @@ MODULE MOD_Urban_LUCY
    USE MOD_TimeManager
    IMPLICIT NONE
    SAVE
-   PUBLIC  :: LUCY
+   PUBLIC :: LUCY
 
 CONTAINS
 
-! -----------------------------------------------------------------------
    SUBROUTINE LUCY( idate       , deltim  , patchlonr, fix_holiday, &
                     week_holiday, hum_prof, wdh_prof , weh_prof   , pop_den, &
                     vehicle     , Fahe    , vehc     , meta        )
 
+! -----------------------------------------------------------------------
 ! !DESCRIPTION:
 !  Anthropogenic heat fluxes other than building heat were calculated
 !
@@ -34,16 +33,17 @@ CONTAINS
 !  1) Grimmond, C. S. B. (1992). The suburban energy balance:
 !  Methodological considerations and results for a mid-latitude west
 !  coast city under winter and spring conditions. International Journal
-!  of Climatology, 12(5), 481–497. https://doi.org/10.1002/joc.3370120506
+!  of Climatology, 12(5), 481-497. https://doi.org/10.1002/joc.3370120506
 !
 !  2) Allen, L., Lindberg, F., & Grimmond, C. S. B. (2011). Global to
 !  city scale urban anthropogenic heat flux: Model and variability.
-!  International Journal of Climatology, 31(13), 1990–2005.
+!  International Journal of Climatology, 31(13), 1990-2005.
 !  https://doi.org/10.1002/joc.2210
 !
 ! -----------------------------------------------------------------------
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    integer , intent(in) :: &
       idate(3)           ! calendar (year, julian day, seconds)
 
@@ -80,20 +80,21 @@ CONTAINS
       motflx           ,&! flux from motorbike [W/m2]
       freflx             ! flux from freight [W/m2]
 
-
-   ! local vars
+!-------------------------- Local Variables ----------------------------
    real(r8):: ldate(3)   ! local time (year, julian day, seconds)
    integer :: &
       iweek            ,&! day of week
       ihour            ,&! hour of day
-      day              ,&! day of mmonth
+      day              ,&! day of month
       month            ,&! month of year
       day_inx          ,&! holiday index, day=1(workday), day=1(holiday)
       EC               ,&! emission factor of car [J/m]
       EF               ,&! emission factor of freight [J/m]
       EM                 ! emission factor of motorbike [J/m]
 
-      ! initializition
+!-----------------------------------------------------------------------
+
+      ! initialization
       meta = 0.
       vehc = 0.
       Fahe = 0.
@@ -177,3 +178,4 @@ CONTAINS
    END Subroutine LUCY
 
 END MODULE MOD_Urban_LUCY
+! ---------- EOP ------------

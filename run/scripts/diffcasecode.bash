@@ -1,4 +1,4 @@
-ROOT=/share/home/dq010/CoLM202X-pre-release/
+ROOT=`awk '/ROOT/ {print $2}' machine.config`
 if [ $# -eq 2 ];then
    if [ "${1:0:1}" == '/' ];then
       CASENAME1=`echo "${1##*/}"`
@@ -114,6 +114,7 @@ if [ $# -eq 1 ];then
       echo $CASEPATH1
       echo $CASENAME1
    fi
+   echo compare CASE1 $CASEPATH1/$CASENAME1 with ROOT: $ROOT
 	
    echo diff between case $1 and root
    cd $CASEPATH1/$CASENAME1/bld/main

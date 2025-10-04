@@ -6,23 +6,26 @@ SUBROUTINE soil_thermal_parameters(wf_gravels_s,wf_sand_s,wf_clay_s,&
            csol,kdry,ksat_u,ksat_f)
 
 !------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Calculate volumetric soil heat capacity and soil thermal conductivity with 8 optional schemes by using the rawdata soil properties.
-! The default soil thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp, 2005)
+! !DESCRIPTION:
+!  Calculate volumetric soil heat capacity and soil thermal conductivity with 8
+!  optional schemes by using the rawdata soil properties.  The default soil
+!  thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp,
+!  2005)
 !
-! REFERENCE:
-! Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for Use in Land Surface Modeling.
-! J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001723
+! !REFERENCE:
+!  Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for Use in
+!  Land Surface Modeling.  J. of Advances in Modeling Earth Systems, DOI:
+!  10.1029/2019MS001723
 !
-! Original author: Yongjiu Dai, 02/2018/
+!  Original author: Yongjiu Dai, 02/2018/
 !
-! Revisions:
-! Nan Wei, 06/2018: add to CoLM/mksrfdata
-! Nan Wei, 01/2020: update thermal conductivity of gravels
-! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
-! -----------------------------------------------------------------------------------------
+! !REVISIONS:
+!  Nan Wei, 06/2018: add to CoLM/mksrfdata
+!  Nan Wei, 01/2020: update thermal conductivity of gravels
+!  Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
+!------------------------------------------------------------------------------------------
 
-use MOD_Precision
+USE MOD_Precision
 USE MOD_Namelist
 
 IMPLICIT NONE
@@ -121,20 +124,20 @@ IMPLICIT NONE
       k_gravels_wet = 2.875    ! Cote and Konrad(2005), Thermal conductivity of base-course materials,
                                ! mean value of Table 3
 
-! The thermal conductivty of non-quartz soil minerals
-      if(vf_quartz_mineral_s > 0.2)then ! non-quartz soil minerals
+! The thermal conductivity of non-quartz soil minerals
+      IF(vf_quartz_mineral_s > 0.2)THEN ! non-quartz soil minerals
          k_minerals_o = 2.0
-      else ! coarse-grained soil with low quartz contents
+      ELSE ! coarse-grained soil with low quartz contents
          k_minerals_o = 3.0
-      endif
+      ENDIF
 
       k_minerals = k_quartz**vf_quartz_mineral_s * k_minerals_o**(1.0-vf_quartz_mineral_s)
       f1 = vf_gravels_s/(vf_gravels_s+vf_om_s+a)
       f2 = vf_om_s     /(vf_gravels_s+vf_om_s+a)
       f3 = a           /(vf_gravels_s+vf_om_s+a)
 
-      select case (DEF_THERMAL_CONDUCTIVITY_SCHEME)
-      case (1)
+      select CASE (DEF_THERMAL_CONDUCTIVITY_SCHEME)
+      CASE (1)
 ! -----------------------------------------------------------------------------------------
 ! [1] Oleson K.W. et al., 2013: Technical Description of version 4.5 of the Community
 !     Land Model (CLM). NCAR/TN-503+STR (Section 6.3: Soil and snow thermal properties)
@@ -156,7 +159,7 @@ IMPLICIT NONE
       ksat_f = k_solids**(1.0-vf_pores_s) * k_ice**vf_pores_s
 
 
-      case (2)
+      CASE (2)
 ! -----------------------------------------------------------------------------------------
 ! [2] Johansen O (1975): Thermal conductivity of soils. PhD Thesis. Trondheim, Norway:
 !     University of Trondheim. US army Crops of Engineerings,
@@ -172,7 +175,7 @@ IMPLICIT NONE
       ksat_f = k_solids * k_ice**vf_pores_s
 
 
-      case (3)
+      CASE (3)
 ! -----------------------------------------------------------------------------------------
 ! [3] Cote, J., and J.-M. Konrad (2005), A generalized thermal conductivity model for soils
 !     and construction materials. Canadian Geotechnical Journal, 42(2): 443-458.
@@ -195,7 +198,7 @@ IMPLICIT NONE
       ksat_f = k_solids * k_ice**vf_pores_s
 
 
-      case (4)
+      CASE (4)
 ! -----------------------------------------------------------------------------------------
 ! [4] Balland V. and P. A. Arp, 2005: Modeling soil thermal conductivities over a wide
 ! range of conditions. J. Environ. Eng. Sci. 4: 549-558.
@@ -212,7 +215,7 @@ IMPLICIT NONE
       ksat_f = k_solids * k_ice**vf_pores_s
 
 
-      case (5)
+      CASE (5)
 ! -----------------------------------------------------------------------------------------
 ! [5] Lu et al., 2007: An improved model for predicting soil thermal conductivity from
 !     water content at room temperature. Soil Sci. Soc. Am. J. 71:8-14
@@ -229,7 +232,7 @@ IMPLICIT NONE
       ksat_f = k_solids * k_ice**vf_pores_s
 
 
-      case (6)
+      CASE (6)
 ! -----------------------------------------------------------------------------------------
 ! [6] Series-Parallel Models (Woodside and Messmer, 1961; Kasubuchi et al., 2007;
 !                         Tarnawski and Leong, 2012)
@@ -257,7 +260,7 @@ IMPLICIT NONE
                 + k_ice*(vf_pores_s-nwm)
 
 
-      case (7)
+      CASE (7)
 !*-----------------------------------------------------------------------------------------
 !*[7] de Vries, Thermal properties of soils, in Physics of Plant Environment,
 !*    ed. by W.R. van Wijk (North-Holland, Amsterdam, 1963), pp. 210-235
@@ -282,7 +285,7 @@ IMPLICIT NONE
                 / (1.0+(1.0-vf_pores_s)*(aa-1.0))
 
 
-      case (8)
+      CASE (8)
 ! -----------------------------------------------------------------------------------------
 ! [8] Yan & He et al., 2019: A generalized model for estimating effective soil thermal conductivity
 !     based on the Kasubuchi algorithm, Geoderma, Vol 353, 227-242
@@ -297,38 +300,38 @@ IMPLICIT NONE
       ksat_f = k_solids * k_ice**vf_pores_s
 
 
-      case (9)
+      CASE (9)
 !*-----------------------------------------------------------------------------------------
 !*[9] Tarnawski et al (2018) Canadian field soils IV: Modeling thermal
 !*    conductivity at dryness and saturation. Int J Thermophys (2018) 39:35
 !*    Equation(30-32)
 !*-----------------------------------------------------------------------------------------
 !*    kdry = 0.55*(1.0-vf_pores_s)**1.4
-!*    if((wf_gravels_s+wf_sand_s)>0.4)then
+!*    IF((wf_gravels_s+wf_sand_s)>0.4)THEN
 !*       ksat_u = 1.147 + 0.007*vf_pores_s**(-5.31)
 !*       ksat_f = ?
-!*    else
+!*    ELSE
 !*       ksat_u = 1.284 + 13.36e-6*vf_pores_s**(-17.484)
 !*       ksat_f = ?
-!*    endif
+!*    ENDIF
 
 
-      case (10)
+      CASE (10)
 !*-----------------------------------------------------------------------------------------
 !*[10] Tarnawski et al (2018) Canadian field soils IV: Modeling thermal
 !*    conductivity at dryness and saturation. Int J Thermophys (2018) 39:35
 !*    Equation(34-37), de Vries' average.
 !*-----------------------------------------------------------------------------------------
-!*    if((wf_gravels_s+wf_sand_s)>0.4)then
+!*    IF((wf_gravels_s+wf_sand_s)>0.4)THEN
 !*       kdry = (0.3965-0.395*vf_pores_s)/(0.837+1.86*vf_pores_s)
 !*       ksat_u = (5.0126-3.369*vf_pores_s)/(1.147+1.55*vf_pores_s)
 !*       ksat_f = ?
-!*    else
+!*    ELSE
 !*       kdry = (0.4234-0.424*vf_pores_s)/(0.238+2.46*vf_pores_s)
 !*       ksat_u = (5.0831-3.437*vf_pores_s)/(1.517+1.18*vf_pores_s)
 !*       ksat_f = ?
-!*    endif
-      end select
+!*    ENDIF
+      END select
 !*-----------------------------------------------------------------------------------------
 
 

@@ -1,18 +1,18 @@
-module MOD_Hydro_VIC
-    use MOD_Hydro_VIC_Variables
-    implicit none
+MODULE MOD_Hydro_VIC
+    USE MOD_Hydro_VIC_Variables
+    IMPLICIT NONE
 
-    public :: compute_vic_runoff
+    PUBLIC :: compute_vic_runoff
 
-    private :: compute_runoff_and_asat
-    private :: calc_Q12
-    private :: compute_zwt
-    private :: wrap_compute_zwt
+    PRIVATE :: compute_runoff_and_asat
+    PRIVATE :: calc_Q12
+    PRIVATE :: compute_zwt
+    PRIVATE :: wrap_compute_zwt
 
-    contains
+    CONTAINS
 
     ! ******************************************************************************
-    subroutine Runoff_VIC(deltim, porsl, theta_r, hksati, bsw, &
+    SUBROUTINE Runoff_VIC(deltim, porsl, theta_r, hksati, bsw, &
                           wice_soisno, wliq_soisno, fevpg, rootflux, ppt, &
                           b_infilt, Dsmax, Ds, Ws, c, &
                           rsur,rsubst,wliq_soisno_tmp)
@@ -20,7 +20,7 @@ module MOD_Hydro_VIC
         USE MOD_Namelist
         USE MOD_Precision
         USE MOD_Vars_Global
-        implicit none
+        IMPLICIT NONE
 
         !-----------------------Arguments---------------------------------------
         type(soil_con_struct)  :: soil_con
@@ -44,37 +44,37 @@ module MOD_Hydro_VIC
         real(r8) :: vic_tmp(Nlayer), vic_tmp_(Nlayer)
         !-----------------------Arguments---------------------------------------
 
-        call vic_para(porsl, theta_r, hksati, bsw, wice_soisno(1:nl_soil), wliq_soisno(1:nl_soil), fevpg, rootflux, &
+        CALL vic_para(porsl, theta_r, hksati, bsw, wice_soisno(1:nl_soil), wliq_soisno(1:nl_soil), fevpg, rootflux, &
                         b_infilt, Dsmax, Ds, Ws, c, &
                         soil_con, cell)
 
-        call compute_vic_runoff(soil_con, ppt*deltim, soil_con%frost_fract, cell)
+        CALL compute_vic_runoff(soil_con, ppt*deltim, soil_con%frost_fract, cell)
 
         DO ilay = 1, Nlayer
             vic_tmp(ilay) = cell%layer(ilay)%moist
         ENDDO
         wliq_soisno_tmp = 0.
-        call VIC2CoLM(wliq_soisno_tmp, vic_tmp)
+        CALL VIC2CoLM(wliq_soisno_tmp, vic_tmp)
 
         DO ilay = 1, Nlayer
            vic_tmp_(ilay) = sum(cell%layer(ilay)%ice)
         ENDDO
-        ! call VIC2CoLM(wice_soisno(1:nl_soil), vic_tmp_)
+        ! CALL VIC2CoLM(wice_soisno(1:nl_soil), vic_tmp_)
 
-        if (ppt > 0.) rsur = cell%runoff/deltim
+        IF (ppt > 0.) rsur = cell%runoff/deltim
         rsubst = cell%baseflow/deltim
 
-    end subroutine Runoff_VIC
+    END SUBROUTINE Runoff_VIC
 
     ! /******************************************************************************
     ! * @brief    Calculate infiltration and runoff from the surface, gravity driven
     ! *           drainage between all soil layers, and generates baseflow from the
     ! *           bottom layer.
     ! ******************************************************************************/
-    subroutine compute_vic_runoff(soil_con, ppt, frost_fract, cell)
-        use MOD_Hydro_VIC_Variables
+    SUBROUTINE compute_vic_runoff(soil_con, ppt, frost_fract, cell)
+        USE MOD_Hydro_VIC_Variables
         USE MOD_Namelist
-        implicit none
+        IMPLICIT NONE
 
         !-----------------------Arguments---------------------------------------
         type(soil_con_struct), intent(in) :: soil_con
@@ -90,7 +90,7 @@ module MOD_Hydro_VIC
         real(r8) :: tmp_runoff
         real(r8) :: inflow
         real(r8) :: resid_moist(MAX_LAYERS) ! residual moisture (mm)
-        real(r8) :: org_moist(MAX_LAYERS) ! total soil moisture (liquid and frozen) at beginning of this function (mm)
+        real(r8) :: org_moist(MAX_LAYERS) ! total soil moisture (liquid and frozen) at beginning of this FUNCTION (mm)
         real(r8) :: avail_liq(MAX_LAYERS, MAX_FROST_AREAS) ! liquid soil moisture available for evap/drainage (mm)
         real(r8) :: liq(MAX_LAYERS)
         real(r8) :: ice(MAX_LAYERS)
@@ -128,11 +128,11 @@ module MOD_Hydro_VIC
         model_steps_per_day  = 86400/dltime
 
         ! /** Set Temporary Variables **/
-        do lindex = 1, Nlayer
+        DO lindex = 1, Nlayer
             resid_moist(lindex) = soil_con%resid_moist(lindex)
             max_moist(lindex) = soil_con%max_moist(lindex)
             Ksat(lindex) = soil_con%Ksat(lindex) / runoff_steps_per_day
-        end do
+        ENDDO
 
         ! /** Allocate and Set Values for Soil Sublayers **/
         layer = cell%layer
@@ -143,74 +143,74 @@ module MOD_Hydro_VIC
         runoff_steps_per_dt = runoff_steps_per_day / model_steps_per_day
 
         ! initialize baseflow
-        do fidx = 1, Nfrost
+        DO fidx = 1, Nfrost
             baseflow(fidx) = 0.0
-        end do
+        ENDDO
 
-        do lindex = 1, Nlayer
+        DO lindex = 1, Nlayer
             evap(lindex, 1) = layer(lindex)%evap / real(runoff_steps_per_dt)
             org_moist(lindex) = layer(lindex)%moist
             layer(lindex)%moist = 0.0
 
             ! if there is positive evaporation
-            if (evap(lindex, 1) > 0.0) then
+            IF (evap(lindex, 1) > 0.0) THEN
                 sum_liq = 0.0
                 ! compute available soil moisture for each frost sub area
-                do fidx = 1, Nfrost
+                DO fidx = 1, Nfrost
                     avail_liq(lindex, fidx) = org_moist(lindex) - layer(lindex)%ice(fidx) - resid_moist(lindex)
                     !avail_liq(lindex, fidx) = org_moist(lindex) -  resid_moist(lindex)
-                    if (avail_liq(lindex, fidx) < 0.0) then
+                    IF (avail_liq(lindex, fidx) < 0.0) THEN
                         avail_liq(lindex, fidx) = 0.0
-                    end if
+                    ENDIF
                     sum_liq = sum_liq + avail_liq(lindex, fidx) * frost_fract(fidx)
-                end do
+                ENDDO
 
                 ! compute fraction of available soil moisture that is evaporated
-                if (sum_liq > 0.0) then
+                IF (sum_liq > 0.0) THEN
                     evap_fraction = evap(lindex, 1) / sum_liq
-                else
+                ELSE
                     evap_fraction = 1.0
-                end if
+                ENDIF
 
                 ! distribute evaporation between frost sub areas by percentage
                 evap_sum = evap(lindex, 1)
-                do fidx = Nfrost, 1, -1
+                DO fidx = Nfrost, 1, -1
                     evap(lindex, fidx) = avail_liq(lindex, fidx) * evap_fraction
                     avail_liq(lindex, fidx) = avail_liq(lindex, fidx) - evap(lindex, fidx)
                     evap_sum = evap_sum - evap(lindex, fidx) * frost_fract(fidx)
-                end do
-            else
+                ENDDO
+            ELSE
                 ! if no evaporation
-                do fidx = Nfrost, 2, -1
+                DO fidx = Nfrost, 2, -1
                     evap(lindex, fidx) = evap(lindex, 1)
-                end do
-            end if
-        end do
+                ENDDO
+            ENDIF
+        ENDDO
 
 
-        do fidx = 1, Nfrost
+        DO fidx = 1, Nfrost
             ! ppt = amount of liquid water coming to the surface
             inflow = ppt
 
             ! /**************************************************
             ! Initialize Variables
             ! **************************************************/
-            do lindex = 1, Nlayer
+            DO lindex = 1, Nlayer
                 ! Set Layer Liquid Moisture Content
                 liq(lindex) = org_moist(lindex) - layer(lindex)%ice(fidx)
 
                 ! Set Layer Frozen Moisture Content
                 ice(lindex) = layer(lindex)%ice(fidx)
-            end do
+            ENDDO
 
             ! /******************************************************
             !    Runoff Based on Soil Moisture Level of Upper Layers
             ! ******************************************************/
-            do lindex = 1, Nlayer
+            DO lindex = 1, Nlayer
                 tmp_moist_for_runoff(lindex) = liq(lindex) + ice(lindex)
-            end do
+            ENDDO
 
-            call compute_runoff_and_asat(soil_con, tmp_moist_for_runoff, inflow, A, runoff(fidx))
+            CALL compute_runoff_and_asat(soil_con, tmp_moist_for_runoff, inflow, A, runoff(fidx))
 
             ! Save dt_runoff based on initial runoff estimate
             tmp_dt_runoff(fidx) = runoff(fidx) / real(runoff_steps_per_dt, kind=r8)
@@ -222,38 +222,38 @@ module MOD_Hydro_VIC
 
             Dsmax = soil_con%Dsmax / runoff_steps_per_day
 
-            do time_step = 1, runoff_steps_per_dt
+            DO time_step = 1, runoff_steps_per_dt
                 inflow = dt_inflow
 
                 ! /*************************************
                 !     Compute Drainage between Sublayers
                 ! *************************************/
-                do lindex = 1, Nlayer - 1
+                DO lindex = 1, Nlayer - 1
                     ! Brooks & Corey relation for hydraulic conductivity
                     tmp_liq = liq(lindex) - evap(lindex, fidx)  ! Assume evap is a 2D array now, adjusted indexing
 
-                    if (tmp_liq < resid_moist(lindex)) then
+                    IF (tmp_liq < resid_moist(lindex)) THEN
                         tmp_liq = resid_moist(lindex)
-                    end if
+                    ENDIF
 
-                    if (tmp_liq > resid_moist(lindex)) then
-                        call calc_Q12(Ksat(lindex), tmp_liq, resid_moist(lindex), max_moist(lindex), soil_con%expt(lindex),Q12(lindex))
-                    else
+                    IF (tmp_liq > resid_moist(lindex)) THEN
+                        CALL calc_Q12(Ksat(lindex), tmp_liq, resid_moist(lindex), max_moist(lindex), soil_con%expt(lindex),Q12(lindex))
+                    ELSE
                         Q12(lindex) = 0.0
-                    end if
-                end do
+                    ENDIF
+                ENDDO
 
                 ! /**************************************************
                 !     Solve for Current Soil Layer Moisture, and
                 !     Check Versus Maximum and Minimum Moisture Contents.
                 ! **************************************************/
                 last_index = 0
-                do lindex = 1, Nlayer - 1
-                    if (lindex == 1) then
+                DO lindex = 1, Nlayer - 1
+                    IF (lindex == 1) THEN
                         dt_runoff = tmp_dt_runoff(fidx)
-                    else
+                    ELSE
                         dt_runoff = 0.0
-                    endif
+                    ENDIF
 
                     ! transport moisture for all sublayers
                     tmp_inflow = 0.0
@@ -262,53 +262,53 @@ module MOD_Hydro_VIC
                     liq(lindex) = liq(lindex) + (inflow - dt_runoff) - (Q12(lindex) + evap(lindex, fidx))
 
                     ! Verify that soil layer moisture is less than maximum
-                    if ((liq(lindex) + ice(lindex)) > max_moist(lindex)) then
+                    IF ((liq(lindex) + ice(lindex)) > max_moist(lindex)) THEN
                         tmp_inflow = (liq(lindex) + ice(lindex)) - max_moist(lindex)
                         liq(lindex) = max_moist(lindex) - ice(lindex)
 
-                        if (lindex == 1) then
+                        IF (lindex == 1) THEN
                             Q12(lindex) = Q12(lindex) + tmp_inflow
                             tmp_inflow = 0.0
-                        else
+                        ELSE
                             tmplayer = lindex
-                            do while (tmp_inflow > 0)
+                            DO WHILE (tmp_inflow > 0)
                                 tmplayer = tmplayer - 1
-                                if (tmplayer < 1) then
+                                IF (tmplayer < 1) THEN
                                     ! If top layer saturated, add to runoff
                                     runoff(fidx) = runoff(fidx) + tmp_inflow
                                     tmp_inflow = 0.0
-                                else
+                                ELSE
                                     ! else add excess soil moisture to next higher layer
                                     liq(tmplayer) = liq(tmplayer) + tmp_inflow
-                                    if ((liq(tmplayer) + ice(tmplayer)) > max_moist(tmplayer)) then
+                                    IF ((liq(tmplayer) + ice(tmplayer)) > max_moist(tmplayer)) THEN
                                         tmp_inflow = (liq(tmplayer) + ice(tmplayer)) - max_moist(tmplayer)
                                         liq(tmplayer) = max_moist(tmplayer) - ice(tmplayer)
-                                    else
+                                    ELSE
                                         tmp_inflow = 0.0
-                                    endif
-                                endif
-                            end do
-                        endif ! /** end trapped excess moisture **/
-                    endif ! /** end check if excess moisture in top layer **/
+                                    ENDIF
+                                ENDIF
+                            ENDDO
+                        ENDIF ! /** END trapped excess moisture **/
+                    ENDIF ! /** END check if excess moisture in top layer **/
 
                     ! verify that current layer moisture is greater than minimum
-                    if (liq(lindex) < 0.0) then
+                    IF (liq(lindex) < 0.0) THEN
                         ! liquid cannot fall below 0
                         Q12(lindex) = Q12(lindex) + liq(lindex)
                         liq(lindex) = 0.0
-                    endif
+                    ENDIF
 
-                    if ((liq(lindex) + ice(lindex)) < resid_moist(lindex)) then
+                    IF ((liq(lindex) + ice(lindex)) < resid_moist(lindex)) THEN
                         ! moisture cannot fall below minimum
                         Q12(lindex) = Q12(lindex) + (liq(lindex) + ice(lindex)) - resid_moist(lindex)
                         liq(lindex) = resid_moist(lindex) - ice(lindex)
-                    endif
+                    ENDIF
 
                     inflow = Q12(lindex) + tmp_inflow
                     Q12(lindex) = Q12(lindex) + tmp_inflow
 
                     last_index = last_index + 1
-                end do ! /* end loop through soil layers */
+                ENDDO ! /* END loop through soil layers */
 
                 ! /**************************************************
                 !     Compute Baseflow
@@ -322,19 +322,19 @@ module MOD_Hydro_VIC
                 rel_moist = (liq(lindex) - resid_moist(lindex)) / &
                             (max_moist(lindex) - resid_moist(lindex))
 
-                ! Compute baseflow as function of relative moisture
+                ! Compute baseflow as FUNCTION of relative moisture
                 frac = Dsmax * soil_con%Ds / soil_con%Ws
                 dt_baseflow = frac * rel_moist
-                if (rel_moist > soil_con%Ws) then
+                IF (rel_moist > soil_con%Ws) THEN
                     frac = (rel_moist - soil_con%Ws) / (1 - soil_con%Ws)
                     dt_baseflow = dt_baseflow + Dsmax * (1 - soil_con%Ds / soil_con%Ws) * &
                                 frac ** soil_con%c
-                endif
+                ENDIF
 
                 ! Make sure baseflow isn't negative
-                if (dt_baseflow < 0) then
+                IF (dt_baseflow < 0) THEN
                     dt_baseflow = 0.0
-                endif
+                ENDIF
 
                 ! Extract baseflow from the bottom soil layer
                 liq(lindex) = liq(lindex) + Q12(lindex - 1) - (evap(lindex, fidx) + dt_baseflow)
@@ -346,41 +346,41 @@ module MOD_Hydro_VIC
                 !  * of baseflow and add back to soil to make up the difference
                 !  * Note: this may lead to negative baseflow, in which case we will
                 !  * reduce evap to make up for it */
-                if ((liq(lindex) + ice(lindex)) < resid_moist(lindex)) then
+                IF ((liq(lindex) + ice(lindex)) < resid_moist(lindex)) THEN
                     dt_baseflow = dt_baseflow + &
                                 (liq(lindex) + ice(lindex)) - resid_moist(lindex)
                     liq(lindex) = resid_moist(lindex) - ice(lindex)
-                endif
+                ENDIF
 
-                if ((liq(lindex) + ice(lindex)) > max_moist(lindex)) then
+                IF ((liq(lindex) + ice(lindex)) > max_moist(lindex)) THEN
                     ! soil moisture above maximum
                     tmp_moist = (liq(lindex) + ice(lindex)) - max_moist(lindex)
                     liq(lindex) = max_moist(lindex) - ice(lindex)
                     tmplayer = lindex
-                    do while (tmp_moist > 0)
+                    DO WHILE (tmp_moist > 0)
                         tmplayer = tmplayer - 1
-                        if (tmplayer < 1) then
+                        IF (tmplayer < 1) THEN
                             ! If top layer saturated, add to runoff
                             runoff(fidx) = runoff(fidx) + tmp_moist
                             tmp_moist = 0.0
-                        else
+                        ELSE
                             ! else if sublayer exists, add excess soil moisture
                             liq(tmplayer) = liq(tmplayer) + tmp_moist
-                            if ((liq(tmplayer) + ice(tmplayer)) > max_moist(tmplayer)) then
+                            IF ((liq(tmplayer) + ice(tmplayer)) > max_moist(tmplayer)) THEN
                                 tmp_moist = (liq(tmplayer) + ice(tmplayer)) - max_moist(tmplayer)
                                 liq(tmplayer) = max_moist(tmplayer) - ice(tmplayer)
-                            else
+                            ELSE
                                 tmp_moist = 0.0
-                            endif
-                        endif
-                    end do
-                endif
+                            ENDIF
+                        ENDIF
+                    ENDDO
+                ENDIF
 
                 baseflow(fidx) = baseflow(fidx) + dt_baseflow
-            end do ! /* end of sub-dt time step loop */
+            ENDDO ! /* END of sub-dt time step loop */
 
             ! If negative baseflow, reduce evap accordingly
-            if (baseflow(fidx) < 0.0) then
+            IF (baseflow(fidx) < 0.0) THEN
                 ! layer(lindex)%evap = layer(lindex)%evap + baseflow(fidx)   !!!! need check
                 baseflow(fidx) = 0.0
             endif
@@ -388,33 +388,33 @@ module MOD_Hydro_VIC
             ! Recompute Asat based on final moisture level of upper layers
             do lindex = 1, Nlayer
                 tmp_moist_for_runoff(lindex) = (liq(lindex) + ice(lindex))
-            end do
+            enddo
 
-            call compute_runoff_and_asat(soil_con, tmp_moist_for_runoff, real(0.0, kind=r8), A, tmp_runoff)
+            CALL compute_runoff_and_asat(soil_con, tmp_moist_for_runoff, real(0.0, kind=r8), A, tmp_runoff)
 
             ! Store tile-wide values
             do lindex = 1, Nlayer
                 layer(lindex)%moist = layer(lindex)%moist + &
                                     ((liq(lindex) + ice(lindex)) * frost_fract(fidx))
-            end do
+            enddo
             cell%asat = cell%asat + A * frost_fract(fidx)
             cell%runoff = cell%runoff + runoff(fidx) * frost_fract(fidx)
             cell%baseflow = cell%baseflow + baseflow(fidx) * frost_fract(fidx)
 
             ! ! /** Compute water table depth **/
-            ! call wrap_compute_zwt(soil_con, cell)
+            ! CALL wrap_compute_zwt(soil_con, cell)
 
-        end do
+        enddo
 
-    end subroutine compute_vic_runoff
+    END SUBROUTINE compute_vic_runoff
 
 
     ! ******************************************************************************
     ! * @brief    Calculate the saturated area and runoff
     ! ******************************************************************************
-    subroutine compute_runoff_and_asat(soil_con, moist, inflow, A, runoff)
+    SUBROUTINE compute_runoff_and_asat(soil_con, moist, inflow, A, runoff)
         USE MOD_Hydro_VIC_Variables, only: soil_con_struct, Nlayer
-        implicit none
+        IMPLICIT NONE
         !-----------------------Arguments---------------------------------------
         type(soil_con_struct), intent(in) :: soil_con
         real(r8), intent(in) :: moist(Nlayer)
@@ -433,7 +433,7 @@ module MOD_Hydro_VIC
         do lindex = 1, Nlayer - 1
             top_moist = top_moist + moist(lindex)
             top_max_moist = top_max_moist + soil_con%max_moist(lindex)
-        end do
+        enddo
         if (top_moist > top_max_moist) then
             top_moist = top_max_moist
         endif
@@ -461,30 +461,30 @@ module MOD_Hydro_VIC
         if (runoff < 0.0) then
             runoff = 0.0
         endif
-    end subroutine compute_runoff_and_asat
+    END SUBROUTINE compute_runoff_and_asat
 
 
     ! ******************************************************************************
     ! * @brief    Calculate drainage between two layers
     ! ******************************************************************************
-    subroutine calc_Q12(Ksat, init_moist, resid_moist, max_moist, expt, Q12)
-        implicit none
+    SUBROUTINE calc_Q12(Ksat, init_moist, resid_moist, max_moist, expt, Q12)
+        IMPLICIT NONE
         real(r8), intent(in) :: Ksat, init_moist, resid_moist, max_moist, expt
         real(r8), intent(out) :: Q12
 
         Q12 = init_moist - ((init_moist - resid_moist)**(1.0d0 - expt) - Ksat / &
             (max_moist - resid_moist)**expt * (1.0d0 - expt))**(1.0d0 / (1.0d0 - expt)) - resid_moist
 
-    end subroutine calc_Q12
+    END SUBROUTINE calc_Q12
 
 
     ! /******************************************************************************
     !  * @brief    Compute spatial average water table position (zwt).  Water table
     !  *           position is measured in cm and is negative below the soil surface.
     !  *****************************************************************************/
-    subroutine compute_zwt(soil_con,lindex, moist, zwt)
-        use MOD_Hydro_VIC_Variables
-        implicit none
+    SUBROUTINE compute_zwt(soil_con,lindex, moist, zwt)
+        USE MOD_Hydro_VIC_Variables
+        IMPLICIT NONE
         !-----------------------Arguments---------------------------------------
         type(soil_con_struct), intent(in) :: soil_con
         integer, intent(in) :: lindex
@@ -501,21 +501,21 @@ module MOD_Hydro_VIC
         i = MAX_ZWTVMOIST - 1
         do while (i >= 1 .and. moist > soil_con%zwtvmoist_moist(lindex, i))
             i = i - 1
-        end do
+        enddo
 
         if (i == MAX_ZWTVMOIST - 1) then
             if (moist < soil_con%zwtvmoist_moist(lindex, i)) then
                 zwt = 999.0 ! 999 indicates water table not present in this layer
             else if (moist == soil_con%zwtvmoist_moist(lindex, i)) then
                 zwt = soil_con%zwtvmoist_zwt(lindex, i) ! Just barely enough water for a water table
-            end if
+            endif
         else
             zwt = soil_con%zwtvmoist_zwt(lindex, i+1) + &
                     (soil_con%zwtvmoist_zwt(lindex, i) - soil_con%zwtvmoist_zwt(lindex, i+1)) * &
                     (moist - soil_con%zwtvmoist_moist(lindex, i+1)) / &
                     (soil_con%zwtvmoist_moist(lindex, i) - soil_con%zwtvmoist_moist(lindex, i+1))
-        end if
-    end subroutine compute_zwt
+        endif
+    END SUBROUTINE compute_zwt
 
 
     ! /******************************************************************************
@@ -524,9 +524,9 @@ module MOD_Hydro_VIC
     !  *           Water table position is measured in cm and is negative below the
     !  *           soil surface.
     !  *****************************************************************************/
-    subroutine wrap_compute_zwt(soil_con, cell)
-        use MOD_Hydro_VIC_Variables
-        implicit none
+    SUBROUTINE wrap_compute_zwt(soil_con, cell)
+        USE MOD_Hydro_VIC_Variables
+        IMPLICIT NONE
 
         !-----------------------Arguments---------------------------------------
         type(soil_con_struct), intent(in) :: soil_con
@@ -545,15 +545,15 @@ module MOD_Hydro_VIC
         total_depth = 0.0
         do lindex = 1, Nlayer
             total_depth = total_depth + soil_con%depth(lindex)
-        end do
+        enddo
 
         ! /** Compute each layer's zwt using soil moisture v zwt curve **/
         do lindex = 1, Nlayer
-            call compute_zwt(soil_con, lindex, cell%layer(lindex)%moist, cell%layer(lindex)%zwt)
-        end do
+            CALL compute_zwt(soil_con, lindex, cell%layer(lindex)%moist, cell%layer(lindex)%zwt)
+        enddo
         if (cell%layer(Nlayer)%zwt == 999) then
             cell%layer(Nlayer)%zwt = -total_depth * CM_PER_M
-        end if
+        endif
 
         ! /** Compute total soil column's zwt; this will be the zwt of the lowest layer that isn't completely saturated **/
         idx = Nlayer
@@ -561,7 +561,7 @@ module MOD_Hydro_VIC
         do while (idx >= 1 .and. soil_con%max_moist(idx) - cell%layer(idx)%moist <= DBL_EPSILON)
             tmp_depth = tmp_depth - soil_con%depth(idx)
             idx = idx - 1
-        end do
+        enddo
         if (idx < 1) then
             cell%zwt = 0.0
         else if (idx < Nlayer) then
@@ -569,20 +569,20 @@ module MOD_Hydro_VIC
                 cell%zwt = cell%layer(idx)%zwt
             else
                 cell%zwt = -tmp_depth * CM_PER_M
-            end if
+            endif
         else
             cell%zwt = cell%layer(idx)%zwt
-        end if
+        endif
 
         ! /** Compute total soil column's zwt_lumped; this will be the zwt of all N layers lumped together. **/
         tmp_moist = 0.0
         do lindex = 1, Nlayer
             tmp_moist = tmp_moist + cell%layer(lindex)%moist
-        end do
-        call compute_zwt(soil_con, Nlayer + 1, tmp_moist, cell%zwt_lumped)
+        enddo
+        CALL compute_zwt(soil_con, Nlayer + 1, tmp_moist, cell%zwt_lumped)
 
         if (cell%zwt_lumped == 999) then
             cell%zwt_lumped = -total_depth * CM_PER_M   ! // in cm;
-        end if
-    end subroutine wrap_compute_zwt
-end module MOD_Hydro_VIC
+        endif
+    END SUBROUTINE wrap_compute_zwt
+END MODULE MOD_Hydro_VIC

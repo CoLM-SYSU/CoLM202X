@@ -44,6 +44,7 @@ MODULE MOD_Urban_Flux
 !
 !-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Namelist, only: DEF_RSS_SCHEME, DEF_VEG_SNOW
    USE MOD_Vars_Global
    USE MOD_Qsadv, only: qsadv
@@ -55,23 +56,24 @@ MODULE MOD_Urban_Flux
    PUBLIC :: UrbanVegFlux
    PUBLIC :: dewfraction
 
-! Exponential extinction factor (alpha) options:
-!   1. Masson, 2000; Oleson et al., 2008
-!   2. Swaid, 1993; Kusaka, 2001; Lee and Park, 2008
-!   3. Macdonald, 2000
+   ! Exponential extinction factor (alpha) options:
+   !   1. Masson, 2000; Oleson et al., 2008
+   !   2. Swaid, 1993; Kusaka, 2001; Lee and Park, 2008
+   !   3. Macdonald, 2000
    integer,  parameter :: alpha_opt = 3
 
-! Layer number setting, default is false, i.e., 2 layers
+   ! Layer number setting, default is false, i.e., 2 layers
    logical,  parameter :: run_three_layer = .false.
 
-! Percent of sensible/latent to AHE (only for Fhac, Fwst, vehc now),
-! 92% heat release as SH, 8% heat release as LH, Pigeon et al., 2007
+   ! Percent of sensible/latent to AHE (only for Fhac, Fwst, vehc now),
+   ! 92% heat release as SH, 8% heat release as LH, Pigeon et al., 2007
    real(r8), parameter :: fsh = 0.92
    real(r8), parameter :: flh = 0.08
 
-! A simple urban irrigation scheme accounts for soil water stress of trees
+   ! A simple urban irrigation scheme accounts for soil water stress of trees
    logical,  parameter :: DEF_URBAN_Irrigation = .true.
    real(r8), parameter :: rstfac_irrig = 1.
+
 !-----------------------------------------------------------------------
 
 CONTAINS
@@ -114,7 +116,7 @@ CONTAINS
    USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
-!----------------------- Dummy argument --------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer, intent(in) :: &
         ipatch,       &! patch index [-]
         lbr,          &! lower bound of array
@@ -188,12 +190,12 @@ CONTAINS
         taux,         &! wind stress: E-W [kg/m/s**2]
         tauy,         &! wind stress: N-S [kg/m/s**2]
         fsenroof,     &! sensible heat flux from roof [W/m2]
-        fsenwsun,     &! sensible heat flux from snulit wall [W/m2]
+        fsenwsun,     &! sensible heat flux from sunlit wall [W/m2]
         fsenwsha,     &! sensible heat flux from shaded wall [W/m2]
         fsengimp,     &! sensible heat flux from impervious road [W/m2]
         fsengper,     &! sensible heat flux from pervious ground [W/m2]
-        fevproof,     &! evaperation heat flux from roof [W/m2]
-        fevpgimp,     &! evaperation heat flux from impervious road [W/m2]
+        fevproof,     &! evaporation heat flux from roof [W/m2]
+        fevpgimp,     &! evaporation heat flux from impervious road [W/m2]
         fevpgper,     &! evaporation heat flux from pervious ground [mm/s]
 
         croofs,       &! deriv of roof sensible heat flux wrt soil temp [w/m**2/k]
@@ -221,14 +223,14 @@ CONTAINS
         fq,           &! integral of profile function for moisture
         tafu           ! effective urban air temperature (2nd layer, walls)
 
-!------------------------ LOCAL VARIABLES ------------------------------
+!-------------------------- Local Variables ----------------------------
    integer :: &
         niters,       &! maximum number of iterations for surface temperature
         iter,         &! iteration index
         nmozsgn        ! number of times moz changes sign
 
    real(r8) :: &
-        beta,         &! coefficient of conective velocity [-]
+        beta,         &! coefficient of convective velocity [-]
         dth,          &! diff of virtual temp. between ref. height and surface
         dqh,          &! diff of humidity between ref. height and surface
         dthv,         &! diff of vir. poten. temp. between ref. height and surface
@@ -241,20 +243,20 @@ CONTAINS
         fq2m,         &! relation for specific humidity at 2m
         fm10m,        &! integral of profile function for momentum at 10m
         thvstar,      &! virtual potential temperature scaling parameter
-        um,           &! wind speed including the stablity effect [m/s]
+        um,           &! wind speed including the stability effect [m/s]
         ur,           &! wind speed at reference height [m/s]
         wc,           &! convective velocity [m/s]
         wc2,          &! wc**2
         zeta,         &! dimensionless height used in Monin-Obukhov theory
         zii,          &! convective boundary height [m]
-        zldis,        &! reference height "minus" zero displacement heght [m]
+        zldis,        &! reference height "minus" zero displacement height [m]
         z0mg,         &! roughness length over ground, momentum [m]
         z0hg,         &! roughness length over ground, sensible heat [m]
         z0qg           ! roughness length over ground, latent heat [m]
 
    real(r8) evplwet, evplwet_dtl, elwmax, elwdif
 
-!----------------------- defination for 3d run -------------------------
+!----------------------- definition for 3d run -------------------------
 
    integer, parameter :: nlay = 3  ! potential layer number
 
@@ -274,9 +276,9 @@ CONTAINS
         phih,         &! phi(h), similarity function for sensible heat
         displa,       &! displacement height for urban
         displau,      &! displacement height for urban building
-        z0mu,         &! roughless length for urban building only
-        z0h,          &! roughless length for sensible heat
-        z0q,          &! roughless length for latent heat
+        z0mu,         &! roughness length for urban building only
+        z0h,          &! roughness length for sensible heat
+        z0q,          &! roughness length for latent heat
         tg,           &! ground temperature
         qg             ! ground specific humidity
 
@@ -293,7 +295,7 @@ CONTAINS
         alpha          ! exponential extinction factor for u/k decline within urban
 
    real(r8), dimension(0:nurb) :: &
-        tu,           &! termperature array
+        tu,           &! temperature array
         fc,           &! fractional cover array
         canlev,       &! urban canopy layer lookup table
         rb,           &! leaf boundary layer resistance [s/m]
@@ -347,7 +349,7 @@ CONTAINS
    real(r8) fwet_roof, fwet_roof_, fwet_gimp, fwet_gimp_, rss_
    real(r8) fwetfac
 
-!-----------------------End Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 ! initialization
       tu(0) = troof; tu(1) = twsun; tu(2) = twsha
@@ -492,7 +494,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 ! first guess for taf and qaf for each layer
-! a large differece from previous schemes
+! a large difference from previous schemes
 !-----------------------------------------------------------------------
 
       IF (numlay .eq. 2) THEN
@@ -516,19 +518,19 @@ CONTAINS
 
          IF (hu <= hroof+1) THEN
             hu_ = hroof + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of u less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (ht <= hroof+1) THEN
             ht_ = hroof + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of t less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (hq <= hroof+1) THEN
             hq_ = hroof + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of q less than hroof+1, set it to hroof+1.'
          ENDIF
 
@@ -659,20 +661,24 @@ CONTAINS
          IF (numlay .eq. 2) THEN
 
             ! - Equations:
-            ! taf(3) = (1/rah*thm + 1/rd(3)*taf(2) + 1/rb(0)*troof*fc(0) + AHE/(rho*cp))/(1/rah + 1/rd(3) + 1/rb(0)*fc(0))
-            ! taf(2) = (1/rd(3)*taf(3) + 1/rd(2)*tg*fg + 1/rb(1)*twsun*fc(1) + 1/rb(2)*twsha*fc(2) + AHE/(rho*cp))/ &
-            !          (1/rd(3) + 1/rd(2)*fg + 1/rb(1)*fc(1) + 1/rb(2)*fc(2))
+            ! taf(3) = (1/rah*thm + 1/rd(3)*taf(2) + 1/rb(0)*troof*fc(0) &
+            !        + AHE/(rho*cp))/(1/rah + 1/rd(3) + 1/rb(0)*fc(0))
+            ! taf(2) = (1/rd(3)*taf(3) + 1/rd(2)*tg*fg + 1/rb(1)*twsun*fc(1) + 1/rb(2)*twsha*fc(2) &
+            !        + AHE/(rho*cp))/ (1/rd(3) + 1/rd(2)*fg + 1/rb(1)*fc(1) + 1/rb(2)*fc(2))
             ! Also written as:
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
-            ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + AHE/(rho*cp))/ &
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2))
+            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) &
+            !        + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
+            ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) &
+            !        + AHE/(rho*cp))/(cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2))
             !
             ! - Equations:
-            ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg)
+            ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0)) &
+            !        / (1/raw + 1/rd(3) + 1/rb(0)*fc(0))
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg &
+            !        + AHE/rho)/(1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg)
             ! Also written as:
-            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
+            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) &
+            !        + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
             ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + AHE/rho)/ &
             !          (caw(2) + cgwper*fgper*fg + cgwimp*fgimp*fg)
 
@@ -686,11 +692,12 @@ CONTAINS
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2)
             aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
 
-            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + aT) &
-                   / (cT * (1- bT/(cT*rd(3))))
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) &
+                     + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + aT) &
+                     / (cT * (1- bT/(cT*rd(3))))
 
             taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
-                   / (1/rah + 1/rd(3) + fc(0)/rb(0))
+                     / (1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
@@ -704,11 +711,11 @@ CONTAINS
             bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + aQ + Lahe/rhoair/hvap) &
-                   / (cQ * (1-bQ/(cQ*rd(3))))
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) &
+                     + aQ + Lahe/rhoair/hvap) / (cQ * (1-bQ/(cQ*rd(3))))
 
             qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
-                   / (1/raw + 1/rd(3) + fwet_roof*fc(0)/rb(0))
+                     / (1/raw + 1/rd(3) + fwet_roof*fc(0)/rb(0))
 
          ENDIF
 
@@ -807,7 +814,7 @@ CONTAINS
       croof  = croofs + croofl*htvp_roof
 
 
-#if(defined CoLMDEBUG)
+#if (defined CoLMDEBUG)
 #endif
 
       tafu = taf(2)
@@ -836,8 +843,10 @@ CONTAINS
 
       cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
 
-      cgperl = rhoair/(rd(2)+rss_)   *dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss_)*(1-bQ/(cQ*rd(3)))) )
-      cgimpl = rhoair*fwet_gimp/rd(2)*dqgimpdT*( 1 - fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
+      cgperl = rhoair/(rd(2)+rss_)   &
+             * dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss_)*(1-bQ/(cQ*rd(3)))) )
+      cgimpl = rhoair*fwet_gimp/rd(2)&
+             * dqgimpdT*( 1 - fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
 
       cgimp  = cgrnds + cgimpl*htvp_gimp
       cgper  = cgrnds + cgperl*htvp_gper
@@ -870,7 +879,7 @@ CONTAINS
          hroof          ,hlr            ,nurb           ,fcover         ,&
          ewall          ,egimp          ,egper          ,ev             ,&
          htop           ,hbot           ,lai            ,sai            ,&
-         sqrtdi         ,effcon         ,vmax25         ,slti           ,&
+         sqrtdi         ,effcon         ,vmax25         ,c3c4           ,slti,&
          hlti           ,shti           ,hhti           ,trda           ,&
          trdm           ,trop           ,g1             ,g0             ,&
          gradm          ,binter         ,extkn          ,extkd          ,&
@@ -912,7 +921,7 @@ CONTAINS
    USE MOD_UserSpecifiedForcing, only: HEIGHT_mode
    IMPLICIT NONE
 
-!-----------------------Arguments---------------------------------------
+!-------------------------- Dummy Arguments ----------------------------
    integer,  intent(in) :: &
         ipatch,       &! patch index [-]
         lbr,          &! lower bound of array
@@ -938,7 +947,7 @@ CONTAINS
         frl,          &! atmospheric infrared (longwave) radiation [W/m2]
         par,          &! par absorbed per unit sunlit lai [w/m**2]
         sabv,         &! solar radiation absorbed by vegetation [W/m2]
-        rstfac,       &! factor of soil water stress to plant physiologocal processes
+        rstfac,       &! factor of soil water stress to plant physiological processes
 
         po2m,         &! atmospheric partial pressure  o2 (pa)
         pco2m,        &! atmospheric partial pressure co2 (pa)
@@ -992,6 +1001,9 @@ CONTAINS
         dewmx,        &! maximum dew
         trsmx0,       &! max transpiration for moist soil+100% veg.  [mm/s]
         etrc           ! maximum possible transpiration rate (mm/s)
+   
+   integer,  intent(in) :: &
+        c3c4       ! 1: C3, 0: C4
 
    ! Status of surface
    real(r8), intent(in) :: &
@@ -1039,9 +1051,9 @@ CONTAINS
    real(r8), intent(in)    :: Ainv(5,5)  !Inverse of Radiation transfer matrix
    real(r8), intent(in)    :: SkyVF (5)  !View factor to sky
    real(r8), intent(in)    :: VegVF (5)  !View factor to veg
-   real(r8), intent(inout) :: B     (5)  !Vectors of incident radition on each surface
-   real(r8), intent(inout) :: B1    (5)  !Vectors of incident radition on each surface
-   real(r8), intent(inout) :: dBdT  (5)  !Vectors of incident radition on each surface
+   real(r8), intent(inout) :: B     (5)  !Vectors of incident radiation on each surface
+   real(r8), intent(inout) :: B1    (5)  !Vectors of incident radiation on each surface
+   real(r8), intent(inout) :: dBdT  (5)  !Vectors of incident radiation on each surface
 
    real(r8), intent(out) :: &
         taux,         &! wind stress: E-W [kg/m/s**2]
@@ -1061,7 +1073,7 @@ CONTAINS
         cgrnds,       &! deriv of ground latent heat flux wrt soil temp [w/m**2/k]
         croofl,       &! deriv of roof latent heat flux wrt soil temp [w/m**2/k]
         cgimpl,       &! deriv of impervious latent heat flux wrt soil temp [w/m**2/k]
-        cgperl,       &! deriv of soil atent heat flux wrt soil temp [w/m**2/k]
+        cgperl,       &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
         croof,        &! deriv of roof total flux wrt soil temp [w/m**2/k]
         cgimp,        &! deriv of impervious total heat flux wrt soil temp [w/m**2/k]
         cgper,        &! deriv of soil total heat flux wrt soil temp [w/m**2/k]
@@ -1111,21 +1123,21 @@ CONTAINS
    real(r8) dtl(0:itmax+1)             !difference of tl between two iterative step
 
    real(r8) :: &
-        zldis,        &! reference height "minus" zero displacement heght [m]
+        zldis,        &! reference height "minus" zero displacement height [m]
         zii,          &! convective boundary layer height [m]
         z0mv,         &! roughness length of vegetation only, momentum [m]
         z0mu,         &! roughness length of building only, momentum [m]
         z0h,          &! roughness length, sensible heat [m]
         z0q,          &! roughness length, latent heat [m]
         zeta,         &! dimensionless height used in Monin-Obukhov theory
-        beta,         &! coefficient of conective velocity [-]
+        beta,         &! coefficient of convective velocity [-]
         wc,           &! convective velocity [m/s]
         wc2,          &! wc**2
         dth,          &! diff of virtual temp. between ref. height and surface
         dthv,         &! diff of vir. poten. temp. between ref. height and surface
         dqh,          &! diff of humidity between ref. height and surface
         obu,          &! monin-obukhov length (m)
-        um,           &! wind speed including the stablity effect [m/s]
+        um,           &! wind speed including the stability effect [m/s]
         ur,           &! wind speed at reference height [m/s]
         uaf,          &! velocity of air within foliage [m/s]
         fh2m,         &! relation for temperature at 2m
@@ -1165,13 +1177,13 @@ CONTAINS
    real(r8) fevpl_bef, fevpl_noadj, dtl_noadj, erre
    real(r8) qevpl, qdewl, qsubl, qfrol, qmelt, qfrz
 
-!----------------------- defination for 3d run ------------------------ !
+!----------------------- definition for 3d run ------------------------
    integer, parameter :: nlay = 3
    integer, parameter :: uvec(5) = (/0,0,0,0,1/) !unit vector
 
    integer :: &
         clev,         &! current layer index
-        botlay,       &! botom layer index
+        botlay,       &! bottom layer index
         numlay         ! available layer number
 
    real(r8) :: &
@@ -1188,7 +1200,7 @@ CONTAINS
         displau,      &! displacement height for urban building
         displav,      &! displacement height for urban vegetation
         displav_lay,  &! displacement height for urban vegetation layer
-        z0mv_lay,     &! roughless length for vegetation
+        z0mv_lay,     &! roughness length for vegetation
         ueff_veg,     &! effective wind speed within canopy layer [m/s]
         tg,           &! ground temperature
         qg             ! ground specific humidity
@@ -1217,7 +1229,7 @@ CONTAINS
         dlveg          ! change of lw for the last time
 
    real(r8), dimension(0:nurb) :: &
-        tu,           &! termperature array
+        tu,           &! temperature array
         fc,           &! fractional cover array
         canlev,       &! urban canopy layer lookup table
         rb,           &! leaf boundary layer resistance [s/m]
@@ -1275,7 +1287,7 @@ CONTAINS
    ! for interface
    real(r8) o3coefv, o3coefg, assim_RuBP, assim_Rubisco, ci, vpd, gammas
 
-!-----------------------End Variable List-------------------------------
+!-----------------------------------------------------------------------
 
 ! initialization of errors and  iteration parameters
       it    = 1    !counter for leaf temperature iteration
@@ -1518,19 +1530,19 @@ CONTAINS
 
          IF (hu <= hroof+1) THEN
             hu_ = hroof + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of u less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (ht <= hroof+1) THEN
             ht_ = hroof + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of t less than hroof+1, set it to hroof+1.'
          ENDIF
 
          IF (hq <= hroof+1) THEN
             hq_ = hroof + 1.
-            IF (taux == spval) & ! only print warning for the firt time-step
+            IF (taux == spval) & ! only print warning for the first time-step
                write(6,*) 'Warning: the obs height of q less than hroof+1, set it to hroof+1.'
          ENDIF
 
@@ -1689,7 +1701,7 @@ CONTAINS
             clev = canlev(i)
             rb(i) = rhoair * cpair / ( 11.8 + 4.2*ueff_lay(clev) )
 
-            ! Cole & Sturrock (1977) Building and Environment, 12, 207–214.
+            ! Cole & Sturrock (1977) Building and Environment, 12, 207-214.
             ! rb(i) = rhoair * cpair / ( 5.8 + 4.1*ueff_lay(clev) )
             ! IF (ueff_lay(clev) > 5.) THEN
             !    rb(i) = rhoair * cpair / (7.51*ueff_lay(clev)**0.78)
@@ -1714,7 +1726,7 @@ CONTAINS
 ! note: calculate resistance for leaves
 !-----------------------------------------------------------------------
 
-            CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
+            CALL stomata (vmax25,effcon ,c3c4   ,slti   ,hlti   ,&
                shti    ,hhti    ,trda   ,trdm   ,trop   ,&
                g1      ,g0      ,gradm  ,binter ,thm    ,&
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
@@ -1727,7 +1739,7 @@ CONTAINS
             rs_ = rs
 
 IF ( DEF_URBAN_Irrigation .and. rstfac < rstfac_irrig ) THEN
-            CALL stomata (vmax25,effcon ,slti   ,hlti   ,&
+            CALL stomata (vmax25,effcon ,c3c4   ,slti   ,hlti   ,&
                shti    ,hhti    ,trda   ,trdm   ,trop   ,&
                g1      ,g0      ,gradm  ,binter ,thm    ,&
                psrf    ,po2m    ,pco2m  ,pco2a  ,eah    ,&
@@ -1761,22 +1773,33 @@ ENDIF
          IF (numlay .eq. 2) THEN
 
             ! - Equations:
-            ! taf(3) = (1/rah*thm + 1/rd(3)*taf(2) + 1/rb(0)*troof*fc(0) + AHE/(rho*cp))/(1/rah + 1/rd(3) + 1/rb(0)*fc(0))
-            ! taf(2) = (1/rd(3)*taf(3) + 1/rd(2)*tg*fg + 1/rb(1)*twsun*fc(1) + 1/rb(2)*twsha*fc(2) + lsai/rb(3)*tl*fc(3) + AHE/(rho*cp))/ &
-            !          (1/rd(3) + 1/rd(2)*fg + 1/rb(1)*fc(1) + 1/rb(2)*fc(2) + lsai/rb(3)*fc(3))
+            ! taf(3) = (1/rah*thm + 1/rd(3)*taf(2) + 1/rb(0)*troof*fc(0) &
+            !        + AHE/(rho*cp))/(1/rah + 1/rd(3) + 1/rb(0)*fc(0))
+            ! taf(2) = (1/rd(3)*taf(3) + 1/rd(2)*tg*fg + 1/rb(1)*twsun*fc(1) + 1/rb(2)*twsha*fc(2) &
+            !        + lsai/rb(3)*tl*fc(3) + AHE/(rho*cp)) &
+            !        / (1/rd(3) + 1/rd(2)*fg + 1/rb(1)*fc(1) + 1/rb(2)*fc(2) + lsai/rb(3)*fc(3))
+            !
             ! Also written as:
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
-            ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + cfh(3)*tl*fc(3) + AHE/(rho*cp))/ &
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
+            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) &
+            !        + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
+            ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) &
+            !        + cfh(3)*tl*fc(3) + AHE/(rho*cp)) &
+            !        / (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
             !
             ! - Equations:
-            ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) &
+            !        + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg &
+            !        + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho) &
+            !        / (1/rd(3) + 1/(rd(2)+rss)*fgper*fg &
+            !        + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            !
             ! Also written as:
-            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
-            ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + cfw(3)*ql*fc(3) + AHE/rho)/ &
-            !          (caw(2) + cgwper*fgper*fg + cgwimp*fgimp*fg + cfw(3)*fc(3))
+            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0)) &
+            !        / (caw(3) + caw(2) + cfw(0)*fc(0))
+            ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg &
+            !        + cfw(3)*ql*fc(3) + AHE/rho) &
+            !        / (caw(2) + cgwper*fgper*fg + cgwimp*fgimp*fg + cfw(3)*fc(3))
 
             ! 06/20/2021, yuan: account for Anthropogenic heat
             ! 92% heat release as SH, Pigeon et al., 2007
@@ -1788,11 +1811,11 @@ ENDIF
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
             aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
 
-            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
-                     / (cT * (1- bT/(cT*rd(3))))
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) &
+                   + tu(3)*fc(3)*lsai/rb(3) + aT) / (cT * (1- bT/(cT*rd(3))))
 
             taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
-                     / (1/rah + 1/rd(3) + fc(0)/rb(0))
+                   / (1/rah + 1/rd(3) + fc(0)/rb(0))
 
             IF (qgper < qaf(2)) THEN
               ! dew case. no soil resistance
@@ -1806,7 +1829,8 @@ ENDIF
             bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) &
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) &
+                     + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) &
                      / (cQ * (1-bQ/(cQ*rd(3))))
 
             qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
@@ -1819,8 +1843,8 @@ ENDIF
             ! - Equations:
             ! taf(3) = (thm/rah+1/rd(3)*taf(2)+AHE2/rho/cpair+1/rb(0)*troof*fc(0))/&
             !          (1/rah+1/rd(3)+1/rb(0)*fc(0))
-            ! taf(2) = (1/rd(3)*taf(3)+1/rd(2)*taf1+1/rb(1)*twsun*fc(1)+1/rb(2)*twsha*fc(2)+AHE1/rho/cpair)/&
-            !          (1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
+            ! taf(2) = (1/rd(3)*taf(3)+1/rd(2)*taf1+1/rb(1)*twsun*fc(1)+1/rb(2)*twsha*fc(2)+&
+            !          AHE1/rho/cpair)/(1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
             ! taf(1) = (1/rd(2)*taf(2)+1/rd(1)*tg*fg+1/rb(3)*tl*fc(3)+Hveh/rhoair/cpair)/&
             !          (1/rd(2)+1/rd(1)*fg+1/rb(3)*fc(3))
             !
@@ -1829,7 +1853,8 @@ ENDIF
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3)+1/rd(2)*qaf(1))/&
             !          (1/rd(3) + 1/rd(2))
-            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
+            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+&
+            !          1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho)/&
             !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
             Hahe(1) = vehc*fsh + meta
@@ -1842,11 +1867,12 @@ ENDIF
 
             taf(2) = (tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) &
                      + (tu(3)*fc(3)*lsai/rb(3)+tg*fg/rd(1)+Hahe(1)/(rhoair*cpair))*aT &
-                     + (tu(0)*fc(0)/rb(0)+thm/rah+Hahe(3)/(rhoair*cpair))*bT + Hahe(2)/(rhoair*cpair)) &
+                     + (tu(0)*fc(0)/rb(0)+thm/rah+Hahe(3)/(rhoair*cpair))*bT &
+                     + Hahe(2)/(rhoair*cpair)) &
                      / (cT*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT)))
 
-            taf(1) = (tu(3)*fc(3)*lsai/rb(3) + tg*fg/rd(1) + taf(2)/rd(2) + Hahe(1)/(rhoair*cpair)) &
-                     / (1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))
+            taf(1) = (tu(3)*fc(3)*lsai/rb(3) + tg*fg/rd(1) + taf(2)/rd(2) &
+                     + Hahe(1)/(rhoair*cpair)) / (1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))
 
             taf(3) = (tu(0)*fc(0)/rb(0) + taf(2)/rd(3) + thm/rah + Hahe(3)/(rhoair*cpair)) &
                      / (1/rah+1/rd(3)+fc(0)/rb(0))
@@ -1863,11 +1889,13 @@ ENDIF
             bQ     = 1/(rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = 1/(rd(2)*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv))
 
-            qaf(2) = ( (fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + Lahe/rhoair/hvap)*aQ &
+            qaf(2) = ( (fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) &
+                     + fc(3)*qsatl(3)/rv + Lahe/rhoair/hvap)*aQ &
                      + (qm/raw+fc(0)*fwet_roof*qsatl(0)/rb(0))*bQ ) &
                      / ( cQ*(1-bQ/(cQ*rd(3))-aQ/(cQ*rd(2))) )
 
-            qaf(1) = ( fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) + fc(3)*qsatl(3)/rv + qaf(2)/rd(2) + Lahe/rhoair/hvap ) &
+            qaf(1) = ( fg*fgimp*fwet_gimp*qgimp/rd(1) + fg*fgper*qgper/(rd(1)+rss_) &
+                     + fc(3)*qsatl(3)/rv + qaf(2)/rd(2) + Lahe/rhoair/hvap ) &
                      / ( 1/rd(2) + fg*fgimp*fwet_gimp/rd(1) + fg*fgper/(rd(1)+rss_) + fc(3)/rv )
 
             qaf(3) = ( fc(0)*fwet_roof*qsatl(0)/rb(0) + qaf(2)/rd(3) + qm/raw ) &
@@ -1878,7 +1906,7 @@ ENDIF
 ! IR radiation, sensible and latent heat fluxes and their derivatives
 !-----------------------------------------------------------------------
 ! the partial derivatives of areodynamical resistance are ignored
-! which cannot be determined analtically
+! which cannot be determined analytically
 
          !NOTE: ONLY for vegetation
          i = 3
@@ -1906,8 +1934,9 @@ ENDIF
                     * qsatldT(3)
          ELSE
             etr_dtl = rhoair * (1.-fwet) * delta * lai/(rb(i)+rs) &
-                    * ( 1. - fc(3)/(rv*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rss_+rd(1))+fc(3)/rv)) &
-                           - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
+                    * ( 1. - fc(3)/(rv*(1/rd(2) + fg*fgimp*fwet_gimp/rd(1) + &
+                                    fg*fgper/(rss_+rd(1)) + fc(3)/rv)) &
+                           - fc(3)*aQ*aQ/(rv*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          ENDIF
 
 IF ( DEF_URBAN_Irrigation ) THEN
@@ -1931,7 +1960,8 @@ ENDIF
                         * qsatldT(3)
          ELSE
             evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * lsai/rb(i) &
-                        * ( 1. - fc(3)/(rv*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rss_+rd(1))+fc(3)/rv)) &
+                        * ( 1. - fc(3)/(rv*(1/rd(2) + fg*fgimp*fwet_gimp/rd(1) + &
+                                        fg*fgper/(rss_+rd(1)) + fc(3)/rv)) &
                                - fc(3)*aQ*aQ/(rv*CQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          ENDIF
 
@@ -2022,22 +2052,33 @@ ENDIF
          IF (numlay .eq. 2) THEN
 
             ! - Equations:
-            ! taf(3) = (1/rah*thm + 1/rd(3)*taf(2) + 1/rb(0)*troof*fc(0) + AHE/(rho*cp))/(1/rah + 1/rd(3) + 1/rb(0)*fc(0))
-            ! taf(2) = (1/rd(3)*taf(3) + 1/rd(2)*tg*fg + 1/rb(1)*twsun*fc(1) + 1/rb(2)*twsha*fc(2) + lsai/rb(3)*tl*fc(3) + AHE/(rho*cp))/ &
-            !          (1/rd(3) + 1/rd(2)*fg + 1/rb(1)*fc(1) + 1/rb(2)*fc(2) + lsai/rb(3)*fc(3))
+            ! taf(3) = (1/rah*thm + 1/rd(3)*taf(2) + 1/rb(0)*troof*fc(0) &
+            !        + AHE/(rho*cp))/(1/rah + 1/rd(3) + 1/rb(0)*fc(0))
+            ! taf(2) = (1/rd(3)*taf(3) + 1/rd(2)*tg*fg + 1/rb(1)*twsun*fc(1) + 1/rb(2)*twsha*fc(2) &
+            !        + lsai/rb(3)*tl*fc(3) + AHE/(rho*cp)) &
+            !        / (1/rd(3) + 1/rd(2)*fg + 1/rb(1)*fc(1) + 1/rb(2)*fc(2) + lsai/rb(3)*fc(3))
+            !
             ! Also written as:
-            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
-            ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) + cfh(2)*twsha*fc(2) + cfh(3)*tl*fc(3) + AHE/(rho*cp))/ &
-            !          (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
+            ! taf(3) = (cah(3)*thm + cah(2)*taf(2) &
+            !        + cfh(0)*troof*fc(0))/(cah(3) + cah(2) + cfh(0)*fc(0))
+            ! taf(2) = (cah(2)*taf(3) + cgh(2)*tg*fg + cfh(1)*twsun*fc(1) &
+            !        + cfh(2)*twsha*fc(2) + cfh(3)*tl*fc(3) + AHE/(rho*cp)) &
+            !        / (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3))
             !
             ! - Equations:
-            ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
-            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho)/ &
-            !          (1/rd(3) + 1/(rd(2)+rss)*fgper*fg + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            ! qaf(3) = (1/raw*qm + 1/rd(3)*qaf(2) &
+            !        + 1/rb(0)*qroof*fc(0))/(1/raw + 1/rd(3) + 1/rb(0)*fc(0))
+            ! qaf(2) = (1/rd(3)*qaf(3) + 1/(rd(2)+rss)*qper*fgper*fg &
+            !        + fwetimp/rd(2)*qimp*fgimp*fg + lsai/(rb(3)+rs)*ql*fc(3) + AHE/rho) &
+            !        / (1/rd(3) + 1/(rd(2)+rss)*fgper*fg &
+            !        + fwetimp/rd(2)*fgimp*fg + lsai/(rb(3)+rs)*fc(3))
+            !
             ! Also written as:
-            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
-            ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg + cfw(3)*ql*fc(3) + AHE/rho)/ &
-            !          (caw(2) + cgwper*fgper*fg + cgwimp*fgimp*fg + cfw(3)*fc(3))
+            ! qaf(3) = (caw(3)*qm + caw(2)*qaf(2) &
+            !        + cfw(0)*qroof*fc(0))/(caw(3) + caw(2) + cfw(0)*fc(0))
+            ! qaf(2) = (caw(2)*qaf(3) + cgwper*qper*fgper*fg + cgwimp*qimp*fgimp*fg &
+            !        + cfw(3)*ql*fc(3) + AHE/rho) &
+            !        / (caw(2) + cgwper*fgper*fg + cgwimp*fgimp*fg + cfw(3)*fc(3))
 
             ! 06/20/2021, yuan: account for AH
             ! 92% heat release as SH, Pigeon et al., 2007
@@ -2049,8 +2090,8 @@ ENDIF
             cT     = 1/rd(3) + fg/rd(2) + fc(1)/rb(1) + fc(2)/rb(2) + fc(3)*lsai/rb(3)
             aT     = (tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah)*bT
 
-            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) + tu(3)*fc(3)*lsai/rb(3) + aT) &
-                     / (cT * (1- bT/(cT*rd(3))))
+            taf(2) = (tg*fg/rd(2) + Hahe(2)/(rhoair*cpair) + tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) &
+                     + tu(3)*fc(3)*lsai/rb(3) + aT) / (cT * (1- bT/(cT*rd(3))))
 
             taf(3) = (taf(2)/rd(3) + tu(0)*fc(0)/rb(0) + Hahe(3)/(rhoair*cpair) + thm/rah) &
                      / (1/rah + 1/rd(3) + fc(0)/rb(0))
@@ -2067,8 +2108,8 @@ ENDIF
             bQ     = 1/(rd(3) * (1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = (qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw)*bQ
 
-            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) &
-                     / (cQ * (1-bQ/(cQ*rd(3))))
+            qaf(2) = (qgper*fgper*fg/(rd(2)+rss_) + qgimp*fwet_gimp*fgimp*fg/rd(2) &
+                     + qsatl(3)*fc(3)/rv + aQ + Lahe/rhoair/hvap) / (cQ * (1-bQ/(cQ*rd(3))))
 
             qaf(3) = (qaf(2)/rd(3) + qsatl(0)*fwet_roof*fc(0)/rb(0) + qm/raw) &
                      / (1/raw + 1/rd(3) + fwet_roof*fc(0)/rb(0))
@@ -2080,8 +2121,8 @@ ENDIF
             ! - Equations:
             ! taf(3) = (thm/rah+1/rd(3)*taf(2)+AHE2/rho/cpair+1/rb(0)*troof*fc(0))/&
             !          (1/rah+1/rd(3)+1/rb(0)*fc(0))
-            ! taf(2) = (1/rd(3)*taf(3)+1/rd(2)*taf1+1/rb(1)*twsun*fc(1)+1/rb(2)*twsha*fc(2)+AHE1/rho/cpair)/&
-            !          (1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
+            ! taf(2) = (1/rd(3)*taf(3)+1/rd(2)*taf1+1/rb(1)*twsun*fc(1)+1/rb(2)*twsha*fc(2)+&
+            !          AHE1/rho/cpair)/(1/rd(3)+1/rd(2)+1/rb(1)*fc(1)+1/rb(2)*fc(2))
             ! taf(1) = (1/rd(2)*taf(2)+1/rd(1)*tg*fg+1/rb(3)*tl*fc(3)+Hveh/rhoair/cpair)/&
             !          (1/rd(2)+1/rd(1)*fg+1/rb(3)*fc(3))
             !
@@ -2090,7 +2131,8 @@ ENDIF
             !          (1/raw+1/rd(3)+1/rb(0)*fc(0))
             ! qaf(2) = (1/rd(3)*qaf(3)+1/rd(2)*qaf(1))/&
             !          (1/rd(3) + 1/rd(2))
-            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
+            ! qaf(1) = (1/rd(2)*qaf(2)+1/(rd(1)+rss)*qgper*fgper*fg+&
+            !          1/rd(1)*qimp*fgimp*fg+1/(rb(3)+rs)*ql*fc(3)+h_veh/rho))/&
             !          (1/rd(2)+1/(rd(1)+rss)*fgper*fg+1/rd(1)*fgimp*fg+1/(rb(3)+rs)*fc(3))
 
             Hahe(1) = vehc*fsh + meta
@@ -2103,11 +2145,11 @@ ENDIF
 
             taf(2) = (tu(1)*fc(1)/rb(1) + tu(2)*fc(2)/rb(2) &
                      + (tu(3)*fc(3)*lsai/rb(3)+tg*fg/rd(1)+Hahe(1)/(rhoair*cpair))*aT &
-                     + (tu(0)*fc(0)/rb(0)+thm/rah+Hahe(3)/(rhoair*cpair))*bT + Hahe(2)/(rhoair*cpair)) &
-                     / (cT*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT)))
+                     + (tu(0)*fc(0)/rb(0)+thm/rah+Hahe(3)/(rhoair*cpair))*bT &
+                     + Hahe(2)/(rhoair*cpair)) / (cT*(1-aT/(rd(2)*cT)-bT/(rd(3)*cT)))
 
-            taf(1) = (tu(3)*fc(3)*lsai/rb(3) + tg*fg/rd(1) + taf(2)/rd(2) + Hahe(1)/(rhoair*cpair)) &
-                     / (1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))
+            taf(1) = (tu(3)*fc(3)*lsai/rb(3) + tg*fg/rd(1) + taf(2)/rd(2) &
+                     + Hahe(1)/(rhoair*cpair)) / (1/rd(2)+fg/rd(1)+fc(3)*lsai/rb(3))
 
             taf(3) = (tu(0)*fc(0)/rb(0) + taf(2)/rd(3) + thm/rah + Hahe(3)/(rhoair*cpair)) &
                      / (1/rah+1/rd(3)+fc(0)/rb(0))
@@ -2124,11 +2166,13 @@ ENDIF
             bQ     = 1/(rd(3)*(1/raw+1/rd(3)+fwet_roof*fc(0)/rb(0)))
             aQ     = 1/(rd(2)*(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv))
 
-            qaf(2) = ((fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+Lahe/rhoair/hvap)*aQ &
+            qaf(2) = ((fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_) &
+                     + fc(3)*qsatl(3)/rv+Lahe/rhoair/hvap)*aQ &
                      + (qm/raw+fc(0)*fwet_roof*qsatl(0)/rb(0))*bQ) &
                      / (cQ*(1-bQ/(cQ*rd(3))-aQ/(cQ*rd(2))))
 
-            qaf(1) = (fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_)+fc(3)*qsatl(3)/rv+qaf(2)/rd(2)+Lahe/rhoair/hvap) &
+            qaf(1) = (fg*fgimp*fwet_gimp*qgimp/rd(1)+fg*fgper*qgper/(rd(1)+rss_) &
+                     + fc(3)*qsatl(3)/rv+qaf(2)/rd(2)+Lahe/rhoair/hvap) &
                      /(1/rd(2)+fg*fgimp*fwet_gimp/rd(1)+fg*fgper/(rd(1)+rss_)+fc(3)/rv)
 
             qaf(3) = (fc(0)*fwet_roof*qsatl(0)/rb(0)+qaf(2)/rd(3)+qm/raw) &
@@ -2238,13 +2282,13 @@ IF ( DEF_URBAN_Irrigation ) THEN
       etr_deficit = max(0., etr - etr_)
 ENDIF
 
-! canopy fluxes and total assimilation amd respiration
+! canopy fluxes and total assimilation and respiration
 
       fsenl = fsenl + fsenl_dtl*dtl(it-1) &
-         ! add the imbalanced energy below due to T adjustment to sensibel heat
+         ! add the imbalanced energy below due to T adjustment to sensible heat
          + (dtl_noadj-dtl(it-1)) * (clai/deltim - dirab_dtl &
          + fsenl_dtl + hvap*fevpl_dtl) &
-         ! add the imbalanced energy below due to q adjustment to sensibel heat
+         ! add the imbalanced energy below due to q adjustment to sensible heat
          + hvap*erre
 
       etr     = etr     +     etr_dtl*dtl(it-1)
@@ -2340,7 +2384,7 @@ ENDIF
       err = sabv + irab + dirab_dtl*dtl(it-1) &
           - fsenl - hvap*fevpl - dheatl
 
-#if(defined CLMDEBUG)
+#if (defined CoLMDEBUG)
       IF (abs(err) .gt. .2) THEN
          write(6,*) 'energy imbalance in UrbanVegFlux.F90', &
          i,it-1,err,sabv,irab,fsenl,hvap*fevpl,dheatl
@@ -2475,8 +2519,8 @@ ENDIF
       IF (botlay == 2) THEN
          cgrnds = cpair*rhoair/rd(2)*( 1. - fg/(cT*rd(2)*(1-bT/(cT*rd(3)))) )
 
-         cgperl = rhoair/(rd(2)+rss_)*dqgperdT*( 1 - fg*fgper/(cQ*(rd(2)+rss_)*(1-bQ/(cQ*rd(3)))) )
-         cgimpl = rhoair/rd(2)       *dqgimpdT*( 1 - fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
+         cgperl = rhoair/(rd(2)+rss_)*dqgperdT*(1-fg*fgper/(cQ*(rd(2)+rss_)*(1-bQ/(cQ*rd(3)))) )
+         cgimpl = rhoair/rd(2)       *dqgimpdT*(1-fwet_gimp*fg*fgimp/(cQ*rd(2)*(1-bQ/(cQ*rd(3)))) )
          cgimpl = cgimpl*fwet_gimp
 
       ELSE !botlay == 1
@@ -2485,11 +2529,13 @@ ENDIF
                        - fg*aT*aT/(rd(1)*cT*(1-aT/(cT*rd(2))-bT/(cT*rd(3)))) )
 
          cgperl = rhoair/(rd(1)+rss_)*dqgperdT &
-                  *( 1. - fg*fgper/((rss_+rd(1))*(1/rd(2)+fg*fgper/(rss_+rd(1))+fg*fgimp*fwet_gimp/rd(1)+fc(3)/rv)) &
+                  *( 1. - fg*fgper/((rss_+rd(1))*(1/rd(2)+fg*fgper/(rss_+rd(1)) &
+                                    +fg*fgimp*fwet_gimp/rd(1)+fc(3)/rv)) &
                         - fg*fgper*aQ*aQ/((rss_+rd(1))*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
 
          cgimpl = rhoair/rd(1)*dqgimpdT &
-                  *( 1. - fg*fgimp*fwet_gimp/(rd(1)*(1/rd(2)+fg*fgper/(rss_+rd(1))+fg*fgimp*fwet_gimp/rd(1)+fc(3)/rv)) &
+                  *( 1. - fg*fgimp*fwet_gimp/(rd(1)*(1/rd(2)+fg*fgper/(rss_+rd(1)) &
+                                              +fg*fgimp*fwet_gimp/rd(1)+fc(3)/rv)) &
                         - fg*fgimp*fwet_gimp*aQ*aQ/(rd(1)*cQ*(1-aQ/(cQ*rd(2))-bQ/(cQ*rd(3)))) )
          cgimpl = cgimpl*fwet_gimp
       ENDIF
@@ -2521,16 +2567,15 @@ ENDIF
 
    SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 !=======================================================================
-! Original author: Yongjiu Dai, September 15, 1999
+!  Original author: Yongjiu Dai, September 15, 1999
 !
-! determine fraction of foliage covered by water and
-! fraction of foliage that is dry and transpiring
+!  determine fraction of foliage covered by water and
+!  fraction of foliage that is dry and transpiring
 !
+! !REVISIONS:
 !
-! REVISIONS:
-!
-! 2024.04.16   Hua Yuan: add option to account for vegetation snow process
-! 2018.06      Hua Yuan: remove sigf, to compatible with PFT
+!  2024.04.16, Hua Yuan: add option to account for vegetation snow process
+!  2018.06   , Hua Yuan: remove sigf, to compatible with PFT
 !=======================================================================
 
    USE MOD_Precision
@@ -2596,3 +2641,4 @@ ENDIF
    END SUBROUTINE dewfraction
 
 END MODULE MOD_Urban_Flux
+! ---------- EOP ------------

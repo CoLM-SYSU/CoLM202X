@@ -18,8 +18,8 @@ CONTAINS
 
    SUBROUTINE qsadv(T,p,es,esdT,qs,qsdT)
 
-!=======================================================================
-! Original author : Yongjiu Dai, September 15, 1999
+!-----------------------------------------------------------------------
+!  Original author: Yongjiu Dai, September 15, 1999
 !
 !      Description: computes saturation mixing ratio and change in saturation
 !                   mixing ratio with respect to temperature
@@ -32,7 +32,7 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-! dummy arguments
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in)  :: T        ! temperature (K)
    real(r8), intent(in)  :: p        ! surface atmospheric pressure (pa)
 
@@ -41,7 +41,7 @@ CONTAINS
    real(r8), intent(out) :: qs       ! humidity (kg/kg)
    real(r8), intent(out) :: qsdT     ! d(qs)/d(T)
 
-! local
+!-------------------------- Local Variables ----------------------------
    real(r8) td,vp,vp1,vp2
    real(r8) a0,a1,a2,a3,a4,a5,a6,a7,a8
    real(r8) b0,b1,b2,b3,b4,b5,b6,b7,b8
@@ -69,7 +69,7 @@ CONTAINS
           ,d3/0.249468427e-04/,d4/0.313703411e-06/,d5/0.257180651e-08/ &
           ,d6/0.133268878e-10/,d7/0.394116744e-13/,d8/0.498070196e-16/
 
-!=======================================================================
+!-----------------------------------------------------------------------
 
       td = T-273.16
 
@@ -105,3 +105,4 @@ CONTAINS
    END SUBROUTINE qsadv
 
 END MODULE MOD_Qsadv
+! ---------- EOP ------------

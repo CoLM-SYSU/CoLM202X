@@ -2,11 +2,11 @@
 
 MODULE MOD_SoilColorRefl
 
-! ======================================================================
-! Guess the soil color (reflectance) based on the land cover types
+!=======================================================================
+!  Guess the soil color (reflectance) based on the land cover types
 !
-! Created by Yongjiu Dai, 03/2014
-! ======================================================================
+!  Created by Yongjiu Dai, 03/2014
+!=======================================================================
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -54,7 +54,7 @@ CONTAINS
                          0.37, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25, 0.23, 0.21, 0.19 /)
 
       ! Guessed soil color of the Lawrence's classification
-#if(defined LULC_USGS)
+#if (defined LULC_USGS)
       IF(L.eq. 0) isc = 1  ! 0  Ocean (not used)
       IF(L.eq. 1) isc = 16 ! 1  Urban and Built-Up Land
       IF(L.eq. 2) isc = 3  ! 2  Dryland Cropland and Pasture
@@ -82,7 +82,7 @@ CONTAINS
       IF(L.eq.24) isc = 1  !24  Snow or Ice (not used)
 #endif
 
-#if(defined LULC_IGBP)
+#if (defined LULC_IGBP)
       IF(L.eq. 0) isc = 1  !0   Ocean (not used)
       IF(L.eq. 1) isc = 17 !1   Evergreen Needleleaf Forest
       IF(L.eq. 2) isc = 18 !2   Evergreen Broadleaf Forest

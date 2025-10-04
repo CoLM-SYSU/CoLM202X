@@ -6,7 +6,7 @@ HEADER = include/define.h
 INCLUDE_DIR = -Iinclude -I.bld/ -I${NETCDF_INC}
 VPATH = include : share : mksrfdata : mkinidata \
 	: main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : main/DA \
-	: CaMa/src : postprocess : .bld
+	: extends/CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
 .PHONY: all
@@ -31,22 +31,22 @@ OBJS_SHARED =    \
 				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
+				  MOD_IncompleteGamma.o        \
 				  MOD_UserDefFun.o             \
 				  MOD_TimeManager.o            \
+				  MOD_Const_PFT.o              \
 				  MOD_NetCDFSerial.o           \
-				  MOD_SingleSrfdata.o          \
 				  MOD_Block.o                  \
 				  MOD_Grid.o                   \
 				  MOD_Pixel.o                  \
 				  MOD_DataType.o               \
+				  MOD_NetCDFPoint.o            \
 				  MOD_NetCDFBlock.o            \
 				  MOD_CatchmentDataReadin.o    \
 				  MOD_5x5DataReadin.o          \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
-				  MOD_NetCDFVectorBlk.o        \
-				  MOD_NetCDFVectorOneS.o       \
-				  MOD_NetCDFVectorOneP.o       \
+				  MOD_NetCDFVector.o           \
 				  MOD_RangeCheck.o             \
 				  MOD_SpatialMapping.o         \
 				  MOD_AggregationRequestData.o \
@@ -54,16 +54,18 @@ OBJS_SHARED =    \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
-				  MOD_LandUrban.o              \
+				  MOD_Land2mWMO.o              \
 				  MOD_LandCrop.o               \
 				  MOD_LandPFT.o                \
+				  MOD_LandUrban.o              \
+				  MOD_Urban_Const_LCZ.o        \
+				  MOD_SingleSrfdata.o          \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
 				  MOD_HRUVector.o              \
 				  MOD_MeshFilter.o             \
-				  MOD_RegionClip.o             \
-				  MOD_Urban_Const_LCZ.o
+				  MOD_RegionClip.o
 
 ${OBJS_SHARED} : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
@@ -79,9 +81,12 @@ OBJS_MKSRFDATA = \
 				  Aggregation_SoilParameters.o      \
 				  Aggregation_DBedrock.o            \
 				  Aggregation_Topography.o          \
+				  Aggregation_TopoWetness.o         \
 				  Aggregation_TopographyFactors.o   \
+				  Aggregation_TopographyFactors_Simple.o \
 				  Aggregation_Urban.o               \
 				  Aggregation_SoilTexture.o         \
+				  MOD_Lulcc_TransferTrace.o         \
 				  MKSRFDATA.o
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
@@ -113,12 +118,13 @@ OBJS_BASIC =    \
 				 MOD_Urban_Vars_1DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
-				 MOD_Const_PFT.o                \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \
 				 MOD_Vars_1DFluxes.o            \
 				 MOD_Vars_1DForcing.o           \
+				 MOD_DA_Vars_1DFluxes.o         \
+				 MOD_DA_Vars_TimeVariables.o    \
 				 MOD_Hydro_SoilFunction.o       \
 				 MOD_Hydro_SoilWater.o          \
 				 MOD_Eroot.o                    \
@@ -154,6 +160,8 @@ OBJS_BASIC =    \
 				 MOD_ElementNeighbour.o         \
 				 MOD_Catch_HillslopeNetwork.o   \
 				 MOD_Catch_RiverLakeNetwork.o   \
+				 MOD_Catch_Reservoir.o          \
+				 MOD_VicParaReadin.o            \
 				 MOD_Initialize.o
 
 
@@ -199,6 +207,7 @@ OBJECTS_CAMA=\
 				  cmf_calc_stonxt_mod.o   \
 				  cmf_calc_diag_mod.o     \
 				  cmf_opt_outflw_mod.o    \
+				  cmf_ctrl_tracer_mod.o   \
 				  cmf_ctrl_mpi_mod.o      \
 				  cmf_ctrl_damout_mod.o   \
 				  cmf_ctrl_levee_mod.o    \
@@ -226,6 +235,7 @@ OBJS_MAIN = \
 				MOD_Catch_SubsurfaceFlow.o                \
 				MOD_Catch_RiverLakeFlow.o                 \
 				MOD_Catch_Hist.o                          \
+				MOD_Catch_WriteParameters.o               \
 				MOD_BGC_CNCStateUpdate1.o                 \
 				MOD_BGC_CNCStateUpdate2.o                 \
 				MOD_BGC_CNCStateUpdate3.o                 \
@@ -255,14 +265,19 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNNDynamics.o                 \
 				MOD_BGC_Veg_CNFireBase.o                  \
 				MOD_BGC_Veg_CNFireLi2016.o                \
-				MOD_Irrigation.o                          \
-				MOD_BGC_driver.o                          \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
 				MOD_ForcingDownscaling.o                  \
 				MOD_Forcing.o                             \
 				MOD_DA_GRACE.o                            \
-				MOD_DataAssimilation.o                    \
+				MOD_DA_Const.o                            \
+				MOD_DA_ObsOperator.o                      \
+				MOD_DA_EnKF.o                             \
+				MOD_DA_SMAP.o                             \
+				MOD_DA_FY3D.o                             \
+				MOD_DA_Main.o                        	  \
+				MOD_DA_Ensemble.o                         \
+				MOD_DA_Driver.o                           \
 				MOD_AssimStomataConductance.o             \
 				MOD_PlantHydraulic.o                      \
 				MOD_FrictionVelocity.o                    \
@@ -292,6 +307,8 @@ OBJS_MAIN = \
 				MOD_Thermal.o                             \
 				MOD_Vars_1DAccFluxes.o                    \
 				MOD_CaMa_Vars.o                           \
+				MOD_Irrigation.o                          \
+				MOD_BGC_driver.o                          \
 				MOD_HistWriteBack.o                       \
 				MOD_HistGridded.o                         \
 				MOD_HistVector.o                          \
@@ -317,9 +334,9 @@ OBJS_MAIN = \
 				CoLMMAIN_Urban.o                          \
 				MOD_Lulcc_Vars_TimeInvariants.o           \
 				MOD_Lulcc_Vars_TimeVariables.o            \
-				MOD_Lulcc_Initialize.o                    \
-				MOD_Lulcc_TransferTrace.o                 \
+				MOD_Lulcc_TransferTraceReadin.o           \
 				MOD_Lulcc_MassEnergyConserve.o            \
+				MOD_Lulcc_Initialize.o                    \
 				MOD_Lulcc_Driver.o                        \
 				CoLMDRIVER.o                              \
 				CoLMMAIN.o                                \

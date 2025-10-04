@@ -29,11 +29,12 @@ CP = /bin/cp
 #----
 #DMPI=-DUseMPI
 DCDF=-DUseCDF
-#DATM=-DNoAtom
+DSINGLE=-DSinglePrec_CMF
+CFLAGS=$(DMPI) $(DCDF) $(DATM) $(DSINGLE)
 CFLAGS=$(DMPI) $(DCDF) $(DATM) 
 #----
 # FCMP: main program (src/), FC: pre/post process (map/ etc/)
 FCMP = ifort -qopenmp
-FC = ifort
+FC = ifort -qopenmp
 LFLAGS =
-FFLAGS = -O3 -warn all -fpp -free -assume byterecl -heap-arrays -nogen-interface -lpthread -static-intel
+FFLAGS = -O3 -warn all -fpp -free -assume byterecl -heap-arrays -nogen-interface -lpthread -static-intel -align array64byte

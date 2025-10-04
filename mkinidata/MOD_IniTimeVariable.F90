@@ -24,13 +24,13 @@ CONTAINS
                      ,vegwp,gs0sun,gs0sha&
 !End plant hydraulic parameter
                      ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,fwet_snow,sag,scv&
-                     ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
+                     ,snowdp,fveg,fsno,sigf,green,lai,sai,lai_old,coszen&
                      ,snw_rds,mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi&
                      ,mss_dst1,mss_dst2,mss_dst3,mss_dst4&
                      ,alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd&
                      ,trad,tref,qref,rst,emis,zol,rib&
                      ,ustar,qstar,tstar,fm,fh,fq&
-#if(defined BGC)
+#if (defined BGC)
                      ,use_cnini, totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_veg, ctrunc_soil, ctrunc_vr &
                      ,totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_veg, ntrunc_soil, ntrunc_vr &
                      ,totvegc, totvegn, totcolc, totcoln, col_endcb, col_begcb, col_endnb, col_begnb &
@@ -71,10 +71,10 @@ CONTAINS
    USE MOD_Utils
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Vars_TimeVariables, only: tlai, tsai
-   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop
-   USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
+   USE MOD_Const_PFT, only: isevg, woody, leafcn, frootcn, livewdcn, deadwdcn, slatop, manure
+   USE MOD_Vars_TimeInvariants, only: ibedrock, dbedrock
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
+   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
 #endif
@@ -101,7 +101,7 @@ CONTAINS
          soil_d_n_alb,           &! albedo of near infrared of the dry soil
          zlnd,                   &! aerodynamic roughness length over soil surface [m]
          z0mr,                   &! ratio to calculate roughness length z0m
-         htop,                   &! Caonpy top height [m]
+         htop,                   &! canopy top height [m]
          chil,                   &! leaf angle distribution factor
          rho(2,2),               &! leaf reflectance (iw=iband, il=life and dead)
          tau(2,2),               &! leaf transmittance (iw=iband, il=life and dead)
@@ -146,7 +146,7 @@ CONTAINS
 !Plant Hydraulic parameters
          vegwp(1:nvegwcs),       &! vegetation water potential
          gs0sun,                 &! working copy of sunlit stomata conductance
-         gs0sha,                 &! working copy of shalit stomata conductance
+         gs0sha,                 &! working copy of shaded stomata conductance
 !end plant hydraulic parameters
          t_grnd,                 &! ground surface temperature [K]
          tleaf,                  &! sunlit leaf temperature [K]
@@ -163,6 +163,7 @@ CONTAINS
          sigf,                   &! fraction of veg cover, excluding snow-covered veg [-]
          lai,                    &! leaf area index
          sai,                    &! stem area index
+         lai_old,                &! leaf area index
 
          alb (2,2),              &! averaged albedo [-]
          ssun(2,2),              &! sunlit canopy absorption for solar radiation
@@ -176,7 +177,7 @@ CONTAINS
    real(r8), intent(inout) ::    &!
          zwt                      ! the depth to water table [m]
 
-   real(r8), intent(out) ::      &!
+   real(r8), intent(out) ::       &!
          snw_rds  ( maxsnl+1:0 ), &! effective grain radius (col,lyr) [microns, m-6]
          mss_bcphi( maxsnl+1:0 ), &! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
          mss_bcpho( maxsnl+1:0 ), &! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
@@ -188,7 +189,7 @@ CONTAINS
          mss_dst4 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
          ssno_lyr (2,2,maxsnl+1:1 ), &! snow layer absorption [-]
 
-                     ! Additional variables required by reginal model (WRF & RSM)
+                     ! Additional variables required by regional model (WRF & RSM)
                      ! ---------------------------------------------------------
          trad,                   &! radiative temperature of surface [K]
          tref,                   &! 2 m height air temperature [kelvin]
@@ -421,7 +422,7 @@ CONTAINS
                   wliq_soisno(j) = dz_soisno(j)*porsl(j)*denh2o
                   wice_soisno(j) = 0.
                ENDIF
-            ENDDO 
+            ENDDO
 
             IF (patchtype <= 1) THEN
                CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
@@ -450,14 +451,19 @@ CONTAINS
                ENDIF
             ENDDO
 
-            IF (DEF_USE_VariablySaturatedFlow) THEN
-               wa  = 0.
-               zwt = zi_soimm(nl_soil)/1000.
+            IF (patchtype <= 1) THEN
+               IF (DEF_USE_VariablySaturatedFlow) THEN
+                  wa  = 0.
+                  zwt = zi_soimm(nl_soil)/1000.
+               ELSE
+                  ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
+                  !                    is below the model bottom zi(nl_soil)
+                  wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+                  zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+               ENDIF
             ELSE
-               ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
-               !                    is below the model bottom zi(nl_soil)
-               wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-               zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+               wa = 0.
+               zwt = 0.
             ENDIF
 
          ENDIF
@@ -599,6 +605,9 @@ CONTAINS
                sigf = fveg
                lai  = tlai(ipatch)
                sai  = tsai(ipatch) * sigf
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old = lai
+               ENDIF
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -611,11 +620,18 @@ CONTAINS
                sigf  = 1.
                lai   = tlai(ipatch)
                sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old = lai
+                  lai_old_p(ps:pe) = lai_p(ps:pe)
+               ENDIF
 #endif
             ELSE
                sigf  = fveg
                lai   = tlai(ipatch)
                sai   = tsai(ipatch) * sigf
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old = lai
+               ENDIF
             ENDIF
          ENDIF
 
@@ -655,7 +671,7 @@ CONTAINS
          col_soilendnb                   = 0.0
          col_soilbegnb                   = 0.0
          IF(.not. use_cnini)THEN
-            decomp_cpools_vr          (:,:) = 0.0
+            decomp_cpools_vr       (:,:) = 0.0
          ENDIF
          decomp_cpools             (:)   = 0.0
          ctrunc_vr                 (:)   = 0.0
@@ -666,16 +682,16 @@ CONTAINS
          altmax_lastyear_indx            = 10
          lag_npp                         = 0.0
          IF(.not. use_cnini)THEN
-            decomp_npools_vr          (:,:) = 0.0
+            decomp_npools_vr       (:,:) = 0.0
          ENDIF
          decomp_npools             (:)   = 0.0
          ntrunc_vr                 (:)   = 0.0
          ntrunc_veg                      = 0.0
          ntrunc_soil                     = 0.0
          IF(.not. use_cnini)THEN
-            smin_no3_vr               (:)   = 5.0
-            smin_nh4_vr               (:)   = 5.0
-            sminn_vr                  (:)   = 10.0
+            smin_no3_vr            (:)   = 5.0
+            smin_nh4_vr            (:)   = 5.0
+            sminn_vr               (:)   = 10.0
          ENDIF
          sminn                           = 0.0
          DO j = 1, nl_soil
@@ -816,8 +832,8 @@ CONTAINS
                !            totvegn = totvegn + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
             ENDDO
             IF(DEF_USE_OZONESTRESS)THEN
-               o3uptakesun_p            (ps:pe) = 0._r8
-               o3uptakesha_p            (ps:pe) = 0._r8
+               o3uptakesun_p         (ps:pe) = 0._r8
+               o3uptakesha_p         (ps:pe) = 0._r8
             ENDIF
             leafc_xfer_p             (ps:pe) = 0.0
             frootc_xfer_p            (ps:pe) = 0.0
@@ -841,7 +857,6 @@ CONTAINS
             cropprod1c_p             (ps:pe) = 0.0
 
             leafn_xfer_p             (ps:pe) = 0.0
-            frootn_storage_p         (ps:pe) = 0.0
             frootn_xfer_p            (ps:pe) = 0.0
             livestemn_storage_p      (ps:pe) = 0.0
             livestemn_xfer_p         (ps:pe) = 0.0
@@ -927,6 +942,9 @@ CONTAINS
             tref_max_inst_p          (ps:pe) = spval
             latbaset_p               (ps:pe) = spval
             fert_p                   (ps:pe) = 0._r8
+            IF(DEF_FERT_SOURCE == 1)THEN
+               manunitro_p              (ps:pe) = manure(pftclass(ps:pe)) * 1000
+            ENDIF
 #endif
 
             IF(DEF_USE_LAIFEEDBACK)THEN
@@ -934,6 +952,10 @@ CONTAINS
                tlai_p                (ps:pe) = max(0._r8, tlai_p(ps:pe))
                lai_p                 (ps:pe) = tlai_p(ps:pe)
                lai                           = sum(lai_p(ps:pe) * pftfrac(ps:pe))
+               IF(DEF_USE_OZONESTRESS)THEN
+                  lai_old                    = lai
+                  lai_old_p          (ps:pe) = lai_p(ps:pe)
+               ENDIF
             ENDIF
 
 #ifdef BGC
@@ -1173,7 +1195,7 @@ CONTAINS
          extkd = 0.0
       ENDIF
 
-      ! Additional variables required by reginal model (WRF & RSM)
+      ! Additional variables required by regional model (WRF & RSM)
       ! totally arbitrarily assigned here
       trad  = t_grnd
       tref  = t_grnd
@@ -1201,9 +1223,9 @@ CONTAINS
    USE MOD_Precision
    IMPLICIT NONE
 
-   integer,  intent(in) :: maxsnl    !maximum of snow layers
-   integer,  intent(in) :: patchtype !index for land cover type [-]
-   real(r8), intent(in) :: snowdp    !snow depth [m]
+   integer,  intent(in)  :: maxsnl    !maximum of snow layers
+   integer,  intent(in)  :: patchtype !index for land cover type [-]
+   real(r8), intent(in)  :: snowdp    !snow depth [m]
    real(r8), intent(out) :: z_soisno (maxsnl+1:0) !node depth [m]
    real(r8), intent(out) :: dz_soisno(maxsnl+1:0) !layer thickness [m]
    integer,  intent(out) :: snl                   !number of snow layer

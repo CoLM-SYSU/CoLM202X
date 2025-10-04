@@ -3,24 +3,33 @@
 SUBROUTINE Aggregation_SoilParameters ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
-!--------------------------------------------------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Create soil hydraulic and thermal parameters for the modeling reolustion
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Create soil hydraulic and thermal parameters for the modeling reolustion
 !
-! REFERENCES:
-! 1)Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S. Liu, X. Lu, 2019. A global high-resolution dataset of
-!          soil hydraulic and thermal properties for land surface modeling. Journal of Advances in Modeling Earth Systems,11, 2996-3023.
-! 2)Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019. Evaluation of soil thermal conductivity schemes
-!          for use in land surface modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
-! 3)Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters
-!         using pedotransfer functions for land surface modeling. Journal of Hydrometeorology 14, 869–887
+! !REFERENCES:
+!  1) Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S.
+!  Liu, X. Lu, 2019. A global high-resolution dataset of soil hydraulic and
+!  thermal properties for land surface modeling. Journal of Advances in
+!  Modeling Earth Systems,11, 2996-3023.
 !
-! Original author: Yongjiu Dai and Wei Shangguan, 02/2014
+!  2) Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019.
+!  Evaluation of soil thermal conductivity schemes for use in land surface
+!  modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
 !
-! REVISIONS:
-! Nan Wei, 06/2019: add algorithms of fitting soil water retention curves to aggregate soil hydraulic parameters from pixels to a patch.
-! Shupeng Zhang and Nan Wei, 01/2022: porting codes to MPI parallel version
-! -------------------------------------------------------------------------------------------------------------------------------------
+!  3) Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013.
+!  Development of a China dataset of soil hydraulic parameters using
+!  pedotransfer functions for land surface modeling. Journal of
+!  Hydrometeorology 14, 869-887
+!
+!  Original author: Yongjiu Dai and Wei Shangguan, 02/2014
+!
+! !REVISIONS:
+!  06/2019, Nan Wei: add algorithms of fitting soil water retention curves to
+!                    aggregate soil hydraulic parameters from pixels to a patch.
+!
+!  01/2022, Shupeng Zhang and Nan Wei: porting codes to MPI parallel version.
+!-----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -28,6 +37,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    USE MOD_SPMD_Task
    USE MOD_Grid
    USE MOD_LandPatch
+   USE MOD_Land2mWMO
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
    USE MOD_AggregationRequestData
@@ -36,9 +46,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
 #endif
    USE MOD_Utils
    USE MOD_UserDefFun
-#ifdef SinglePoint
-   USE MOD_SingleSrfdata
-#endif
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag
 #endif
@@ -56,6 +63,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    character(len=256) :: landdir, lndname, cyear
    character(len=256) :: c
    integer :: nsl, ipatch, L, np, LL, ipxstt, ipxend
+   integer :: wmo_src
 
    type (block_data_real8_2d) :: vf_quartz_mineral_s_grid
    type (block_data_real8_2d) :: vf_gravels_s_grid
@@ -64,6 +72,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    type (block_data_real8_2d) :: vf_clay_s_grid
    type (block_data_real8_2d) :: wf_gravels_s_grid
    type (block_data_real8_2d) :: wf_sand_s_grid
+   type (block_data_real8_2d) :: wf_om_s_grid
+   type (block_data_real8_2d) :: wf_clay_s_grid
    type (block_data_real8_2d) :: OM_density_s_grid
    type (block_data_real8_2d) :: BD_all_s_grid
    type (block_data_real8_2d) :: theta_s_grid
@@ -89,6 +99,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: vf_clay_s_patches (:)
    real(r8), allocatable :: wf_gravels_s_patches (:)
    real(r8), allocatable :: wf_sand_s_patches (:)
+   real(r8), allocatable :: wf_om_s_patches (:)
+   real(r8), allocatable :: wf_clay_s_patches (:)
    real(r8), allocatable :: OM_density_s_patches (:)
    real(r8), allocatable :: BD_all_s_patches (:)
    real(r8), allocatable :: theta_s_patches (:)
@@ -116,6 +128,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: vf_clay_s_one (:)
    real(r8), allocatable :: wf_gravels_s_one (:)
    real(r8), allocatable :: wf_sand_s_one (:)
+   real(r8), allocatable :: wf_om_s_one (:)
+   real(r8), allocatable :: wf_clay_s_one (:)
    real(r8), allocatable :: OM_density_s_one (:)
    real(r8), allocatable :: BD_all_s_one (:)
    real(r8), allocatable :: theta_s_one (:)
@@ -137,7 +151,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), allocatable :: BA_alpha_one  (:)
    real(r8), allocatable :: BA_beta_one  (:)
 
-! local variables for estimating the upscaled soil parameters using the Levenberg–Marquardt fitting method
+! local variables for estimating the upscaled soil parameters using the Levenberg-Marquardt fitting method
 ! ---------------------------------------------------------------
    integer, parameter   :: npointw  = 24
    integer, parameter   :: npointb  = 20
@@ -161,7 +175,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                                           ! (theta_r, alpha and n)
    integer, parameter   :: nb = 2         ! the number of fitted parameters in Ke-Sr relationship (alpha and beta)
 
-! Variables needed for Levenberg–Marquardt algorithm in MINPACK library
+! Variables needed for Levenberg-Marquardt algorithm in MINPACK library
    real(r8),parameter   :: factor = 0.1
    real(r8),parameter   :: ftol = 1.0e-5
    real(r8),parameter   :: xtol = 1.0e-4
@@ -181,6 +195,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8), parameter :: vf_om_fill_water(8)             = 0.102
    real(r8), parameter :: wf_gravels_fill_water(8)        = 0.0
    real(r8), parameter :: wf_sand_fill_water(8)           = 0.1
+   real(r8), parameter :: wf_om_fill_water(8)             = 0.1
+   real(r8), parameter :: wf_clay_fill_water(8)           = 0.2
    real(r8), parameter :: theta_r_fill_water(8)           = 0.116
    real(r8), parameter :: alpha_vgm_fill_water(8)         = 0.01
    real(r8), parameter :: n_vgm_fill_water(8)             = 1.352
@@ -225,39 +241,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef SinglePoint
-      IF (USE_SITE_soilparameters) THEN
-         RETURN
-      ELSE
-         allocate ( SITE_soil_vf_quartz_mineral (nl_soil) )
-         allocate ( SITE_soil_vf_gravels        (nl_soil) )
-         allocate ( SITE_soil_vf_om             (nl_soil) )
-         allocate ( SITE_soil_vf_sand           (nl_soil) )
-         allocate ( SITE_soil_vf_clay           (nl_soil) )
-         allocate ( SITE_soil_wf_gravels        (nl_soil) )
-         allocate ( SITE_soil_wf_sand           (nl_soil) )
-         allocate ( SITE_soil_OM_density        (nl_soil) )
-         allocate ( SITE_soil_BD_all            (nl_soil) )
-         allocate ( SITE_soil_theta_s           (nl_soil) )
-         allocate ( SITE_soil_psi_s             (nl_soil) )
-         allocate ( SITE_soil_lambda            (nl_soil) )
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
-         allocate ( SITE_soil_theta_r   (nl_soil) )
-         allocate ( SITE_soil_alpha_vgm (nl_soil) )
-         allocate ( SITE_soil_L_vgm     (nl_soil) )
-         allocate ( SITE_soil_n_vgm     (nl_soil) )
-#endif
-         allocate ( SITE_soil_k_s      (nl_soil) )
-         allocate ( SITE_soil_csol     (nl_soil) )
-         allocate ( SITE_soil_tksatu   (nl_soil) )
-         allocate ( SITE_soil_tksatf   (nl_soil) )
-         allocate ( SITE_soil_tkdry    (nl_soil) )
-         allocate ( SITE_soil_k_solids (nl_soil) )
-         allocate ( SITE_soil_BA_alpha (nl_soil) )
-         allocate ( SITE_soil_BA_beta  (nl_soil) )
-      ENDIF
-#endif
-
       IF (p_is_worker) THEN
 
          allocate ( vf_quartz_mineral_s_patches(numpatch) )
@@ -267,6 +250,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          allocate ( vf_clay_s_patches          (numpatch) )
          allocate ( wf_gravels_s_patches       (numpatch) )
          allocate ( wf_sand_s_patches          (numpatch) )
+         allocate ( wf_om_s_patches            (numpatch) )
+         allocate ( wf_clay_s_patches          (numpatch) )
          allocate ( OM_density_s_patches       (numpatch) )
          allocate ( BD_all_s_patches           (numpatch) )
          allocate ( theta_s_patches            (numpatch) )
@@ -309,6 +294,13 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+                  vf_quartz_mineral_s_patches (ipatch) = vf_quartz_mineral_s_patches (wmo_src)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                      data_r8_2d_in1 = vf_quartz_mineral_s_grid, data_r8_2d_out1 = vf_quartz_mineral_s_one)
@@ -338,7 +330,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('vf_quartz_mineral_s lev '//trim(c), vf_quartz_mineral_s_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -349,10 +340,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (vf_quartz_mineral_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
-            -1.0e36_r8, lndname, 'vf_quartz_mineral_s_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_vf_quartz_mineral(nsl) = vf_quartz_mineral_s_patches(1)
+            -1.0e36_r8, lndname, 'vf_quartz_mineral_s_l'//trim(c), compress = 1, write_mode = 'one', &
+            create_mode = (nsl==1))
 #endif
 
          ! (2) volumetric fraction of gravels
@@ -383,6 +372,16 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  vf_gravels_s_patches (ipatch) = vf_gravels_s_patches (wmo_src)
+                  vf_sand_s_patches    (ipatch) = vf_sand_s_patches    (wmo_src)
+                  vf_om_s_patches      (ipatch) = vf_om_s_patches      (wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -472,7 +471,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('BA_beta lev '//trim(c), BA_beta_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -485,11 +483,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (vf_gravels_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'vf_gravels_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_vf_gravels(nsl) = vf_gravels_s_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -502,11 +496,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (vf_sand_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'vf_sand_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_vf_sand(nsl) = vf_sand_s_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -519,11 +509,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (vf_om_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'vf_om_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_vf_om(nsl) = vf_om_s_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -536,11 +522,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (BA_alpha_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'BA_alpha_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_BA_alpha(nsl) = BA_alpha_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -552,9 +534,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (BA_beta_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'BA_beta_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_BA_beta(nsl) = BA_beta_patches(1)
 #endif
 
          ! (5) gravimetric fraction of gravels
@@ -572,6 +551,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  wf_gravels_s_patches (ipatch) = wf_gravels_s_patches (wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -602,7 +589,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('wf_gravels_s lev '//trim(c), wf_gravels_s_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -615,10 +601,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (wf_gravels_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'wf_gravels_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_wf_gravels(nsl) = wf_gravels_s_patches(1)
-#endif
-
 
          ! (6) gravimetric fraction of sand
          IF (p_is_io) THEN
@@ -635,6 +617,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  wf_sand_s_patches (ipatch) = wf_sand_s_patches (wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -665,7 +655,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('wf_sand_s lev '//trim(c), wf_sand_s_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -677,9 +666,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (wf_sand_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'wf_sand_s_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_wf_sand(nsl) = wf_sand_s_patches(1)
 #endif
 
 
@@ -731,6 +717,19 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  theta_r_patches   (ipatch) = theta_r_patches   (wmo_src)
+                  alpha_vgm_patches (ipatch) = alpha_vgm_patches (wmo_src)
+                  n_vgm_patches     (ipatch) = n_vgm_patches     (wmo_src)
+                  theta_s_patches   (ipatch) = theta_s_patches   (wmo_src)
+                  k_s_patches       (ipatch) = k_s_patches       (wmo_src)
+                  L_vgm_patches     (ipatch) = L_vgm_patches     (wmo_src)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                          data_r8_2d_in1 = theta_r_grid,   data_r8_2d_out1 = theta_r_one, &
@@ -761,7 +760,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                         allocate ( ydatv  (1:np,npointw) )
                         allocate ( ydatvks(1:np,npointw) )
                         allocate ( THETA  (     npointw) )
-! the jacobian matrix required in Levenberg–Marquardt fitting method
+! the jacobian matrix required in Levenberg-Marquardt fitting method
                         allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
 ! the values of objective functions to be fitted
                         allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist
@@ -864,7 +863,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('L VGM lev '//trim(c), L_vgm_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -877,11 +875,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (theta_r_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'theta_r_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_theta_r(nsl) = theta_r_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -894,11 +888,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (alpha_vgm_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'alpha_vgm_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_alpha_vgm(nsl) = alpha_vgm_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -911,11 +901,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (n_vgm_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'n_vgm_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_n_vgm(nsl) = n_vgm_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -928,11 +914,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (theta_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'theta_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_theta_s(nsl) = theta_s_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -945,11 +927,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (k_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'k_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_k_s(nsl) = k_s_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -961,9 +939,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (L_vgm_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'L_vgm_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_L_vgm(nsl) = L_vgm_patches(1)
 #endif
 
 #endif
@@ -1002,6 +977,17 @@ SUBROUTINE Aggregation_SoilParameters ( &
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
 
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  theta_s_patches (ipatch) = theta_s_patches (wmo_src)
+                  k_s_patches     (ipatch) = k_s_patches     (wmo_src)
+                  psi_s_patches   (ipatch) = psi_s_patches   (wmo_src)
+                  lambda_patches  (ipatch) = lambda_patches  (wmo_src)
+
+                  CYCLE
+               ENDIF
+
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                                data_r8_2d_in1 = theta_s_grid, data_r8_2d_out1 = theta_s_one, &
@@ -1025,7 +1011,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                      IF( np > 1 ) THEN
                         allocate ( ydatc  (1:np,npointw-7) )
                         allocate ( ydatcks(1:np,npointw-7) )
-! the jacobian matrix required in Levenberg–Marquardt fitting method
+! the jacobian matrix required in Levenberg-Marquardt fitting method
                         allocate ( fjacc  (npointw-7,nc) )           ! calculated in SW_CB_dist
 ! the values of objective functions to be fitted
                         allocate ( fvecc  (npointw-7)    )           ! calculated in SW_CB_dist
@@ -1109,7 +1095,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
 #endif
 
 #ifndef vanGenuchten_Mualem_SOIL_MODEL
-#ifndef SinglePoint
          lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1122,11 +1107,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (theta_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'theta_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_theta_s(nsl) = theta_s_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1139,12 +1120,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (k_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'k_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_k_s(nsl) = k_s_patches(1)
-#endif
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1157,11 +1134,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (psi_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'psi_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_psi_s(nsl) = psi_s_patches(1)
-#endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1173,9 +1146,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (lambda_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'lambda_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_lambda(nsl) = lambda_patches(1)
 #endif
 
          ! (15) heat capacity of soil solids [J/(m3 K)]
@@ -1192,6 +1162,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  csol_patches(ipatch) = csol_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1222,7 +1200,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('csol lev '//trim(c), csol_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1234,9 +1211,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (csol_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'csol_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_csol(nsl) = csol_patches(1)
 #endif
 
          ! (16) thermal conductivity of unfrozen saturated soil [W/m-K]
@@ -1253,6 +1227,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  tksatu_patches(ipatch) = tksatu_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1283,7 +1265,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('tksatu lev '//trim(c), tksatu_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1295,9 +1276,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (tksatu_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'tksatu_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_tksatu(nsl) = tksatu_patches(1)
 #endif
 
          ! (17) thermal conductivity of frozen saturated soil [W/m-K]
@@ -1314,6 +1292,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  tksatf_patches(ipatch) = tksatf_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1344,7 +1330,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('tksatf lev '//trim(c), tksatf_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1356,9 +1341,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (tksatf_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'tksatf_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_tksatf(nsl) = tksatf_patches(1)
 #endif
 
          ! (18) thermal conductivity for dry soil [W/(m-K)]
@@ -1375,6 +1357,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  tkdry_patches(ipatch) = tkdry_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1405,7 +1395,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('tkdry lev '//trim(c), tkdry_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1417,9 +1406,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (tkdry_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'tkdry_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_tkdry(nsl) = tkdry_patches(1)
 #endif
 
          ! (19) thermal conductivity of soil solids [W/m-K]
@@ -1436,6 +1422,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  k_solids_patches(ipatch) = k_solids_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1466,7 +1460,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('k_solids lev '//trim(c), k_solids_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1478,9 +1471,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (k_solids_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'k_solids_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_k_solids(nsl) = k_solids_patches(1)
 #endif
 
          ! (20) OM_density [kg/m3]
@@ -1498,6 +1488,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  OM_density_s_patches(ipatch) = OM_density_s_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1528,7 +1526,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('OM_density_s lev '//trim(c), OM_density_s_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1540,9 +1537,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (OM_density_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'OM_density_s_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_OM_density(nsl) = OM_density_s_patches(1)
 #endif
 
          ! (21) bulk density of soil (GRAVELS + OM + Mineral Soils)
@@ -1560,6 +1554,15 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  BD_all_s_patches(ipatch) = BD_all_s_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
+
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1590,7 +1593,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('BD_all_s lev '//trim(c), BD_all_s_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1602,9 +1604,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
          CALL srfdata_map_and_write (BD_all_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'BD_all_s_l'//trim(c), compress = 1, write_mode = 'one')
-#endif
-#else
-         SITE_soil_BD_all(nsl) = BD_all_s_patches(1)
 #endif
 
          ! (22) volumetric fraction of clay
@@ -1622,6 +1621,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
             DO ipatch = 1, numpatch
                L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  vf_clay_s_patches(ipatch) = vf_clay_s_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
 
                IF (L /= 0) THEN
                   CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
@@ -1652,7 +1659,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL check_vector_data ('vf_clay_s lev '//trim(c), vf_clay_s_patches)
 #endif
 
-#ifndef SinglePoint
          lndname = trim(landdir)//'/vf_clay_s_l'//trim(c)//'_patches.nc'
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -1665,10 +1671,140 @@ SUBROUTINE Aggregation_SoilParameters ( &
          CALL srfdata_map_and_write (vf_clay_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, 'vf_clay_s_l'//trim(c), compress = 1, write_mode = 'one')
 #endif
-#else
-         SITE_soil_vf_clay(nsl) = vf_clay_s_patches(1)
+
+
+         ! (23) gravimetric fraction of om
+         IF (p_is_io) THEN
+
+            CALL allocate_block_data (gland, wf_om_s_grid)
+            lndname = trim(dir_rawdata)//'/soil/wf_om_s.nc'
+            CALL ncio_read_block (lndname, 'wf_om_s_l'//trim(c), gland, wf_om_s_grid)
+#ifdef USEMPI
+            CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_om_s_grid)
+#endif
+         ENDIF
+
+         IF (p_is_worker) THEN
+
+            DO ipatch = 1, numpatch
+               L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  wf_om_s_patches(ipatch) = wf_om_s_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
+
+               IF (L /= 0) THEN
+                  CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
+                     data_r8_2d_in1 = wf_om_s_grid, data_r8_2d_out1 = wf_om_s_one)
+                  CALL fillnan (wf_om_s_one, L == WATERBODY, wf_om_fill_water(nsl))
+                  wf_om_s_patches (ipatch) = sum (wf_om_s_one * (area_one/sum(area_one)))
+               ELSE
+                  wf_om_s_patches (ipatch) = -1.0e36_r8
+               ENDIF
+
+               IF (isnan_ud(wf_om_s_patches(ipatch))) THEN
+                  write(*,*) "Warning: NAN appears in wf_om_s_patches."
+                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+               ENDIF
+
+            ENDDO
+
+#ifdef USEMPI
+            CALL aggregation_worker_done ()
+#endif
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
+#ifdef RangeCheck
+         CALL check_vector_data ('wf_om_s lev '//trim(c), wf_om_s_patches)
+#endif
+
+         lndname = trim(landdir)//'/wf_om_s_l'//trim(c)//'_patches.nc'
+         CALL ncio_create_file_vector (lndname, landpatch)
+         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+         CALL ncio_write_vector (lndname, 'wf_om_s_l'//trim(c)//'_patches', 'patch',&
+                                 landpatch, wf_om_s_patches, DEF_Srfdata_CompressLevel)
+
+#ifdef SrfdataDiag
+         typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+         lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
+         CALL srfdata_map_and_write (wf_om_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, 'wf_om_s_l'//trim(c), compress = 1, write_mode = 'one')
+#endif
+
+
+         ! (24) gravimetric fraction of clay
+         IF (p_is_io) THEN
+
+            CALL allocate_block_data (gland, wf_clay_s_grid)
+            lndname = trim(dir_rawdata)//'/soil/wf_clay_s.nc'
+            CALL ncio_read_block (lndname, 'wf_clay_s_l'//trim(c), gland, wf_clay_s_grid)
+#ifdef USEMPI
+            CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_clay_s_grid)
+#endif
+         ENDIF
+
+         IF (p_is_worker) THEN
+
+            DO ipatch = 1, numpatch
+               L = landpatch%settyp(ipatch)
+
+               IF (ipatch == wmo_patch(landpatch%ielm(ipatch))) THEN
+                  wmo_src = wmo_source (landpatch%ielm(ipatch))
+
+                  wf_clay_s_patches(ipatch) = wf_clay_s_patches(wmo_src)
+
+                  CYCLE
+               ENDIF
+
+               IF (L /= 0) THEN
+                  CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
+                     data_r8_2d_in1 = wf_clay_s_grid, data_r8_2d_out1 = wf_clay_s_one)
+                  CALL fillnan (wf_clay_s_one, L == WATERBODY, wf_clay_fill_water(nsl))
+                  wf_clay_s_patches (ipatch) = sum (wf_clay_s_one * (area_one/sum(area_one)))
+               ELSE
+                  wf_clay_s_patches (ipatch) = -1.0e36_r8
+               ENDIF
+
+               IF (isnan_ud(wf_clay_s_patches(ipatch))) THEN
+                  write(*,*) "Warning: NAN appears in wf_clay_s_patches."
+                  write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+               ENDIF
+
+            ENDDO
+
+#ifdef USEMPI
+            CALL aggregation_worker_done ()
+#endif
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef RangeCheck
+         CALL check_vector_data ('wf_clay_s lev '//trim(c), wf_clay_s_patches)
+#endif
+
+         lndname = trim(landdir)//'/wf_clay_s_l'//trim(c)//'_patches.nc'
+         CALL ncio_create_file_vector (lndname, landpatch)
+         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+         CALL ncio_write_vector (lndname, 'wf_clay_s_l'//trim(c)//'_patches', 'patch',&
+                                 landpatch, wf_clay_s_patches, DEF_Srfdata_CompressLevel)
+
+#ifdef SrfdataDiag
+         typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+         lndname  = trim(dir_model_landdata) // '/diag/soil_parameters_' // trim(cyear) // '.nc'
+         CALL srfdata_map_and_write (wf_clay_s_patches, landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, 'wf_clay_s_l'//trim(c), compress = 1, write_mode = 'one')
+#endif
       ENDDO
 
 
@@ -1684,6 +1820,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          deallocate ( vf_clay_s_patches )
          deallocate ( wf_gravels_s_patches )
          deallocate ( wf_sand_s_patches )
+         deallocate ( wf_om_s_patches )
+         deallocate ( wf_clay_s_patches )
          deallocate ( OM_density_s_patches )
          deallocate ( BD_all_s_patches )
          deallocate ( theta_s_patches )
@@ -1711,6 +1849,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
          IF (allocated(vf_clay_s_one))           deallocate (vf_clay_s_one)
          IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
          IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one)
+         IF (allocated(wf_om_s_one))             deallocate (wf_om_s_one)
+         IF (allocated(wf_clay_s_one))           deallocate (wf_clay_s_one)
          IF (allocated(OM_density_s_one))        deallocate (OM_density_s_one)
          IF (allocated(BD_all_s_one))            deallocate (BD_all_s_one)
          IF (allocated(theta_s_one))             deallocate (theta_s_one)

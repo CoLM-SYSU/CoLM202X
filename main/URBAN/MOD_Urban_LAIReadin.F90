@@ -15,14 +15,12 @@ CONTAINS
 !-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
-!
 !  Read in urban LAI, SAI and urban tree cover data.
 !
 !  Create by Hua Yuan, 11/2021
 !
 !
 ! !REVISIONS:
-!
 !  08/2023, Wenzong Dong: add codes to read urban tree LAI.
 !
 !-----------------------------------------------------------------------
@@ -67,7 +65,7 @@ CONTAINS
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LAI/urban_SAI_'//trim(ctime)//'.nc'
       CALL ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
 #endif
-      ! loop for urban atch to assign fraction of green leaf
+      ! loop for urban patch to assign fraction of green leaf
       IF (p_is_worker) THEN
          DO u = 1, numurban
             npatch = urban2patch(u)
@@ -82,3 +80,4 @@ CONTAINS
 
 END MODULE MOD_Urban_LAIReadin
 #endif
+! ---------- EOP ------------

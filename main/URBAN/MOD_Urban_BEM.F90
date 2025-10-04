@@ -16,15 +16,15 @@ MODULE MOD_Urban_BEM
 
 CONTAINS
 
-!-----------------------------------------------------------------------------------
-   SUBROUTINE SimpleBEM ( deltim, rhoair, fcover, H, troom_max, troom_min, &
-                          troof_nl_bef, twsun_nl_bef, twsha_nl_bef, &
-                          troof_nl, twsun_nl, twsha_nl, &
-                          tkdz_roof, tkdz_wsun, tkdz_wsha, taf, &
-                          troom, troof_inner, twsun_inner, twsha_inner, &
-                          Fhac, Fwst, Fach, Fhah)
+!-----------------------------------------------------------------------
+   SUBROUTINE SimpleBEM (deltim, rhoair, fcover, H, troom_max, troom_min, &
+                         troof_nl_bef, twsun_nl_bef, twsha_nl_bef, &
+                         troof_nl, twsun_nl, twsha_nl, &
+                         tkdz_roof, tkdz_wsun, tkdz_wsha, taf, &
+                         troom, troof_inner, twsun_inner, twsha_inner, &
+                         Fhac, Fwst, Fach, Fhah)
 
-!-----------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !
 ! !DESCRIPTION:
 !
@@ -51,7 +51,7 @@ CONTAINS
 !     heat flux.
 !
 !  o Solve the following energy balance equations
-!  o variables: troom, troof_inner, twsun_inner, twsha_innter
+!  o Variables: troom, troof_inner, twsun_inner, twsha_innter
 !
 !     Hc_roof = Fn_roof        .................................(1)
 !     Hc_wsun = Fn_wsun        .................................(2)
@@ -71,10 +71,11 @@ CONTAINS
 !
 !  11/2022, Hua Yuan: Add option for constant AC.
 !
-!-----------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
    IMPLICIT NONE
 
+!-------------------------- Dummy Arguments ----------------------------
    real(r8), intent(in) :: &
         deltim,          &! seconds in a time step [second]
         rhoair,          &! density air [kg/m3]
@@ -105,11 +106,11 @@ CONTAINS
         Fwst,            &! waste heat from cool or heat
         Fach              ! flux from air exchange
 
-   ! local variables
+!-------------------------- Local Variables ----------------------------
    real(r8) :: &
-        ACH,             &! air exchange coefficience
-        hcv_roof,        &! convective exchange ceofficience for roof<->room
-        hcv_wall,        &! convective exchange ceofficience for wall<->room
+        ACH,             &! air exchange coefficient
+        hcv_roof,        &! convective exchange coefficient for roof<->room
+        hcv_wall,        &! convective exchange coefficient for wall<->room
         waste_coef,      &! waste coefficient
         waste_cool,      &! waste heat for AC cooling
         waste_heat        ! waste heat for AC heating
@@ -136,9 +137,11 @@ CONTAINS
    ! Option for continuous AC
    logical, parameter :: Constant_AC = .true.
 
-      ACH = 0.3           !air exchange coefficience
-      hcv_roof   = 4.040  !convective exchange ceofficience for roof<->room (W m-2 K-1)
-      hcv_wall   = 3.076  !convective exchange ceofficience for wall<->room (W m-2 K-1)
+!-----------------------------------------------------------------------
+
+      ACH = 0.3           !air exchange coefficient
+      hcv_roof   = 4.040  !convective exchange coefficient for roof<->room (W m-2 K-1)
+      hcv_wall   = 3.076  !convective exchange coefficient for wall<->room (W m-2 K-1)
       waste_cool = 0.6    !waste heat for AC cooling
       waste_heat = 0.2    !waste heat for AC heating
       cooling = .false.   !cooling case
@@ -162,9 +165,12 @@ CONTAINS
                   0.5*hcv_roof + 0.5*hcv_wall*f_wsun + 0.5*hcv_wall*f_wsha +&
                   H*rhoair*cpair/deltim + (ACH/3600.)*H*rhoair*cpair /)
 
-      B(1) = -0.5*hcv_roof*(troof_inner-troom) + 0.5*tkdz_roof*(troof_nl_bef-troof_inner) + 0.5*tkdz_roof*troof_nl
-      B(2) = -0.5*hcv_wall*(twsun_inner-troom) + 0.5*tkdz_wsun*(twsun_nl_bef-twsun_inner) + 0.5*tkdz_wsun*twsun_nl
-      B(3) = -0.5*hcv_wall*(twsha_inner-troom) + 0.5*tkdz_wsha*(twsha_nl_bef-twsha_inner) + 0.5*tkdz_wsha*twsha_nl
+      B(1) = -0.5*hcv_roof*(troof_inner-troom) + 0.5*tkdz_roof*(troof_nl_bef-troof_inner) &
+                                               + 0.5*tkdz_roof*troof_nl
+      B(2) = -0.5*hcv_wall*(twsun_inner-troom) + 0.5*tkdz_wsun*(twsun_nl_bef-twsun_inner) &
+                                               + 0.5*tkdz_wsun*twsun_nl
+      B(3) = -0.5*hcv_wall*(twsha_inner-troom) + 0.5*tkdz_wsha*(twsha_nl_bef-twsha_inner) &
+                                               + 0.5*tkdz_wsha*twsha_nl
 
       B(4) = H*rhoair*cpair*troom/deltim + (ACH/3600.)*H*rhoair*cpair*taf &
            + 0.5*hcv_roof*(troof_inner-troom) &
@@ -174,7 +180,7 @@ CONTAINS
       ! Inverse of matrix A
       Ainv = MatrixInverse(A)
 
-      ! Matrix computing to revole multiple reflections
+      ! Matrix computing to resolve multiple reflections
       X = matmul(Ainv, B)
 
       troof_inner_bef = troof_inner
@@ -200,7 +206,7 @@ CONTAINS
          Fhac  = H*rhoair*cpair*(troom-troom_min)/deltim
          troom = troom_min
          Fwst  = abs(Fhac)*waste_heat
-         ! nagative value, set it to 0.
+         ! negative value, set it to 0.
          Fhac  = 0.
       ENDIF
 
@@ -225,9 +231,13 @@ CONTAINS
          twsun_inner = (B(2)-A(2,4)*troom)/A(2,2)
          twsha_inner = (B(3)-A(3,4)*troom)/A(3,3)
 
-         Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef)        + 0.5*hcv_roof*(troof_inner-troom)
-         Fhac = 0.5*hcv_wall*(twsun_inner_bef-troom_bef)*f_wsun + 0.5*hcv_wall*(twsun_inner-troom)*f_wsun + Fhac
-         Fhac = 0.5*hcv_wall*(twsha_inner_bef-troom_bef)*f_wsha + 0.5*hcv_wall*(twsha_inner-troom)*f_wsha + Fhac
+         Fhac = 0.5*hcv_roof*(troof_inner_bef-troom_bef) &
+              + 0.5*hcv_roof*(troof_inner-troom)
+         Fhac = 0.5*hcv_wall*(twsun_inner_bef-troom_bef)*f_wsun &
+              + 0.5*hcv_wall*(twsun_inner-troom)*f_wsun + Fhac
+         Fhac = 0.5*hcv_wall*(twsha_inner_bef-troom_bef)*f_wsha &
+              + 0.5*hcv_wall*(twsha_inner-troom)*f_wsha + Fhac
+
          IF ( heating ) Fhah = abs(Fhac)
          Fhac = abs(Fhac) + abs(Fach)
          Fwst = Fhac*waste_coef
@@ -243,4 +253,4 @@ CONTAINS
    END SUBROUTINE SimpleBEM
 
 END MODULE MOD_Urban_BEM
-! --------- EOP ----------
+! ---------- EOP ------------

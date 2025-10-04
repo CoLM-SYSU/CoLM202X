@@ -4,8 +4,8 @@ MODULE MOD_Hydro_SoilWater
 
 !-------------------------------------------------------------------------
 ! Description:
-!    
-!    Numerical Solver of Richards equation. 
+!
+!    Numerical Solver of Richards equation.
 !
 !    Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
 !    Modeling Variably Saturated Flow in Stratified Soils
@@ -18,18 +18,20 @@ MODULE MOD_Hydro_SoilWater
    USE MOD_Precision
    USE MOD_Hydro_SoilFunction
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
-   USE MOD_UserDefFun, only : findloc_ud
+   USE MOD_UserDefFun, only: findloc_ud
 
    IMPLICIT NONE
 
    ! public subroutines and functions
    PUBLIC :: soil_water_vertical_movement
    PUBLIC :: get_water_equilibrium_state
-   PUBLIC :: soilwater_aquifer_exchange 
+   PUBLIC :: soilwater_aquifer_exchange
+   PUBLIC :: get_zwt_from_wa
+
 
    ! boundary condition:
    ! 1: fixed pressure head
-   ! 2: rainfall condition with a ponding layer on top of groud surface
+   ! 2: rainfall condition with a ponding layer on top of ground surface
    !    and a flux such as rainfall into the ponding layer
    ! 3: fixed flux
    ! 4: drainage condition with aquifers below soil columns
@@ -45,7 +47,7 @@ MODULE MOD_Hydro_SoilWater
 
    integer,  parameter :: effective_hk_type  = type_weighted_geometric_mean
    integer,  parameter :: max_iters_richards = 10
-   real(r8), parameter :: tol_richards = 1.e-7
+   real(r8), parameter :: tol_richards = 8.e-8
 
 #ifdef CoLMDEBUG
    integer(8) :: count_implicit = 0
@@ -75,8 +77,6 @@ MODULE MOD_Hydro_SoilWater
    PRIVATE :: flux_top_transitive_interface
    PRIVATE :: flux_btm_transitive_interface
    PRIVATE :: flux_both_transitive_interface
-
-   PRIVATE :: get_zwt_from_wa
 
    PRIVATE :: solve_least_squares_problem
    PRIVATE :: secant_method_iteration
@@ -171,7 +171,7 @@ CONTAINS
    ! soil water movement
    !=======================================================================
 
-   USE MOD_Const_Physical, only : tfrz
+   USE MOD_Const_Physical, only: tfrz
 
    IMPLICIT NONE
 
@@ -192,10 +192,10 @@ CONTAINS
    real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
    real(r8), intent(in) :: porsl_wa      ! soil porosity in aquifer (mm^3/mm^3)
-   
+
    ! ground water including rain, snow melt and dew formation (mm/s)
-   real(r8), intent(in) :: qgtop          
-   
+   real(r8), intent(in) :: qgtop
+
    real(r8), intent(in) :: etr           ! transpiration rate (mm/s)
    real(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
    real(r8), intent(in) :: rootflux(1:nlev) ! root water uptake from different layers (mm/s)
@@ -231,7 +231,7 @@ CONTAINS
    integer  :: lbc_typ_sub
    real(r8) :: lbc_val_sub
 
-   real(r8) :: w_sum_before, w_sum_after
+   real(r8) :: w_sum_before, w_sum_after, vl_before(nlev), wt_before, wa_before, dp_before
 
    real(r8) :: tol_q, tol_z, tol_v, tol_p
 
@@ -264,6 +264,11 @@ CONTAINS
       ENDDO
       w_sum_before = w_sum_before + wa
 
+      vl_before = ss_vliq
+      wt_before = zwt
+      wa_before = wa
+      dp_before = ss_dp
+
       ! transpiration
       IF(.not. DEF_USE_PLANTHYDRAULICS)THEN
          sumroot   = sum(rootr, mask = is_permeable .and. (rootr > 0.))
@@ -291,7 +296,7 @@ CONTAINS
 
             IF (ss_vliq(ilev) < 0) THEN
                deficit = ( - ss_vliq(ilev)) * sp_dz(ilev)
-               ss_vliq(ilev) = 0 
+               ss_vliq(ilev) = 0
             ELSEIF (ss_vliq(ilev) > porsl(ilev)) THEN
                deficit = - (ss_vliq(ilev) - porsl(ilev)) * sp_dz(ilev)
                ss_vliq(ilev) = porsl(ilev)
@@ -323,7 +328,7 @@ CONTAINS
       ENDDO
 
       ! Impermeable levels cut the soil column into several disconnected parts.
-      ! The Richards solver is called to calcute water movement part by part.
+      ! The Richards solver is called to calculate water movement part by part.
       ub = nlev
       soilcolumn : DO WHILE (ub >= 1)
 
@@ -394,12 +399,10 @@ CONTAINS
             zwt = 0._r8
          ENDIF
       ELSE
-         IF (is_permeable(nlev)) THEN
-            CALL get_zwt_from_wa ( &
-               porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
-               nprm, prms(:,nlev), tol_v, tol_z, &
-               wa, sp_zi(nlev), zwt)
-         ENDIF
+         CALL get_zwt_from_wa ( &
+            porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
+            nprm, prms(:,nlev), tol_v, tol_z, &
+            wa, sp_zi(nlev), zwt)
       ENDIF
 
       izwt = findloc_ud(zwt >= sp_zi, back=.true.)
@@ -432,9 +435,15 @@ CONTAINS
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc, ' in mm.'
-         write(*,*) 'qtop: ', qgtop, 'etr: ', etr, 'rsubst: ', rsubst, 'surf dep: ', ss_dp
+         write(*,*) 'qtop: ', qgtop, 'etr: ', sum(etroot)+etrdef, 'rsubst: ', rsubst
          write(*,*) 'permeable (1-10): ', is_permeable
-         write(*,*) 'vliq (1-10): ', ss_vliq
+         write(*,*) 'ponding depth: ', dp_before, '(before) to ', ss_dp, '(after)'
+         write(*,*) 'porsl (c1) and liquid volume before (c2) and after (c3) (1-10) : '
+         DO ilev = 1, nlev
+            write(*,*) porsl(ilev), vl_before(ilev), ss_vliq(ilev)
+         ENDDO
+         write(*,*) 'water table  : ', wt_before, '(before) to ', zwt, '(after)'
+         write(*,*) 'aquifer      : ', wa_before, '(before) to ', wa, '(after)'
       ENDIF
 
       DO ilev = 1, nlev
@@ -460,13 +469,13 @@ CONTAINS
    SUBROUTINE soilwater_aquifer_exchange ( &
          nlev, exwater, sp_zi, is_permeable, porsl, vl_r, psi_s, hksat, &
          nprm, prms, porsl_wa, ss_dp, ss_vliq, zwt, wa, izwt)
-      
+
    IMPLICIT NONE
 
    integer,  intent(in) :: nlev
 
    real(r8), intent(in) :: exwater ! total water exchange [mm]
-   
+
    real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level [mm]
 
    logical,  intent(in) :: is_permeable (1:nlev)
@@ -479,7 +488,7 @@ CONTAINS
    real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
    real(r8), intent(in) :: porsl_wa       ! soil porosity in aquifer [mm^3/mm^3]
-   
+
    real(r8), intent(inout) :: ss_dp           ! depth of ponding water [mm]
    real(r8), intent(inout) :: ss_vliq(1:nlev) ! volume content of liquid water [mm^3/mm^3]
    real(r8), intent(inout) :: zwt             ! location of water table [mm]
@@ -501,10 +510,10 @@ CONTAINS
       ! water table location
       izwt = findloc_ud(zwt >= sp_zi, back=.true.)
 
-      reswater = exwater 
+      reswater = exwater
 
       IF (reswater > 0.) THEN
-      
+
          IF ((zwt <= 0.) .and. (ss_dp > 0.)) THEN
             IF (ss_dp > reswater) THEN
                ss_dp = ss_dp - reswater
@@ -512,7 +521,7 @@ CONTAINS
             ELSE
                reswater = reswater - ss_dp
                ss_dp = 0.
-            ENDIF 
+            ENDIF
          ENDIF
 
          ! remove water from aquifer
@@ -640,10 +649,10 @@ CONTAINS
    real(r8), intent(inout) :: ss_wt   (lb:ub) ! soil water state : location of water table (mm)
    real(r8), intent(out)   :: ss_q  (lb-1:ub) ! soil water state : flux between levels (mm/s)
 
-   real(r8), intent(in) :: tol_q    ! tolerence for flux
-   real(r8), intent(in) :: tol_z    ! tolerence for locations
-   real(r8), intent(in) :: tol_v    ! tolerence for volumetric water content
-   real(r8), intent(in) :: tol_p    ! tolerence for potential head
+   real(r8), intent(in) :: tol_q    ! tolerance for flux
+   real(r8), intent(in) :: tol_z    ! tolerance for locations
+   real(r8), intent(in) :: tol_v    ! tolerance for volumetric water content
+   real(r8), intent(in) :: tol_p    ! tolerance for potential head
 
    ! Local variables
    real(r8) :: zwt             ! location of water table (mm)
@@ -723,7 +732,7 @@ CONTAINS
          wf_m1 = ss_wf
          vl_m1 = ss_vl
          wt_m1 = ss_wt
-      
+
          wsum_m1 = sum(ss_vl * (sp_dz - ss_wt)) + sum(ss_wt * vl_s)
          IF (ubc_typ == BC_RAINFALL) THEN
             wsum_m1 = wsum_m1 + ss_dp
@@ -1778,7 +1787,7 @@ CONTAINS
                CASE (BC_RAINFALL)
 
                   IF (has_wf(lb) .and. (wf(lb) >= tol_z))  THEN
-                  
+
                      qq(lb-1) = - hksat(lb) * ((psi_s(lb) - dp) / wf(lb) - 1)
 
                   ELSE
@@ -2665,7 +2674,7 @@ CONTAINS
          psi_s, hksat, nprm, prms, &
          dz, psi_u, psi_l, hk_u, hk_l)
 
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    real(r8), intent(in) :: psi_s, hksat
    integer,  intent(in) :: nprm
@@ -2838,7 +2847,7 @@ CONTAINS
          nlev_sat, dz_sat, psi_sat, hk_sat, psi_btm, &
          q_us_up, qlc, tol_q, tol_z, tol_p, flux_btm)
 
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    real(r8), intent(in) :: psi_s_u, hksat_u
    integer,  intent(in) :: nprm
@@ -3184,7 +3193,7 @@ CONTAINS
          q_us_u, q_us_l, qlc, &
          tol_q, tol_z, tol_p)
 
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    integer,  intent(in) :: ilev_us_u, ilev_us_l
    real(r8), intent(in) :: dz    (ilev_us_u:ilev_us_l)
@@ -3550,10 +3559,10 @@ CONTAINS
 
    ! -----
    SUBROUTINE print_VSF_iteration_stat_info ()
-      
+
    USE MOD_SPMD_Task
    IMPLICIT NONE
-   
+
    integer(8), SAVE :: count_implicit_accum = 0
    integer(8), SAVE :: count_explicit_accum = 0
    integer(8), SAVE :: count_wet2dry_accum  = 0
@@ -3570,7 +3579,7 @@ CONTAINS
             count_implicit_accum = count_implicit_accum + count_implicit
             count_explicit_accum = count_explicit_accum + count_explicit
             count_wet2dry_accum  = count_wet2dry_accum  + count_wet2dry
-            
+
 #ifdef USEMPI
             CALL mpi_send (count_implicit,       1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
             CALL mpi_send (count_explicit,       1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)

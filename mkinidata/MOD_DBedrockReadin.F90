@@ -11,7 +11,7 @@ MODULE MOD_DBedrockReadin
 
 CONTAINS
 
-   SUBROUTINE dbedrock_readin (dir_landdata)
+   SUBROUTINE dbedrock_readin (dir_landdata, lc_year)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -19,24 +19,26 @@ CONTAINS
    USE MOD_UserDefFun
    USE MOD_LandPatch
    USE MOD_NetCDFVector
-   USE MOD_Vars_Global, only : nl_soil, dz_soi
-   USE MOD_Vars_TimeInvariants, only : dbedrock, ibedrock
+   USE MOD_Vars_Global, only: nl_soil, dz_soi
+   USE MOD_Vars_TimeInvariants, only: dbedrock, ibedrock
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
 
    IMPLICIT NONE
 
+   integer, intent(in) :: lc_year    ! which year of data used
    character(len=256), intent(in) :: dir_landdata
 
    ! Local Variables
-   character(len=256) :: lndname
+   character(len=256) :: lndname, cyear
    integer  :: ipatch, L
 
 #ifdef SinglePoint
       dbedrock(:) = SITE_dbedrock
 #else
-      lndname = trim(dir_landdata)//'/dbedrock/dbedrock_patches.nc'
+      write(cyear,'(i4.4)') lc_year
+      lndname = trim(dir_landdata)//'/dbedrock/'//trim(cyear)//'/dbedrock_patches.nc'
       CALL ncio_read_vector (lndname, 'dbedrock_patches', landpatch, dbedrock)
 #endif
 
@@ -68,4 +70,3 @@ CONTAINS
    END SUBROUTINE dbedrock_readin
 
 END MODULE MOD_DBedrockReadin
-

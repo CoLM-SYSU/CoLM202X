@@ -1,28 +1,31 @@
 #include <define.h>
 
-!-------------------------------------------------------------------------
 MODULE MOD_SnowSnicar
 
-   !-----------------------------------------------------------------------
-   ! DESCRIPTION:
-   ! Calculate albedo of snow containing impurities
-   ! and the evolution of snow effective radius
-   !
-   ! ORIGINAL:
-   ! 1) The Community Land Model version 5.0 (CLM5.0)
-   ! 2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
-   !
-   ! REFERENCES:
-   ! 1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
-   ! Geosci. Model Dev., 14, 7673–7704, https://doi.org/10.5194/gmd-14-7673-2021
-   ! 2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
-   ! and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
-   ! Geosci. Model Dev., 16, 75–94, https://doi.org/10.5194/gmd-16-75-2023
-   !
-   ! REVISIONS:
-   ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
-   !
-   ! !USES:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Calculate albedo of snow containing impurities and the evolution of
+!  snow effective radius
+!
+!  Original:
+!  1) The Community Land Model version 5.0 (CLM5.0)
+!  2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land
+!     Model (ELM v2.0)
+!
+! !REFERENCES:
+!  1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling
+!  spectral snow albedo.  Geosci. Model Dev., 14, 7673-7704,
+!  https://doi.org/10.5194/gmd-14-7673-2021
+!  2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land
+!  model (version 2.0) and assessing its impacts on snow and surface
+!  fluxes over the Tibetan Plateau.  Geosci. Model Dev., 16, 75-94,
+!  https://doi.org/10.5194/gmd-16-75-2023
+!
+! !REVISIONS:
+!  Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
+!
+!-----------------------------------------------------------------------
+! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global, only: maxsnl
    USE MOD_SPMD_Task
@@ -37,7 +40,7 @@ MODULE MOD_SnowSnicar
 
 !--------------------------------------------------------------------
 ! DAI, Dec. 29, 2022
-! Temporay setting
+! Temporary setting
 
    logical, parameter :: use_extrasnowlayers = .false.
    character(len=256), parameter :: snow_shape = 'sphere'        ! (=1), 'spheroid'(=2), 'hexagonal_plate'(=3), 'koch_snowflake'(=4)
@@ -56,7 +59,7 @@ MODULE MOD_SnowSnicar
    ! !PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: SNICAR_RT        ! Snow albedo and vertically-resolved solar absorption
    PUBLIC :: SNICAR_AD_RT     ! Snow albedo and vertically-resolved solar absorption by adding-doubling solution
-                              ! To USE this subtroutine, set use_snicar_ad = true
+                              ! To USE this subroutine, set use_snicar_ad = true
    PUBLIC :: SnowAge_grain    ! Snow effective grain size evolution
    PUBLIC :: SnowAge_init     ! Initial read in of snow-aging file
    PUBLIC :: SnowOptics_init  ! Initial read in of snow-optics file
@@ -72,11 +75,11 @@ MODULE MOD_SnowSnicar
    integer,  parameter :: nir_bnd_bgn    = 2              ! first band index in near-IR spectrum [idx]
    integer,  parameter :: nir_bnd_end    = 5              ! ending near-IR band index [idx]
    integer,  parameter :: idx_Mie_snw_mx = 1471           ! number of effective radius indices used in Mie lookup table [idx]
-   integer,  parameter :: idx_T_max      = 11             ! maxiumum temperature index used in aging lookup table [idx]
+   integer,  parameter :: idx_T_max      = 11             ! maximum temperature index used in aging lookup table [idx]
    integer,  parameter :: idx_T_min      = 1              ! minimum temperature index used in aging lookup table [idx]
-   integer,  parameter :: idx_Tgrd_max   = 31             ! maxiumum temperature gradient index used in aging lookup table [idx]
+   integer,  parameter :: idx_Tgrd_max   = 31             ! maximum temperature gradient index used in aging lookup table [idx]
    integer,  parameter :: idx_Tgrd_min   = 1              ! minimum temperature gradient index used in aging lookup table [idx]
-   integer,  parameter :: idx_rhos_max   = 8              ! maxiumum snow density index used in aging lookup table [idx]
+   integer,  parameter :: idx_rhos_max   = 8              ! maximum snow density index used in aging lookup table [idx]
    integer,  parameter :: idx_rhos_min   = 1              ! minimum snow density index used in aging lookup table [idx]
 
 #ifdef MODAL_AER
@@ -93,7 +96,7 @@ MODULE MOD_SnowSnicar
 #endif
 
    integer,  parameter :: snw_rds_max_tbl = 1500          ! maximum effective radius defined in Mie lookup table [microns]
-   integer,  parameter :: snw_rds_min_tbl = 30            ! minimium effective radius defined in Mie lookup table [microns]
+   integer,  parameter :: snw_rds_min_tbl = 30            ! minimum effective radius defined in Mie lookup table [microns]
    real(r8), parameter :: snw_rds_max     = 1500._r8      ! maximum allowed snow effective radius [microns]
    real(r8), parameter :: snw_rds_min     = 54.526_r8     ! minimum allowed snow effective radius (also "fresh snow" value) [microns
    real(r8), parameter :: snw_rds_refrz   = 1000._r8      ! effective radius of re-frozen snow [microns]
@@ -231,33 +234,33 @@ MODULE MOD_SnowSnicar
 
 CONTAINS
 
-   !-----------------------------------------------------------------------
    SUBROUTINE SNICAR_RT (flg_snw_ice, flg_slr_in, &
                          coszen, snl, h2osno, frac_sno, &
                          h2osno_liq, h2osno_ice, snw_rds,   &
                          mss_cnc_aer_in, albsfc, albout, flx_abs)
-   !
-   ! !DESCRIPTION:
-   ! Determine reflectance of, and vertically-resolved solar absorption in,
-   ! snow with impurities.
-   !
-   ! Original references on physical models of snow reflectance include:
-   ! Wiscombe and Warren [1980] and Warren and Wiscombe [1980],
-   ! Journal of Atmospheric Sciences, 37,
-   !
-   ! The multi-layer solution for multiple-scattering used here is from:
-   ! Toon et al. [1989], Rapid calculation of radiative heating rates
-   ! and photodissociation rates in inhomogeneous multiple scattering atmospheres,
-   ! J. Geophys. Res., 94, D13, 16287-16301
-   !
-   ! The implementation of the SNICAR model in CLM/CSIM is described in:
-   ! Flanner, M., C. Zender, J. Randerson, and P. Rasch [2007],
-   ! Present-day climate forcing and response from black carbon in snow,
-   ! J. Geophys. Res., 112, D11202, doi: 10.1029/2006JD008003
-   !
-   ! !USES:
-   !
-   ! !ARGUMENTS:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Determine reflectance of, and vertically-resolved solar absorption in,
+!  snow with impurities.
+!
+!  Original references on physical models of snow reflectance include:
+!  Wiscombe and Warren [1980] and Warren and Wiscombe [1980],
+!  Journal of Atmospheric Sciences, 37,
+!
+!  The multi-layer solution for multiple-scattering used here is from:
+!  Toon et al. [1989], Rapid calculation of radiative heating rates
+!  and photodissociation rates in inhomogeneous multiple scattering atmospheres,
+!  J. Geophys. Res., 94, D13, 16287-16301
+!
+!  The implementation of the SNICAR model in CLM/CSIM is described in:
+!  Flanner, M., C. Zender, J. Randerson, and P. Rasch [2007],
+!  Present-day climate forcing and response from black carbon in snow,
+!  J. Geophys. Res., 112, D11202, doi: 10.1029/2006JD008003
+!
+! !USES:
+!
+!-----------------------------------------------------------------------
+! !ARGUMENTS:
 
    IMPLICIT NONE
 
@@ -1135,32 +1138,33 @@ CONTAINS
                             coszen, snl, h2osno, frac_sno, &
                             h2osno_liq, h2osno_ice, snw_rds, &
                             mss_cnc_aer_in, albsfc, albout, flx_abs)
-   !
-   ! !DESCRIPTION:
-   ! Determine reflectance of, and vertically-resolved solar absorption in,
-   ! snow with impurities, with updated shortwave scheme
-   !
-   ! The multi-layer solution for multiple-scattering used here is from:
-   ! Briegleb, P. and Light, B.: A Delta-Eddington mutiple scattering
-   ! parameterization for solar radiation in the sea ice component of the
-   ! community climate system model, 2007.
-   !
-   ! The implementation of the SNICAR-AD model in ELM is described in:
-   ! Dang et al., Inter-comparison and improvement of 2-stream shortwave
-   ! radiative transfer models for unified treatment of cryospheric surfaces
-   ! in ESMs, in review, 2019
-   !
-   ! To USE this subtroutine, set use_snicar_ad = true in ELM
-   !
-   ! IF config_use_snicar_ad = true in MPAS-seaice
-   ! Snow on land and snow on sea ice will be treated
-   ! with the same model for their solar radiative properties.
-   !
-   ! The inputs and outputs are the same to SUBROUTINE SNICAR_RT
-   !
-   ! !USES:
-   !
-   ! !ARGUMENTS:
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!  Determine reflectance of, and vertically-resolved solar absorption in,
+!  snow with impurities, with updated shortwave scheme
+!
+!  The multi-layer solution for multiple-scattering used here is from:
+!  Briegleb, P. and Light, B.: A Delta-Eddington mutiple scattering
+!  parameterization for solar radiation in the sea ice component of the
+!  community climate system model, 2007.
+!
+!  The implementation of the SNICAR-AD model in ELM is described in:
+!  Dang et al., Inter-comparison and improvement of 2-stream shortwave
+!  radiative transfer models for unified treatment of cryospheric surfaces
+!  in ESMs, in review, 2019
+!
+!  To USE this subtroutine, set use_snicar_ad = true in ELM
+!
+!  IF config_use_snicar_ad = true in MPAS-seaice
+!  Snow on land and snow on sea ice will be treated
+!  with the same model for their solar radiative properties.
+!
+!  The inputs and outputs are the same to SUBROUTINE SNICAR_RT
+!
+! !USES:
+!-----------------------------------------------------------------------
+! !ARGUMENTS:
 
    IMPLICIT NONE
 
@@ -2395,51 +2399,51 @@ CONTAINS
    !-----------------------------------------------------------------------
 
 
-   SUBROUTINE SnowAge_grain( dtime          , snl            , dz              , &
-                             qflx_snow_grnd , qflx_snwcp_ice , qflx_snofrz_lyr , &
-                             do_capsnow     , frac_sno       , h2osno          , &
-                             h2osno_liq     , h2osno_ice     , &
-                             t_soisno       , t_grnd         , &
-                             forc_t         , snw_rds        )
-   !
-   ! !DESCRIPTION:
-   ! Updates the snow effective grain size (radius).
-   ! Contributions to grain size evolution are from:
-   !   1. vapor redistribution (dry snow)
-   !   2. liquid water redistribution (wet snow)
-   !   3. re-freezing of liquid water
-   !
-   ! Vapor redistribution: Method is to retrieve 3 best-bit parameters that
-   ! depend on snow temperature, temperature gradient, and density,
-   ! that are derived from the microphysical model described in:
-   ! Flanner and Zender (2006), Linking snowpack microphysics and albedo
-   ! evolution, J. Geophys. Res., 111, D12208, doi:10.1029/2005JD006834.
-   ! The parametric equation has the form:
-   ! dr/dt = drdt_0*(tau/(dr_fresh+tau))^(1/kappa), WHERE:
-   !   r is the effective radius,
-   !   tau and kappa are best-fit parameters,
-   !   drdt_0 is the initial rate of change of effective radius, and
-   !   dr_fresh is the difference between the current and fresh snow states
-   !  (r_current - r_fresh).
-   !
-   ! Liquid water redistribution: Apply the grain growth FUNCTION from:
-   !   Brun, E. (1989), Investigation of wet-snow metamorphism in respect of
-   !   liquid-water content, Annals of Glaciology, 13, 22-26.
-   !   There are two parameters that describe the grain growth rate as
-   !   a FUNCTION of snow liquid water content (LWC). The "LWC=0" parameter
-   !   is zeroed here because we are accounting for dry snowing with a
-   !   different representation
-   !
-   ! Re-freezing of liquid water: Assume that re-frozen liquid water clumps
-   !   into an arbitrarily large effective grain size (snw_rds_refrz).
-   !   The phenomenon is observed (Grenfell), but so far unquantified, as far as
-   !   I am aware.
-   !
-   ! !USES:
-   !
-   ! DAI, Dec. 29, 2022
-   !-----------------------------------------------------------------------
-   ! !ARGUMENTS:
+   SUBROUTINE SnowAge_grain( dtime          , snl            , dz              ,&
+                             qflx_snow_grnd , qflx_snwcp_ice , qflx_snofrz_lyr ,&
+                             do_capsnow     , frac_sno       , h2osno          ,&
+                             h2osno_liq     , h2osno_ice     , t_soisno        ,&
+                             t_grnd         , forc_t         , snw_rds          )
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!  Updates the snow effective grain size (radius).
+!  Contributions to grain size evolution are from:
+!    1. vapor redistribution (dry snow)
+!    2. liquid water redistribution (wet snow)
+!    3. re-freezing of liquid water
+!
+!  Vapor redistribution: Method is to retrieve 3 best-bit parameters that
+!  depend on snow temperature, temperature gradient, and density,
+!  that are derived from the microphysical model described in:
+!  Flanner and Zender (2006), Linking snowpack microphysics and albedo
+!  evolution, J. Geophys. Res., 111, D12208, doi:10.1029/2005JD006834.
+!  The parametric equation has the form:
+!  dr/dt = drdt_0*(tau/(dr_fresh+tau))^(1/kappa), WHERE:
+!    r is the effective radius,
+!    tau and kappa are best-fit parameters,
+!    drdt_0 is the initial rate of change of effective radius, and
+!    dr_fresh is the difference between the current and fresh snow states
+!   (r_current - r_fresh).
+!
+!  Liquid water redistribution: Apply the grain growth FUNCTION from:
+!    Brun, E. (1989), Investigation of wet-snow metamorphism in respect of
+!    liquid-water content, Annals of Glaciology, 13, 22-26.
+!    There are two parameters that describe the grain growth rate as
+!    a FUNCTION of snow liquid water content (LWC). The "LWC=0" parameter
+!    is zeroed here because we are accounting for dry snowing with a
+!    different representation
+!
+!  Re-freezing of liquid water: Assume that re-frozen liquid water clumps
+!    into an arbitrarily large effective grain size (snw_rds_refrz).
+!    The phenomenon is observed (Grenfell), but so far unquantified, as far as
+!    I am aware.
+!
+! !USES:
+!
+! DAI, Dec. 29, 2022
+!-----------------------------------------------------------------------
+! !ARGUMENTS:
 
    IMPLICIT NONE
 
@@ -2948,19 +2952,20 @@ CONTAINS
 
 
    real(r8) FUNCTION FreshSnowRadius (forc_t)
-   !
-   ! !DESCRIPTION:
-   ! Returns fresh snow grain radius, which is linearly dependent on temperature.
-   ! This is implemented to remedy an outstanding bias that SNICAR has in initial
-   ! grain size. See e.g. Sandells et al, 2017 for a discussion (10.5194/tc-11-229-2017).
-   !
-   ! Yang et al. (2017), 10.1016/j.jqsrt.2016.03.033
-   !  discusses grain size observations, which suggest a temperature dependence.
-   !
-   ! !REVISION HISTORY:
-   ! Author: Leo VanKampenhout
-   !
-   ! !USES:
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+!  Returns fresh snow grain radius, which is linearly dependent on temperature.
+!  This is implemented to remedy an outstanding bias that SNICAR has in initial
+!  grain size. See e.g. Sandells et al, 2017 for a discussion (10.5194/tc-11-229-2017).
+!
+!  Yang et al. (2017), 10.1016/j.jqsrt.2016.03.033
+!  discusses grain size observations, which suggest a temperature dependence.
+!
+! !REVISION HISTORY:
+!  Author: Leo VanKampenhout
+!
+!-----------------------------------------------------------------------
+! !USES:
    USE MOD_Const_Physical, only: tfrz
    USE MOD_Aerosol, only: fresh_snw_rds_max
 
@@ -2992,3 +2997,4 @@ CONTAINS
    END FUNCTION FreshSnowRadius
 
 END MODULE MOD_SnowSnicar
+! ---------- EOP ------------

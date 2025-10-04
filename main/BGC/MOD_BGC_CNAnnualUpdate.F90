@@ -5,7 +5,7 @@ MODULE MOD_BGC_CNAnnualUpdate
 
 !------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION:
-! On the radiation time step, update annual summation variables mostly for phenology module:
+! On the radiation time step, update annual summation variables mostly for phenology modules:
 ! annsum_potential_gpp : annual sum of potential gpp of last year is used to calculate the available 
 !                        retranslocation N 
 ! annmax_retransn      : maximum of retranslocation N pool size of last year in a whole year, used to 
@@ -16,7 +16,7 @@ MODULE MOD_BGC_CNAnnualUpdate
 ! !ORIGINAL:
 ! The Community Land Model version 5.0 (CLM5.0)
 
-! !REFERENCE:
+! !REFERENCES:
 ! Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., 
 ! Ghimire, B., van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. 
 ! The Community Land Model version 5: Description of new features, benchmarking,

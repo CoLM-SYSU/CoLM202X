@@ -45,7 +45,7 @@
 
 
    DEF_forcing%vname    = 'Tair_f_inst' 'Qair_f_inst' 'Psurf_f_inst' 'Rainf_f_tavg' 'NULL' 'Wind_f_inst' 'SWdown_f_tavg' 'LWdown_f_tavg'
-   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'foreward' 'instant' 'instant' 'foreward' 'foreward'
+   DEF_forcing%timelog  = 'instant' 'instant' 'instant' 'forward' 'instant' 'instant' 'forward' 'forward'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
 
 /

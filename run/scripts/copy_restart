@@ -1,0 +1,108 @@
+Help()
+{
+#DISPLAY help
+   echo "----------------------------- Usage ------------------------------------"
+   echo "Descripion:Copy restart from other case"
+
+   echo !-------------------------------------------------------------------------
+   echo 'Syntax: ./copy_restart -s $SourceCase -d $DestinationCase' 
+   echo '                         -o $YYYY1-$MM1-$DD1 [ -e $YYYY2-$MM2-$DD2 ]'
+   echo !-------------------------------------------------------------------------
+   echo options:
+   echo -s The path of the source case, which your restart files will be copied from 
+   echo -d The path of the destimation case, which your restart files will be copied to
+   echo -o The date of the source restart file
+   echo -e optional, The date of the destination restart file, if absence, use the date
+   echo              of source restart file.
+   echo -h display command information
+}
+
+CopyRestart()
+{
+Source=$1
+Dest=$2
+SourceRestTime=$3
+DestRestTime=$4
+SourceCase=$(basename "$Source")
+DestCase=$(basename "$Dest")
+
+SourceRestJulianTime=`date -d "$SourceRestTime" +%Y`-`date -d "$SourceRestTime" +%j`-00000
+DestRestJulianTime=`date -d "$DestRestTime" +%Y`-`date -d "$DestRestTime" +%j`-00000
+
+if [ -d $Source/restart/$SourceRestJulianTime ];then
+   if [ -d $Dest/restart ];then
+      rm -rf $Dest/restart/$SourceRestJulianTime
+      cp -pr $Source/restart/$SourceRestJulianTime $Dest/restart/$DestRestJulianTime 
+      rm -rf $Dest/restart/const
+      cp -pr $Source/restart/const/ $Dest/restart/
+   else
+      echo Error: Destination case $Dest does not exist
+      exit
+   fi
+else
+   echo Error: Restart in source case $Source/$RestJulianTime does not exist
+   exit
+fi
+
+cd $Dest/restart/$DestRestJulianTime/
+total=`find . -maxdepth 1 -type f -name "${SourceCase}*.nc" | wc -l`
+i=0
+for files in *"${SourceCase}"*.nc
+do
+   i=$(($i + 1))
+   filesnew=$(echo "$files" | sed "s/$SourceCase/$DestCase/; s/$SourceRestJulianTime/$DestRestJulianTime/")
+   mv $files $filesnew
+done
+echo $i and $total
+
+cd $Dest/restart/const/
+for files in *"${SourceCase}"*.nc
+do
+   filesnew=$(echo "$files" | sed "s/$SourceCase/$DestCase/")
+   mv $files ${filesnew}
+done
+
+
+}
+while getopts ":hs:d:o:e:" options ;
+do
+    case $options in
+      s) Source="$OPTARG" ;;
+      d) Destination="$OPTARG"  ;;
+      o) SourceRestTime="$OPTARG" ;;
+      e) DestRestTime="$OPTARG" ;;
+      h) Help; exit;;
+      *) echo "invalid option: $@";exit ;;
+    esac
+done
+
+if [ -z "${Source}" ] || [ -z "${Destination}" ]; then
+   echo
+   echo 'Error: either "-s" or "-d" is missing' 
+   echo
+   Help
+   exit
+else 
+   datecheck=`date -d "$SourceRestTime"`
+   if [ -z "$datecheck" ];then
+      echo Error: Source restart time $restTime is invalid
+   else
+      if [ -z "$DestRestTime" ];then
+         DestRestTime=$SourceRestTime
+         echo Destination restart time '(-e option)' is missing
+         echo Assume Destination restart time is the same with Source $SourceRestTime
+      else
+         datecheck=`date -d "$DestRestTime"`
+         if [ -z "$datecheck" ];then
+            echo Error: Destination restart time $DestRestTime is invalid
+            exit
+         fi
+      fi
+      echo Source is $Source
+      echo Destination is $Destination
+      echo Source restart time is $SourceRestTime
+      echo Destination restart time is $DestRestTime
+      CopyRestart $Source $Destination $SourceRestTime $DestRestTime
+   fi
+fi
+

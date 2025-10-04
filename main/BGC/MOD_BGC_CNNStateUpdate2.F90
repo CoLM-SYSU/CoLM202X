@@ -4,30 +4,30 @@ MODULE MOD_BGC_CNNStateUpdate2
 
 !---------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION
-! First updates in vegetation and soil nitrogen. Thre major updates are included in bgc_CNNStateUpdate1Mod
+! First updates in vegetation and soil nitrogen. The major updates are included in bgc_CNNStateUpdate1Mod
 !  1. Update gap-mortality-associated veg and soil N pool size changes
-!  2. Record the accumulated N transfers associated to gap-mortality for semi-analytic spinup 
+!  2. Record the accumulated N transfers associated to gap-mortality for semi-analytic spinup
 
 ! !ORIGINAL:
 ! The Community Land Model version 5.0 (CLM5.0)
 
 ! REVISION:
-! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure. 
+! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure.
 !                   2) Record the accumulated gap-mortality-associated N transfers for veg and soil N semi-analytic spinup
 
    USE MOD_Precision
-   USE MOD_Namelist, only : DEF_USE_SASU, DEF_USE_DiagMatrix
+   USE MOD_Namelist, only: DEF_USE_SASU, DEF_USE_DiagMatrix
    USE MOD_BGC_Vars_TimeInvariants, only: &
             i_met_lit,i_cel_lit,i_lig_lit ,i_cwd, i_soil1, i_soil2,i_soil3
    USE MOD_BGC_Vars_TimeVariables, only: &
      ! decompositionn nitrogen pools & fluxes variables (inout)
             decomp_npools_vr, &
-            I_met_n_vr_acc     , I_cel_n_vr_acc      , I_lig_n_vr_acc   , I_cwd_n_vr_acc             
- 
+            I_met_n_vr_acc     , I_cel_n_vr_acc      , I_lig_n_vr_acc   , I_cwd_n_vr_acc
+
    USE MOD_BGC_Vars_1DFluxes, only: &
             gap_mortality_to_met_n, gap_mortality_to_cel_n , &
-            gap_mortality_to_lig_n, gap_mortality_to_cwdn  
- 
+            gap_mortality_to_lig_n, gap_mortality_to_cwdn
+
    USE MOD_BGC_Vars_PFTimeVariables, only: &
      ! vegetation nitrogen state variables (inout)
             leafn_p            , leafn_storage_p     , leafn_xfer_p     , &
@@ -37,7 +37,7 @@ MODULE MOD_BGC_CNNStateUpdate2
             livecrootn_p       , livecrootn_storage_p, livecrootn_xfer_p, &
             deadcrootn_p       , deadcrootn_storage_p, deadcrootn_xfer_p, &
             retransn_p         , npool_p, grainn_p, grainn_storage_p, grainn_xfer_p, cropseedn_deficit_p, &
-             
+
      ! SASU variables
             AKX_leafn_exit_p_acc     , AKX_leafn_st_exit_p_acc     , AKX_leafn_xf_exit_p_acc     , &
             AKX_frootn_exit_p_acc    , AKX_frootn_st_exit_p_acc    , AKX_frootn_xf_exit_p_acc    , &
@@ -46,7 +46,7 @@ MODULE MOD_BGC_CNNStateUpdate2
             AKX_livecrootn_exit_p_acc, AKX_livecrootn_st_exit_p_acc, AKX_livecrootn_xf_exit_p_acc, &
             AKX_deadcrootn_exit_p_acc, AKX_deadcrootn_st_exit_p_acc, AKX_deadcrootn_xf_exit_p_acc, &
             AKX_retransn_exit_p_acc
- 
+
    USE MOD_BGC_Vars_1DPFTFluxes, only: &
      ! vegetation nitrogen flux variables
             m_leafn_to_litter_p        , m_leafn_storage_to_litter_p     , m_leafn_xfer_to_litter_p     , &
@@ -56,10 +56,10 @@ MODULE MOD_BGC_CNNStateUpdate2
             m_livecrootn_to_litter_p   , m_livecrootn_storage_to_litter_p, m_livecrootn_xfer_to_litter_p, &
             m_deadcrootn_to_litter_p   , m_deadcrootn_storage_to_litter_p, m_deadcrootn_xfer_to_litter_p, &
             m_retransn_to_litter_p
- 
+
    USE MOD_Vars_PFTimeInvariants, only: pftfrac
    IMPLICIT NONE
- 
+
    PUBLIC NStateUpdate2
 
 CONTAINS
@@ -112,7 +112,7 @@ CONTAINS
                                  - m_deadcrootn_to_litter_p        (m) * deltim
          retransn_p          (m) = retransn_p          (m) &
                                  - m_retransn_to_litter_p          (m) * deltim
-     
+
      ! storage pools
          leafn_storage_p     (m) = leafn_storage_p     (m) &
                                  - m_leafn_storage_to_litter_p     (m) * deltim
@@ -126,7 +126,7 @@ CONTAINS
                                  - m_livecrootn_storage_to_litter_p(m) * deltim
          deadcrootn_storage_p(m) = deadcrootn_storage_p(m) &
                                  - m_deadcrootn_storage_to_litter_p(m) * deltim
-     
+
      ! transfer pools
          leafn_xfer_p        (m) = leafn_xfer_p        (m) &
                                  - m_leafn_xfer_to_litter_p        (m) * deltim

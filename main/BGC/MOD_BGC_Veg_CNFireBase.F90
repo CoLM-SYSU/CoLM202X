@@ -4,11 +4,11 @@ MODULE MOD_BGC_Veg_CNFireBase
 
 !---------------------------------------------------------------------------------------------------------------
 ! !DESCRIPTION:
-! This MODULE calculate fire-induced vegetation and litter CN transfers flux, the calculation is based on the fire-induced 
+! This MODULE calculate fire-induced vegetation and litter CN transfers flux, the calculation is based on the fire-induced
 ! CN loss rates (f). The CN loss rates (f) is calculated from bgc_veg_CNFireLi2016Mod.F90.
 !
-! !REFERENCE:
-! Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system – Part 1: Improved global fire
+! !REFERENCES:
+! Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system - Part 1: Improved global fire
 ! modeling in the Community Earth System Model (CESM1). Biogeosciences 10:2293-2314.
 ! Li, F., and Lawrence, D. 2017. Role of fire in the global land water budget during the 20th century through changing
 ! ecosystems. J. Clim. 30: 1894-1908.
@@ -17,7 +17,7 @@ MODULE MOD_BGC_Veg_CNFireBase
 ! The Community Land Model version 5.0 (CLM5)
 !
 ! !REVISION:
-! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
+! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code structure.
 
 
    USE MOD_Precision
@@ -26,17 +26,17 @@ MODULE MOD_BGC_Veg_CNFireBase
        fr_fcel   , fr_flig    , fr_flab  , lf_fcel , lf_flig, lf_flab
    USE MOD_Vars_TimeInvariants, only: &
        cmb_cmplt_fact, patchlatr, borealat, is_cwd, is_litter
- 
+
    USE MOD_BGC_Vars_TimeVariables, only: &
        ! decomposition pools & fluxes variables (inout)
        decomp_cpools_vr, decomp_npools_vr,  cropf, farea_burned, baf_crop, baf_peatf, totsomc
- 
+
    USE MOD_BGC_Vars_1DFluxes, only: &
        m_decomp_cpools_to_fire_vr, m_decomp_npools_to_fire_vr, &
        fire_mortality_to_met_c, fire_mortality_to_cel_c, fire_mortality_to_lig_c, fire_mortality_to_cwdc, &
        fire_mortality_to_met_n, fire_mortality_to_cel_n, fire_mortality_to_lig_n, fire_mortality_to_cwdn, &
        somc_fire
- 
+
    USE MOD_BGC_Vars_PFTimeVariables, only: &
        leafc_p     , leafc_storage_p     , leafc_xfer_p     , frootc_p    , frootc_storage_p    , frootc_xfer_p    , &
        livestemc_p , livestemc_storage_p , livestemc_xfer_p , deadstemc_p , deadstemc_storage_p , deadstemc_xfer_p , &
@@ -47,7 +47,7 @@ MODULE MOD_BGC_Veg_CNFireBase
        livecrootn_p, livecrootn_storage_p, livecrootn_xfer_p, deadcrootn_p, deadcrootn_storage_p, deadcrootn_xfer_p, &
        gresp_xfer_p, gresp_storage_p     , retransn_p       , &
        leaf_prof_p , froot_prof_p        , croot_prof_p     , stem_prof_p
- 
+
    USE MOD_BGC_Vars_1DPFTFluxes, only: &
        m_leafc_to_fire_p       , m_leafc_storage_to_fire_p       , m_leafc_xfer_to_fire_p     , &
        m_frootc_to_fire_p      , m_frootc_storage_to_fire_p      , m_frootc_xfer_to_fire_p    , &
@@ -64,7 +64,7 @@ MODULE MOD_BGC_Veg_CNFireBase
        m_livecrootn_to_fire_p  , m_livecrootn_storage_to_fire_p  , m_livecrootn_xfer_to_fire_p, &
        m_deadcrootn_to_fire_p  , m_deadcrootn_storage_to_fire_p  , m_deadcrootn_xfer_to_fire_p, &
        m_livestemn_to_deadstemn_fire_p, m_livecrootn_to_deadcrootn_fire_p, &
-       
+
        m_leafc_to_litter_fire_p     , m_leafc_storage_to_litter_fire_p     , m_leafc_xfer_to_litter_fire_p     , &
        m_frootc_to_litter_fire_p    , m_frootc_storage_to_litter_fire_p    , m_frootc_xfer_to_litter_fire_p    , &
        m_livestemc_to_litter_fire_p , m_livestemc_storage_to_litter_fire_p , m_livestemc_xfer_to_litter_fire_p , &
@@ -78,11 +78,11 @@ MODULE MOD_BGC_Veg_CNFireBase
        m_deadstemn_to_litter_fire_p , m_deadstemn_storage_to_litter_fire_p , m_deadstemn_xfer_to_litter_fire_p , &
        m_livecrootn_to_litter_fire_p, m_livecrootn_storage_to_litter_fire_p, m_livecrootn_xfer_to_litter_fire_p, &
        m_deadcrootn_to_litter_fire_p, m_deadcrootn_storage_to_litter_fire_p, m_deadcrootn_xfer_to_litter_fire_p
-    
+
    USE MOD_Vars_PFTimeInvariants, only: pftfrac
- 
+
    IMPLICIT NONE
- 
+
    PUBLIC CNFireFluxes
 
 CONTAINS
@@ -118,7 +118,7 @@ CONTAINS
               f = 0._r8
             ENDIF
          ENDIF
-  
+
          ! apply this rate to the patch state variables to get flux rates
          ! biomass burning
          ! carbon fluxes
@@ -133,18 +133,18 @@ CONTAINS
          m_deadstemc_storage_to_fire_p(m)   =  deadstemc_storage_p(m)  * f * cc_other(ivt)
          m_deadstemc_xfer_to_fire_p(m)      =  deadstemc_xfer_p(m)     * f * cc_other(ivt)
          m_frootc_to_fire_p(m)              =  frootc_p(m)             * f * 0._r8
-         m_frootc_storage_to_fire_p(m)      =  frootc_storage_p(m)     * f * cc_other(ivt) 
+         m_frootc_storage_to_fire_p(m)      =  frootc_storage_p(m)     * f * cc_other(ivt)
          m_frootc_xfer_to_fire_p(m)         =  frootc_xfer_p(m)        * f * cc_other(ivt)
          m_livecrootc_to_fire_p(m)          =  livecrootc_p(m)         * f * 0._r8
-         m_livecrootc_storage_to_fire_p(m)  =  livecrootc_storage_p(m) * f * cc_other(ivt) 
-         m_livecrootc_xfer_to_fire_p(m)     =  livecrootc_xfer_p(m)    * f * cc_other(ivt) 
+         m_livecrootc_storage_to_fire_p(m)  =  livecrootc_storage_p(m) * f * cc_other(ivt)
+         m_livecrootc_xfer_to_fire_p(m)     =  livecrootc_xfer_p(m)    * f * cc_other(ivt)
          m_deadcrootc_to_fire_p(m)          =  deadcrootc_p(m)         * f * 0._r8
-         m_deadcrootc_storage_to_fire_p(m)  =  deadcrootc_storage_p(m) * f*  cc_other(ivt) 
-         m_deadcrootc_xfer_to_fire_p(m)     =  deadcrootc_xfer_p(m)    * f * cc_other(ivt) 
+         m_deadcrootc_storage_to_fire_p(m)  =  deadcrootc_storage_p(m) * f*  cc_other(ivt)
+         m_deadcrootc_xfer_to_fire_p(m)     =  deadcrootc_xfer_p(m)    * f * cc_other(ivt)
          m_gresp_storage_to_fire_p(m)       =  gresp_storage_p(m)      * f * cc_other(ivt)
          m_gresp_xfer_to_fire_p(m)          =  gresp_xfer_p(m)         * f * cc_other(ivt)
-  
-  
+
+
          ! nitrogen fluxes
          m_leafn_to_fire_p(m)               =  leafn_p(m)              * f * cc_leaf(ivt)
          m_leafn_storage_to_fire_p(m)       =  leafn_storage_p(m)      * f * cc_other(ivt)
@@ -152,20 +152,20 @@ CONTAINS
          m_livestemn_to_fire_p(m)           =  livestemn_p(m)          * f * cc_lstem(ivt)
          m_livestemn_storage_to_fire_p(m)   =  livestemn_storage_p(m)  * f * cc_other(ivt)
          m_livestemn_xfer_to_fire_p(m)      =  livestemn_xfer_p(m)     * f * cc_other(ivt)
-         m_deadstemn_to_fire_p(m)           =  deadstemn_p(m)          * f * cc_dstem(ivt) 
+         m_deadstemn_to_fire_p(m)           =  deadstemn_p(m)          * f * cc_dstem(ivt)
          m_deadstemn_storage_to_fire_p(m)   =  deadstemn_storage_p(m)  * f * cc_other(ivt)
          m_deadstemn_xfer_to_fire_p(m)      =  deadstemn_xfer_p(m)     * f * cc_other(ivt)
          m_frootn_to_fire_p(m)              =  frootn_p(m)             * f * 0._r8
          m_frootn_storage_to_fire_p(m)      =  frootn_storage_p(m)     * f * cc_other(ivt)
          m_frootn_xfer_to_fire_p(m)         =  frootn_xfer_p(m)        * f * cc_other(ivt)
-         m_livecrootn_to_fire_p(m)          =  livecrootn_p(m)         * f * 0._r8 
-         m_livecrootn_storage_to_fire_p(m)  =  livecrootn_storage_p(m) * f * cc_other(ivt) 
+         m_livecrootn_to_fire_p(m)          =  livecrootn_p(m)         * f * 0._r8
+         m_livecrootn_storage_to_fire_p(m)  =  livecrootn_storage_p(m) * f * cc_other(ivt)
          m_livecrootn_xfer_to_fire_p(m)     =  livecrootn_xfer_p(m)    * f * cc_other(ivt)
          m_deadcrootn_to_fire_p(m)          =  deadcrootn_p(m)         * f * 0._r8
-         m_deadcrootn_xfer_to_fire_p(m)     =  deadcrootn_xfer_p(m)    * f * cc_other(ivt) 
+         m_deadcrootn_xfer_to_fire_p(m)     =  deadcrootn_xfer_p(m)    * f * cc_other(ivt)
          m_deadcrootn_storage_to_fire_p(m)  =  deadcrootn_storage_p(m) * f * cc_other(ivt)
          m_retransn_to_fire_p(m)            =  retransn_p(m)           * f * cc_other(ivt)
-  
+
          ! mortality due to fire
          ! carbon pools
          m_leafc_to_litter_fire_p(m)                   =  leafc_p(m) * f * &
@@ -179,19 +179,19 @@ CONTAINS
               fm_other(ivt)
          m_livestemc_to_litter_fire_p(m)               =  livestemc_p(m) * f * &
               (1._r8 - cc_lstem(ivt)) * &
-              fm_droot(ivt)    
+              fm_droot(ivt)
          m_livestemc_storage_to_litter_fire_p(m)       =  livestemc_storage_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
               fm_other(ivt)
          m_livestemc_xfer_to_litter_fire_p(m)          =  livestemc_xfer_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
-              fm_other(ivt) 
+              fm_other(ivt)
          m_livestemc_to_deadstemc_fire_p(m)            =  livestemc_p(m) * f * &
               (1._r8 - cc_lstem(ivt)) * &
               (fm_lstem(ivt)-fm_droot(ivt))
          m_deadstemc_to_litter_fire_p(m)               =  deadstemc_p(m) * f * m * &
               (1._r8 - cc_dstem(ivt)) * &
-              fm_droot(ivt)    
+              fm_droot(ivt)
          m_deadstemc_storage_to_litter_fire_p(m)       =  deadstemc_storage_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
               fm_other(ivt)
@@ -210,10 +210,10 @@ CONTAINS
               fm_droot(ivt)
          m_livecrootc_storage_to_litter_fire_p(m)      =  livecrootc_storage_p(m) * f * &
               (1._r8- cc_other(ivt)) * &
-              fm_other(ivt) 
+              fm_other(ivt)
          m_livecrootc_xfer_to_litter_fire_p(m)         =  livecrootc_xfer_p(m)    * f * &
               (1._r8- cc_other(ivt)) * &
-              fm_other(ivt) 
+              fm_other(ivt)
          m_livecrootc_to_deadcrootc_fire_p(m)          =  livecrootc_p(m)         * f * &
               (fm_lroot(ivt)-fm_droot(ivt))
          m_deadcrootc_to_litter_fire_p(m)              =  deadcrootc_p(m)         * f * m * &
@@ -223,22 +223,22 @@ CONTAINS
               fm_other(ivt)
          m_deadcrootc_xfer_to_litter_fire_p(m)         =  deadcrootc_xfer_p(m)    * f * &
               (1._r8- cc_other(ivt)) * &
-              fm_other(ivt)      
+              fm_other(ivt)
          m_gresp_storage_to_litter_fire_p(m)           =  gresp_storage_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
-              fm_other(ivt)  
+              fm_other(ivt)
          m_gresp_xfer_to_litter_fire_p(m)              =  gresp_xfer_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
-              fm_other(ivt) 
-  
-  
-         ! nitrogen pools    
+              fm_other(ivt)
+
+
+         ! nitrogen pools
          m_leafn_to_litter_fire_p(m)                  =  leafn_p(m) * f * &
               (1._r8 - cc_leaf(ivt)) * &
               fm_leaf(ivt)
          m_leafn_storage_to_litter_fire_p(m)          =  leafn_storage_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
-              fm_other(ivt)  
+              fm_other(ivt)
          m_leafn_xfer_to_litter_fire_p(m)             =  leafn_xfer_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
               fm_other(ivt)
@@ -247,7 +247,7 @@ CONTAINS
               fm_droot(ivt)
          m_livestemn_storage_to_litter_fire_p(m)      =  livestemn_storage_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
-              fm_other(ivt)   
+              fm_other(ivt)
          m_livestemn_xfer_to_litter_fire_p(m)         =  livestemn_xfer_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
               fm_other(ivt)
@@ -256,7 +256,7 @@ CONTAINS
               (fm_lstem(ivt)-fm_droot(ivt))
          m_deadstemn_to_litter_fire_p(m)              =  deadstemn_p(m) * f * m * &
               (1._r8 - cc_dstem(ivt)) * &
-              fm_droot(ivt)    
+              fm_droot(ivt)
          m_deadstemn_storage_to_litter_fire_p(m)      =  deadstemn_storage_p(m) * f * &
               (1._r8 - cc_other(ivt)) * &
               fm_other(ivt)
@@ -278,7 +278,7 @@ CONTAINS
               fm_other(ivt)
          m_livecrootn_xfer_to_litter_fire_p(m)        =  livecrootn_xfer_p(m)    * f * &
               (1._r8 - cc_other(ivt)) * &
-              fm_other(ivt) 
+              fm_other(ivt)
          m_livecrootn_to_deadcrootn_fire_p(m)         =  livecrootn_p(m)         * f * &
               (fm_lroot(ivt)-fm_droot(ivt))
          m_deadcrootn_to_litter_fire_p(m)             =  deadcrootn_p(m)         * f * &
@@ -291,12 +291,12 @@ CONTAINS
               fm_other(ivt)
          m_retransn_to_litter_fire_p(m)               =  retransn_p(m)           * f * &
               (1._r8 - cc_other(ivt)) * &
-              fm_other(ivt) 
-  
-      ENDDO  ! END of patches loop  
-  
+              fm_other(ivt)
+
+      ENDDO  ! END of patches loop
+
       ! fire-induced transfer of carbon and nitrogen pools to litter and cwd
-  
+
       DO j = 1,nl_soil
          fire_mortality_to_cwdc (j,i) = 0._r8
          fire_mortality_to_cwdn (j,i) = 0._r8
@@ -310,8 +310,8 @@ CONTAINS
                           m_deadstemn_to_litter_fire_p(m) * stem_prof_p(j,m) * pftfrac(m)
             fire_mortality_to_cwdn(j,i) = fire_mortality_to_cwdn(j,i) + &
                           m_deadcrootn_to_litter_fire_p(m) * croot_prof_p(j,m) * pftfrac(m)
-  
-  
+
+
             fire_mortality_to_cwdc(j,i) = fire_mortality_to_cwdc(j,i) + &
                           m_livestemc_to_litter_fire_p(m) * stem_prof_p(j,m) * pftfrac(m)
             fire_mortality_to_cwdc(j,i) = fire_mortality_to_cwdc(j,i) + &
@@ -320,8 +320,8 @@ CONTAINS
                           m_livestemn_to_litter_fire_p(m) * stem_prof_p(j,m) * pftfrac(m)
             fire_mortality_to_cwdn(j,i) = fire_mortality_to_cwdn(j,i) + &
                           m_livecrootn_to_litter_fire_p(m) * croot_prof_p(j,m) * pftfrac(m)
-  
-  
+
+
             fire_mortality_to_met_c(j,i)=fire_mortality_to_met_c(j,i) &
                           +((m_leafc_to_litter_fire_p(m)*lf_flab(ivt) &
                           +  m_leafc_storage_to_litter_fire_p(m) &
@@ -345,7 +345,7 @@ CONTAINS
             fire_mortality_to_lig_c(j,i)=fire_mortality_to_lig_c(j,i) &
                           + (m_leafc_to_litter_fire_p(m)*lf_flig(ivt)*leaf_prof_p(j,m) &
                           + m_frootc_to_litter_fire_p(m)*fr_flig(ivt)*froot_prof_p(j,m)) * pftfrac(m)
-  
+
             fire_mortality_to_met_n(j,i)=fire_mortality_to_met_n(j,i) &
                           + ((m_leafn_to_litter_fire_p(m)*lf_flab(ivt) &
                           +   m_leafn_storage_to_litter_fire_p(m) &
@@ -371,7 +371,7 @@ CONTAINS
          ENDDO
       ENDDO
       !
-      ! vertically-resolved decomposing C/N fire loss   
+      ! vertically-resolved decomposing C/N fire loss
       ! column loop
       !
       DO j = 1, nl_soil
@@ -386,7 +386,7 @@ CONTAINS
                        (f-baf_crop(i)) * cmb_cmplt_fact(cwd_fp)
             ENDIF
          ENDDO
-  
+
             ! nitrogen fluxes
          DO l = 1, ndecomp_pools
             IF ( is_litter(l) ) THEN
@@ -398,7 +398,7 @@ CONTAINS
                       (f-baf_crop(i)) * cmb_cmplt_fact(cwd_fp)
             ENDIF
          ENDDO
-  
+
       ENDDO
       ! Carbon loss due to peat fires
       !
