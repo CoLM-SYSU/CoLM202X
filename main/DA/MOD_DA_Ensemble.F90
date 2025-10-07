@@ -14,16 +14,22 @@ MODULE MOD_DA_Ensemble
 !   Lu Li, 12/2024: Initial version
 !-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_Vars_TimeVariables
+   USE MOD_DA_Vars_TimeVariables
+   USE MOD_Vars_1DForcing
+   USE MOD_LandPatch
    IMPLICIT NONE
    SAVE
 
    ! public functions
-   PUBLIC :: disturb_forc_ens
+   PUBLIC :: ensemble
 
    ! local parameters
    real(r8) :: std_sr = 0.3 ! multiplicative noise
-   real(r8) :: std_ta = 2.5 ! additive noise
-   real(r8) :: std_p  = 0.3 ! multiplicative noise, log-normal noise
+   real(r8) :: std_ta = 1.0 ! additive noise
+   real(r8) :: std_lw  = 20.0 ! multiplicative noise, log-normal noise
+   real(r8) :: std_p  = 0.5 ! multiplicative noise, log-normal noise
 
 !-----------------------------------------------------------------------
 
@@ -31,7 +37,37 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE disturb_ens(num_ens, type, rand_seed, A, mu, sigma, A_ens)
+   SUBROUTINE ensemble()
+
+!-----------------------------------------------------------------------
+      IMPLICIT NONE
+
+!------------------------ Local Variables ------------------------------
+      integer  ::  np
+
+!-----------------------------------------------------------------------
+
+!#############################################################################
+! Generate ensemble samples for forcing variables
+!#############################################################################
+
+      DO np = 1, numpatch
+         ! generate ensemble samples for forcing variables
+         CALL disturb_ens(DEF_DA_ENS, 2, forc_prc(np),   0.0, std_p,  forc_prc_ens(:,np))
+         CALL disturb_ens(DEF_DA_ENS, 2, forc_prl(np),   0.0, std_p,  forc_prl_ens(:,np))
+         CALL disturb_ens(DEF_DA_ENS, 0, forc_t(np),     0.0, std_ta, forc_t_ens(:,np))
+         CALL disturb_ens(DEF_DA_ENS, 0, forc_frl(np),   0.0, std_lw, forc_frl_ens(:,np))
+         CALL disturb_ens(DEF_DA_ENS, 1, forc_sols(np),  0.0, std_sr, forc_sols_ens(:,np))
+         CALL disturb_ens(DEF_DA_ENS, 1, forc_soll(np),  0.0, std_sr, forc_soll_ens(:,np))
+         CALL disturb_ens(DEF_DA_ENS, 1, forc_solsd(np), 0.0, std_sr, forc_solsd_ens(:,np))
+         CALL disturb_ens(DEF_DA_ENS, 1, forc_solld(np), 0.0, std_sr, forc_solld_ens(:,np))
+      ENDDO
+
+   END SUBROUTINE ensemble
+
+!-----------------------------------------------------------------------
+
+   SUBROUTINE disturb_ens(num_ens, type, A, mu, sigma, A_ens)
 
 !-----------------------------------------------------------------------
       USE MOD_Vars_Global, only: pi
@@ -39,7 +75,6 @@ CONTAINS
 
 !------------------------ Dummy Argument ------------------------------
       integer, intent(in)  :: num_ens
-      integer, intent(in)  :: rand_seed
       integer, intent(in)  :: type
       real(r8), intent(in)  :: A
       real(r8), intent(in)  :: mu
@@ -49,18 +84,10 @@ CONTAINS
 !------------------------ Local Variables ------------------------------
       real(r8) :: u1, u2
       real(r8) :: z(num_ens)
-      real(r8) :: mean_z
+      real(r8) :: mean_z, max_z
       integer  :: i
-      integer  :: seed_size
-      integer, allocatable :: seed(:)
 
 !-----------------------------------------------------------------------
-
-      ! initialize random number generator
-      CALL random_seed(size=seed_size)
-      allocate (seed(seed_size))
-      seed = rand_seed
-      CALL random_seed(put=seed)
 
       ! generate disturbance ensemble samples ~ N(mu, sigma)
       DO i = 1, num_ens
@@ -88,69 +115,13 @@ CONTAINS
             A_ens(i) = A*(1.0 + z(i))
          ENDDO
       ELSEIF (type == 2) THEN ! multiplicative log-normal
+         max_z = maxval(abs(z))
          DO i = 1, num_ens
-            A_ens(i) = A*exp(z(i))
+            A_ens(i) = A*(1 + z(i)/max_z)
          ENDDO
       ENDIF
 
-      deallocate (seed)
-
    END SUBROUTINE disturb_ens
-
-!-----------------------------------------------------------------------
-
-   SUBROUTINE disturb_forc_ens( &
-      idate, &
-      num_ens, &
-      forc_t, &
-      forc_prc, forc_prl, &
-      forc_sols, forc_soll, forc_solsd, forc_solld, &
-      forc_t_ens, &
-      forc_prc_ens, forc_prl_ens, &
-      forc_sols_ens, forc_soll_ens, forc_solsd_ens, forc_solld_ens)
-
-!-----------------------------------------------------------------------
-      USE MOD_TimeManager, only: minutes_since_1900
-      IMPLICIT NONE
-
-!------------------------ Dummy Argument ------------------------------
-      integer, intent(in) :: num_ens
-      integer, intent(in) :: idate(3)  
-      real(r8), intent(in) :: &
-         forc_t, &
-         forc_prc, &
-         forc_prl, &
-         forc_sols, &
-         forc_soll, &
-         forc_solsd, &
-         forc_solld
-
-      real(r8), intent(out) :: &
-         forc_t_ens(num_ens), &
-         forc_prc_ens(num_ens), &
-         forc_prl_ens(num_ens), &
-         forc_sols_ens(num_ens), &
-         forc_soll_ens(num_ens), &
-         forc_solsd_ens(num_ens), &
-         forc_solld_ens(num_ens)
-
-!------------------------ Local Variables ------------------------------
-      integer  ::  rand_seed
-
-!-----------------------------------------------------------------------
-      ! to guarantee reproducibility, all random processes are initialized with a fixed seed.
-      rand_seed = minutes_since_1900(idate(1), idate(2), idate(3))
-
-      ! generate ensemble samples for forcing variables
-      CALL disturb_ens(num_ens, 0, rand_seed + 0, forc_t,     0.0, std_ta, forc_t_ens)
-      CALL disturb_ens(num_ens, 2, rand_seed + 1, forc_prc,   0.0, std_p,  forc_prc_ens)
-      CALL disturb_ens(num_ens, 2, rand_seed + 2, forc_prl,   0.0, std_p,  forc_prl_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 3, forc_sols,  0.0, std_sr, forc_sols_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 4, forc_soll,  0.0, std_sr, forc_soll_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 5, forc_solsd, 0.0, std_sr, forc_solsd_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 6, forc_solld, 0.0, std_sr, forc_solld_ens)
-
-   END SUBROUTINE disturb_forc_ens
 
 !-----------------------------------------------------------------------
 END MODULE MOD_DA_Ensemble
