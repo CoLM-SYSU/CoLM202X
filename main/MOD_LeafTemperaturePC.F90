@@ -1207,8 +1207,8 @@ CONTAINS
                         k_soil_root  ,k_ax_root    ,gssun(i)     ,gssha(i)                    )
 
                   etr(i)  = etrsun(i) + etrsha(i)
-                  gssun(i) = gssun(i) * laisun(i)
-                  gssha(i) = gssha(i) * laisha(i)
+                  gssun(i) = gssun(i) * laisun(i) * 1.e-6
+                  gssha(i) = gssha(i) * laisha(i) * 1.e-6
 
                   CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), &
                      rb(i), gssun(i), effcon(i), vmax25(i), c3c4(i), gradm(i), trop(i), slti(i), hlti(i), &

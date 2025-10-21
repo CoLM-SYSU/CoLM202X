@@ -50,6 +50,9 @@ CreateClone()
       sed -i "s|$SourceName|$DestName|g" ./input_${DestName}-SASU.nml
       sed -i "s|$SourcePath|$DestPath|g" ./input_${DestName}-SASU.nml
    fi
+   if [ -f $SourcePath/$SourceName/history.nml ];then
+      cp -p $SourcePath/$SourceName/history.nml ./
+   fi
    
    echo copy source files 
    cd $SourcePath/$SourceName/bld/

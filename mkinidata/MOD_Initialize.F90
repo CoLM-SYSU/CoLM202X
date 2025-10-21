@@ -653,7 +653,7 @@ ENDIF
       max_depth_cryoturb         = 3._r8
 
       br              = 2.525e-6_r8
-      br_root         = 0.83e-6_r8
+      br_root         = 2.000e-6_r8
 
       fstor2tran      = 0.5
       ndays_on        = 30
