@@ -18,7 +18,7 @@ MODULE MOD_BGC_CNSummary
    USE MOD_Precision
    USE MOD_Namelist, only: DEF_USE_NITRIF, DEF_USE_DiagMatrix
    USE MOD_Vars_PFTimeInvariants, only: pftclass
-   USE MOD_Vars_PFTimeVariables, only:irrig_method_p
+   USE MOD_Vars_PFTimeVariables, only:irrig_method_p, lai_p
    USE MOD_Vars_TimeInvariants, only: BD_all
    USE MOD_BGC_Vars_TimeVariables, only: &
        totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
@@ -83,6 +83,11 @@ MODULE MOD_BGC_CNSummary
        leafc_enftemp, leafc_enfboreal, leafc_dnfboreal, leafc_ebftrop, leafc_ebftemp, leafc_dbftrop, leafc_dbftemp, &
        leafc_dbfboreal, leafc_ebstemp, leafc_dbstemp, leafc_dbsboreal, leafc_c3arcgrass, leafc_c3grass, leafc_c4grass, &
        decomp_hr, decomp_hr_vr, gpp, ar, er, supplement_to_sminn, supplement_to_sminn_vr, &
+       npp_enftemp, npp_enfboreal, npp_dnfboreal, npp_ebftrop, npp_ebftemp, npp_dbftrop, npp_dbftemp, &
+       npp_dbfboreal, npp_ebstemp, npp_dbstemp, npp_dbsboreal, npp_c3arcgrass, npp_c3grass, npp_c4grass, &
+       npptoleafc_enftemp, npptoleafc_enfboreal, npptoleafc_dnfboreal, npptoleafc_ebftrop, &
+       npptoleafc_ebftemp, npptoleafc_dbftrop, npptoleafc_dbftemp, npptoleafc_dbfboreal, npptoleafc_ebstemp, &
+       npptoleafc_dbstemp, npptoleafc_dbsboreal, npptoleafc_c3arcgrass, npptoleafc_c3grass, npptoleafc_c4grass, &
 #ifdef CROP
        cropprod1c_loss, grainc_to_cropprodc, grainc_to_seed, grainn_to_cropprodn, &
 #endif
@@ -102,6 +107,7 @@ MODULE MOD_BGC_CNSummary
        grain_mr_p, xsmrpool_to_atm_p, cpool_grain_gr_p, &
        transfer_grain_gr_p, cpool_grain_storage_gr_p, soil_change_p, &
        fire_closs_p, hrv_xsmrpool_to_atm_p, &
+       cpool_to_leafc_p, cpool_to_leafc_storage_p, &
 #ifdef CROP
        cropprod1c_loss_p, grainc_to_seed_p, grainc_to_food_p, grainn_to_food_p, &
 #endif
@@ -114,7 +120,10 @@ MODULE MOD_BGC_CNSummary
        m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p
    USE MOD_Vars_TimeVariables, only: &
        irrig_method_corn  , irrig_method_swheat, irrig_method_wwheat, irrig_method_soybean  , &
-       irrig_method_cotton, irrig_method_rice1 , irrig_method_rice2 , irrig_method_sugarcane
+       irrig_method_cotton, irrig_method_rice1 , irrig_method_rice2 , irrig_method_sugarcane, &
+       lai_enftemp, lai_enfboreal, lai_dnfboreal, lai_ebftrop, lai_ebftemp, lai_dbftrop, lai_dbftemp, &
+       lai_dbfboreal, lai_ebstemp, lai_dbstemp, lai_dbsboreal, lai_c3arcgrass, lai_c3grass, lai_c4grass
+
    USE MOD_Vars_TimeInvariants, only: patchclass
    USE MOD_Vars_Global, only: spval
    USE MOD_SPMD_Task
@@ -433,35 +442,63 @@ CONTAINS
          leafc_c3arcgrass           (i) = 0._r8
          leafc_c3grass              (i) = 0._r8
          leafc_c4grass              (i) = 0._r8
+         lai_enftemp                (i) = 0._r8
+         lai_enfboreal              (i) = 0._r8
+         lai_dnfboreal              (i) = 0._r8
+         lai_ebftrop                (i) = 0._r8
+         lai_ebftemp                (i) = 0._r8
+         lai_dbftrop                (i) = 0._r8
+         lai_dbftemp                (i) = 0._r8
+         lai_dbfboreal              (i) = 0._r8
+         lai_ebstemp                (i) = 0._r8
+         lai_dbstemp                (i) = 0._r8
+         lai_dbsboreal              (i) = 0._r8
+         lai_c3arcgrass             (i) = 0._r8
+         lai_c3grass                (i) = 0._r8
+         lai_c4grass                (i) = 0._r8
          DO m = ps, pe
             IF(pftclass      (m) .eq. 1)THEN
                leafc_enftemp   (i) = leafc_p(m)
+               lai_enftemp     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 2)THEN
                leafc_enfboreal (i) = leafc_p(m)
+               lai_enfboreal   (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 3)THEN
                leafc_dnfboreal (i) = leafc_p(m)
+               lai_dnfboreal   (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 4)THEN
                leafc_ebftrop   (i) = leafc_p(m)
+               lai_ebftrop     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 5)THEN
                leafc_ebftemp   (i) = leafc_p(m)
+               lai_ebftemp     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 6)THEN
                leafc_dbftrop   (i) = leafc_p(m)
+               lai_dbftrop     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 7)THEN
                leafc_dbftemp   (i) = leafc_p(m)
+               lai_dbftemp     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 8)THEN
                leafc_dbfboreal (i) = leafc_p(m)
+               lai_dbfboreal   (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 9)THEN
                leafc_ebstemp   (i) = leafc_p(m)
+               lai_ebstemp     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 10)THEN
                leafc_dbstemp   (i) = leafc_p(m)
+               lai_dbstemp     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 11)THEN
                leafc_dbsboreal (i) = leafc_p(m)
+               lai_dbsboreal   (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 12)THEN
                leafc_c3arcgrass(i)= leafc_p(m)
+               lai_c3arcgrass  (i)= lai_p(m)
             ELSE IF(pftclass (m) .eq. 13)THEN
                leafc_c3grass   (i) = leafc_p(m)
+               lai_c3grass     (i) = lai_p(m)
             ELSE IF(pftclass (m) .eq. 14)THEN
                leafc_c4grass   (i) = leafc_p(m)
+               lai_c4grass     (i) = lai_p(m)
             ENDIF
          ENDDO
       ENDIF
@@ -650,6 +687,7 @@ CONTAINS
    integer, intent(in) :: ps      ! start pft index
    integer, intent(in) :: pe      ! END pft index
    real(r8),intent(in) :: deltim  ! time step in seconds
+   real(r8) :: ar_p
 
    integer m
    real(r8) nfixlags
@@ -684,35 +722,105 @@ CONTAINS
       gpp_c3arcgrass             (i) = 0._r8
       gpp_c3grass                (i) = 0._r8
       gpp_c4grass                (i) = 0._r8
+      npp_enftemp                (i) = 0._r8
+      npp_enfboreal              (i) = 0._r8
+      npp_dnfboreal              (i) = 0._r8
+      npp_ebftrop                (i) = 0._r8
+      npp_ebftemp                (i) = 0._r8
+      npp_dbftrop                (i) = 0._r8
+      npp_dbftemp                (i) = 0._r8
+      npp_dbfboreal              (i) = 0._r8
+      npp_ebstemp                (i) = 0._r8
+      npp_dbstemp                (i) = 0._r8
+      npp_dbsboreal              (i) = 0._r8
+      npp_c3arcgrass             (i) = 0._r8
+      npp_c3grass                (i) = 0._r8
+      npp_c4grass                (i) = 0._r8
+      npptoleafc_enftemp         (i) = 0._r8
+      npptoleafc_enfboreal       (i) = 0._r8
+      npptoleafc_dnfboreal       (i) = 0._r8
+      npptoleafc_ebftrop         (i) = 0._r8
+      npptoleafc_ebftemp         (i) = 0._r8
+      npptoleafc_dbftrop         (i) = 0._r8
+      npptoleafc_dbftemp         (i) = 0._r8
+      npptoleafc_dbfboreal       (i) = 0._r8
+      npptoleafc_ebstemp         (i) = 0._r8
+      npptoleafc_dbstemp         (i) = 0._r8
+      npptoleafc_dbsboreal       (i) = 0._r8
+      npptoleafc_c3arcgrass      (i) = 0._r8
+      npptoleafc_c3grass         (i) = 0._r8
+      npptoleafc_c4grass         (i) = 0._r8
       DO m = ps, pe
+         ar_p = (leaf_mr_p(m)                   + froot_mr_p(m) &
+              + livestem_mr_p(m)                + livecroot_mr_p(m) &
+              + cpool_leaf_gr_p(m)              + cpool_froot_gr_p(m) &
+              + cpool_livestem_gr_p(m)          + cpool_deadstem_gr_p(m) &
+              + cpool_livecroot_gr_p(m)         + cpool_deadcroot_gr_p(m) &
+              + transfer_leaf_gr_p(m)           + transfer_froot_gr_p(m) &
+              + transfer_livestem_gr_p(m)       + transfer_deadstem_gr_p(m) &
+              + transfer_livecroot_gr_p(m)      + transfer_deadcroot_gr_p(m) &
+              + cpool_leaf_storage_gr_p(m)      + cpool_froot_storage_gr_p(m) &
+              + cpool_livestem_storage_gr_p(m)  + cpool_deadstem_storage_gr_p(m) &
+              + cpool_livecroot_storage_gr_p(m) + cpool_deadcroot_storage_gr_p(m) &
+              + grain_mr_p(m)                   + xsmrpool_to_atm_p(m) &
+              + cpool_grain_gr_p(m)             + transfer_grain_gr_p(m) &
+              + cpool_grain_storage_gr_p(m))
          IF(pftclass      (m) .eq. 1)THEN
-            gpp_enftemp   (i) = psn_to_cpool_p(m)
+            gpp_enftemp          (i) = psn_to_cpool_p(m)
+            npp_enftemp          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_enftemp   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 2)THEN
-            gpp_enfboreal (i) = psn_to_cpool_p(m)
+            gpp_enfboreal        (i) = psn_to_cpool_p(m)
+            npp_enfboreal        (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_enfboreal (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 3)THEN
-            gpp_dnfboreal (i) = psn_to_cpool_p(m)
+            gpp_dnfboreal        (i) = psn_to_cpool_p(m)
+            npp_dnfboreal        (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_dnfboreal (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 4)THEN
-            gpp_ebftrop   (i) = psn_to_cpool_p(m)
+            gpp_ebftrop          (i) = psn_to_cpool_p(m)
+            npp_ebftrop          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_ebftrop   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 5)THEN
-            gpp_ebftemp   (i) = psn_to_cpool_p(m)
+            gpp_ebftemp          (i) = psn_to_cpool_p(m)
+            npp_ebftemp          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_ebftemp   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 6)THEN
-            gpp_dbftrop   (i) = psn_to_cpool_p(m)
+            gpp_dbftrop          (i) = psn_to_cpool_p(m)
+            npp_dbftrop          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_dbftrop   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 7)THEN
-            gpp_dbftemp   (i) = psn_to_cpool_p(m)
+            gpp_dbftemp          (i) = psn_to_cpool_p(m)
+            npp_dbftemp          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_dbftemp   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 8)THEN
-            gpp_dbfboreal (i) = psn_to_cpool_p(m)
+            gpp_dbfboreal        (i) = psn_to_cpool_p(m)
+            npp_dbfboreal        (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_dbfboreal (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 9)THEN
-            gpp_ebstemp   (i) = psn_to_cpool_p(m)
+            gpp_ebstemp          (i) = psn_to_cpool_p(m)
+            npp_ebstemp          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_ebstemp   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 10)THEN
-            gpp_dbstemp   (i) = psn_to_cpool_p(m)
+            gpp_dbstemp          (i) = psn_to_cpool_p(m)
+            npp_dbstemp          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_dbstemp   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 11)THEN
-            gpp_dbsboreal (i) = psn_to_cpool_p(m)
+            gpp_dbsboreal        (i) = psn_to_cpool_p(m)
+            npp_dbsboreal        (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_dbsboreal (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 12)THEN
-            gpp_c3arcgrass(i)= psn_to_cpool_p(m)
+            gpp_c3arcgrass       (i) = psn_to_cpool_p(m)
+            npp_c3arcgrass       (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_c3arcgrass(i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 13)THEN
-            gpp_c3grass   (i) = psn_to_cpool_p(m)
+            gpp_c3grass          (i) = psn_to_cpool_p(m)
+            npp_c3grass          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_c3grass   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ELSE IF(pftclass (m) .eq. 14)THEN
-            gpp_c4grass   (i) = psn_to_cpool_p(m)
+            gpp_c4grass          (i) = psn_to_cpool_p(m)
+            npp_c4grass          (i) = psn_to_cpool_p(m) - ar_p
+            npptoleafc_c4grass   (i) = cpool_to_leafc_p(m) + cpool_to_leafc_storage_p(m)
          ENDIF
       ENDDO
 
