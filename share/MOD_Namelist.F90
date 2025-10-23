@@ -681,6 +681,48 @@ MODULE MOD_Namelist
       logical :: leafc_c3arcgrass                 = .false. !12
       logical :: leafc_c3grass                    = .false. !13
       logical :: leafc_c4grass                    = .false. !14
+      logical :: lai_enftemp                      = .false. !1
+      logical :: lai_enfboreal                    = .false. !2
+      logical :: lai_dnfboreal                    = .false. !3
+      logical :: lai_ebftrop                      = .false. !4
+      logical :: lai_ebftemp                      = .false. !5
+      logical :: lai_dbftrop                      = .false. !6
+      logical :: lai_dbftemp                      = .false. !7
+      logical :: lai_dbfboreal                    = .false. !8
+      logical :: lai_ebstemp                      = .false. !9
+      logical :: lai_dbstemp                      = .false. !10
+      logical :: lai_dbsboreal                    = .false. !11
+      logical :: lai_c3arcgrass                   = .false. !12
+      logical :: lai_c3grass                      = .false. !13
+      logical :: lai_c4grass                      = .false. !14
+      logical :: npp_enftemp                      = .false. !1
+      logical :: npp_enfboreal                    = .false. !2
+      logical :: npp_dnfboreal                    = .false. !3
+      logical :: npp_ebftrop                      = .false. !4
+      logical :: npp_ebftemp                      = .false. !5
+      logical :: npp_dbftrop                      = .false. !6
+      logical :: npp_dbftemp                      = .false. !7
+      logical :: npp_dbfboreal                    = .false. !8
+      logical :: npp_ebstemp                      = .false. !9
+      logical :: npp_dbstemp                      = .false. !10
+      logical :: npp_dbsboreal                    = .false. !11
+      logical :: npp_c3arcgrass                   = .false. !12
+      logical :: npp_c3grass                      = .false. !13
+      logical :: npp_c4grass                      = .false. !14
+      logical :: npptoleafc_enftemp               = .false. !1
+      logical :: npptoleafc_enfboreal             = .false. !2
+      logical :: npptoleafc_dnfboreal             = .false. !3
+      logical :: npptoleafc_ebftrop               = .false. !4
+      logical :: npptoleafc_ebftemp               = .false. !5
+      logical :: npptoleafc_dbftrop               = .false. !6
+      logical :: npptoleafc_dbftemp               = .false. !7
+      logical :: npptoleafc_dbfboreal             = .false. !8
+      logical :: npptoleafc_ebstemp               = .false. !9
+      logical :: npptoleafc_dbstemp               = .false. !10
+      logical :: npptoleafc_dbsboreal             = .false. !11
+      logical :: npptoleafc_c3arcgrass            = .false. !12
+      logical :: npptoleafc_c3grass               = .false. !13
+      logical :: npptoleafc_c4grass               = .false. !14
 
       logical :: cphase                           = .true.
       logical :: gddmaturity                      = .true.
@@ -1989,6 +2031,48 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_enftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_enfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_dnfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_ebftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_ebftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_dbftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_dbftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_dbfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_ebstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_dbstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_dbsboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_c3arcgrass   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_c3grass      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lai_c4grass      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_enftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_enfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_dnfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_ebftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_ebftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_dbftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_dbftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_dbfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_ebstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_dbstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_dbsboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_c3arcgrass   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_c3grass      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npp_c4grass      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_enftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_enfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_dnfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_ebftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_ebftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_dbftrop      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_dbftemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_dbfboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_ebstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_dbstemp      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_dbsboreal    , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_c3arcgrass   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_c3grass      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%npptoleafc_c4grass      , set_defaults)
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gddmaturity                     , set_defaults)
