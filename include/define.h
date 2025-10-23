@@ -26,7 +26,7 @@
 ! 3. If defined, debug information is output.
 #define CoLMDEBUG
 ! 3.1 If defined, range of variables is checked.
-#undef RangeCheck
+#define RangeCheck
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
 #undef SrfdataDiag
 
@@ -49,7 +49,7 @@
 #endif
 
 ! 6. If defined, CaMa-Flood model will be used.
-#define CaMa_Flood
+#undef CaMa_Flood
 #if (defined SinglePoint)
 #undef CaMa_Flood
 #endif
