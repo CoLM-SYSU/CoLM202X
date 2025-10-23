@@ -189,10 +189,13 @@ mkinidata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MKINIDAT
 	@echo ''
 # ----- End of Target 2 mkinidata ----
 
-DEF  = $(shell grep -i cama_flood include/define.h)
-CaMa = $(word 1, ${DEF})
-ifeq (${CaMa},\#define)# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
-
+CaMa = $(shell \
+	CAMA_INIT=$$(grep -E '^\#(define|undef)[[:space:]]+CaMa_Flood' $(HEADER) | head -1 | grep -q 'define' && echo 1 || echo 0); \
+	SP=$$(grep -E '^\#(define|undef)[[:space:]]+SinglePoint' $(HEADER) | tail -1 | grep -q 'define' && echo 1 || echo 0); \
+	MP=$$(if [ $$SP -eq 1 ]; then echo 0; else grep -E '^\#(define|undef)[[:space:]]+USEMPI' $(HEADER) | head -1 | grep -q 'define' && echo 1 || echo 0; fi); \
+	if [ $$CAMA_INIT -eq 0 ]; then echo NO; elif [ $$SP -eq 1 ] || [ $$MP -eq 0 ]; then echo NO; else echo YES; fi)
+ifeq (${CaMa},YES)# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
+#
 OBJECTS_CAMA=\
 				  parkind1.o              \
 				  yos_cmf_input.o         \
@@ -352,7 +355,7 @@ OBJS_MAIN_T = $(addprefix .bld/,${OBJS_MAIN})
 
 # ------ Target 3: main --------
 
-ifneq (${CaMa},\#define)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
+ifneq (${CaMa},YES)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
 
 colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
