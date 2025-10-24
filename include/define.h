@@ -53,6 +53,9 @@
 #if (defined SinglePoint)
 #undef CaMa_Flood
 #endif
+#ifndef USEMPI
+#undef CaMa_Flood
+#endif
 
 
 ! 7. If defined, BGC model is used.
