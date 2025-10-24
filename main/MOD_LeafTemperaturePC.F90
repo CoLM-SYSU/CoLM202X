@@ -1219,8 +1219,8 @@ CONTAINS
                      shti(i), hhti(i), trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
 
                   ! leaf scale stomata resistance
-                  rssun(i) = tprcor / tl(i) * 1.e6 /gssun(i)
-                  rssha(i) = tprcor / tl(i) * 1.e6 /gssha(i)
+                  rssun(i) = tprcor / tl(i) / gssun(i)
+                  rssha(i) = tprcor / tl(i) / gssha(i)
 
                ENDIF
 
