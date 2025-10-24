@@ -21,10 +21,10 @@
      FOPTS = -fdefault-real-8 -ffree-form -C -g -u -xcheck=stkovf \
            -ffpe-trap=invalid,zero,overflow -fbounds-check \
            -mcmodel=medium -fbacktrace -fdump-core -cpp \
-           -ffree-line-length-0
+           -ffree-line-length-0 -fopenmp
   endif
 
-  LDFLAGS = -L$(NETCDF_LIB) -lnetcdff -lnetcdf -llapack -lblas 
+  LDFLAGS = -fopenmp -L$(NETCDF_LIB) -lnetcdff -lnetcdf -llapack -lblas 
 
 #============================================================
 # CaMa-Flood Mkinclude (for Linux, gfortran)
