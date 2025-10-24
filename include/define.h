@@ -53,7 +53,7 @@
 #if (defined SinglePoint)
 #undef CaMa_Flood
 #endif
-#if not defined USEMPI
+#ifndef USEMPI
 #undef CaMa_Flood
 #endif
 
