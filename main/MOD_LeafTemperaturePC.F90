@@ -1207,8 +1207,8 @@ CONTAINS
                         k_soil_root  ,k_ax_root    ,gssun(i)     ,gssha(i)                    )
 
                   etr(i)  = etrsun(i) + etrsha(i)
-                  gssun(i) = gssun(i) * laisun(i)
-                  gssha(i) = gssha(i) * laisha(i)
+                  gssun(i) = gssun(i) * laisun(i) * 1.e-6
+                  gssha(i) = gssha(i) * laisha(i) * 1.e-6
 
                   CALL update_photosyn(tl(i), po2m, pco2m, pco2a, parsun(i), psrf, rstfacsun(i), &
                      rb(i), gssun(i), effcon(i), vmax25(i), c3c4(i), gradm(i), trop(i), slti(i), hlti(i), &
@@ -1219,8 +1219,8 @@ CONTAINS
                      shti(i), hhti(i), trda(i), trdm(i), cintsha(:,i), assimsha(i), respcsha(i))
 
                   ! leaf scale stomata resistance
-                  rssun(i) = tprcor / tl(i) * 1.e6 /gssun(i)
-                  rssha(i) = tprcor / tl(i) * 1.e6 /gssha(i)
+                  rssun(i) = tprcor / tl(i) / gssun(i)
+                  rssha(i) = tprcor / tl(i) / gssha(i)
 
                ENDIF
 
@@ -1742,6 +1742,7 @@ ENDIF
 
       IF(DEF_USE_OZONESTRESS)THEN
          DO i = ps, pe
+            p = pftclass(i)
             CALL CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
                                  rssun(i),rbsun,lai(i),lai_old(i),p,o3uptakesun(i),sabv(i),deltim)
             CALL CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&

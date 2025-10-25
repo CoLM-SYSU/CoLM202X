@@ -31,6 +31,34 @@ MODULE MOD_BGC_Vars_1DFluxes
    real(r8), allocatable :: gpp_c3arcgrass             (:) ! gross primary productivity for c3 arctic grass (gC m-2 s-1)
    real(r8), allocatable :: gpp_c3grass                (:) ! gross primary productivity for c3 grass (gC m-2 s-1)
    real(r8), allocatable :: gpp_c4grass                (:) ! gross primary productivity for c4 grass (gC m-2 s-1)
+   real(r8), allocatable :: npp_enftemp              (:) ! leaf carbon display pool for needleleaf evergreen temperate tree (gC m-2)
+   real(r8), allocatable :: npp_enfboreal            (:) ! leaf carbon display pool for needleleaf evergreen boreal tree (gC m-2)
+   real(r8), allocatable :: npp_dnfboreal            (:) ! leaf carbon display pool for needleleaf deciduous boreal tree (gC m-2)
+   real(r8), allocatable :: npp_ebftrop              (:) ! leaf carbon display pool for broadleaf evergreen tropical tree (gC m-2)
+   real(r8), allocatable :: npp_ebftemp              (:) ! leaf carbon display pool for broadleaf evergreen temperate tree (gC m-2)
+   real(r8), allocatable :: npp_dbftrop              (:) ! leaf carbon display pool for broadleaf deciduous tropical tree (gC m-2)
+   real(r8), allocatable :: npp_dbftemp              (:) ! leaf carbon display pool for broadleaf deciduous temperate tree (gC m-2)
+   real(r8), allocatable :: npp_dbfboreal            (:) ! leaf carbon display pool for broadleaf deciduous boreal tree (gC m-2)
+   real(r8), allocatable :: npp_ebstemp              (:) ! leaf carbon display pool for broadleaf evergreen temperate shrub (gC m-2)
+   real(r8), allocatable :: npp_dbstemp              (:) ! leaf carbon display pool for broadleaf deciduous temperate shrub (gC m-2)
+   real(r8), allocatable :: npp_dbsboreal            (:) ! leaf carbon display pool for broadleaf deciduous boreal shrub (gC m-2)
+   real(r8), allocatable :: npp_c3arcgrass           (:) ! leaf carbon display pool for c3 arctic grass (gC m-2)
+   real(r8), allocatable :: npp_c3grass              (:) ! leaf carbon display pool for c3 grass (gC m-2)
+   real(r8), allocatable :: npp_c4grass              (:) ! leaf carbon display pool for c4 grass (gC m-2)
+   real(r8), allocatable :: npptoleafc_enftemp              (:) ! leaf carbon display pool for needleleaf evergreen temperate tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_enfboreal            (:) ! leaf carbon display pool for needleleaf evergreen boreal tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_dnfboreal            (:) ! leaf carbon display pool for needleleaf deciduous boreal tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_ebftrop              (:) ! leaf carbon display pool for broadleaf evergreen tropical tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_ebftemp              (:) ! leaf carbon display pool for broadleaf evergreen temperate tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_dbftrop              (:) ! leaf carbon display pool for broadleaf deciduous tropical tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_dbftemp              (:) ! leaf carbon display pool for broadleaf deciduous temperate tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_dbfboreal            (:) ! leaf carbon display pool for broadleaf deciduous boreal tree (gC m-2)
+   real(r8), allocatable :: npptoleafc_ebstemp              (:) ! leaf carbon display pool for broadleaf evergreen temperate shrub (gC m-2)
+   real(r8), allocatable :: npptoleafc_dbstemp              (:) ! leaf carbon display pool for broadleaf deciduous temperate shrub (gC m-2)
+   real(r8), allocatable :: npptoleafc_dbsboreal            (:) ! leaf carbon display pool for broadleaf deciduous boreal shrub (gC m-2)
+   real(r8), allocatable :: npptoleafc_c3arcgrass           (:) ! leaf carbon display pool for c3 arctic grass (gC m-2)
+   real(r8), allocatable :: npptoleafc_c3grass              (:) ! leaf carbon display pool for c3 grass (gC m-2)
+   real(r8), allocatable :: npptoleafc_c4grass              (:) ! leaf carbon display pool for c4 grass (gC m-2)
    real(r8), allocatable :: leafc_enftemp              (:) ! leaf carbon display pool for needleleaf evergreen temperate tree (gC m-2)
    real(r8), allocatable :: leafc_enfboreal            (:) ! leaf carbon display pool for needleleaf evergreen boreal tree (gC m-2)
    real(r8), allocatable :: leafc_dnfboreal            (:) ! leaf carbon display pool for needleleaf deciduous boreal tree (gC m-2)
@@ -194,6 +222,34 @@ CONTAINS
             allocate (gpp_c3arcgrass             (numpatch)) ; gpp_c3arcgrass             (:) = spval
             allocate (gpp_c3grass                (numpatch)) ; gpp_c3grass                (:) = spval
             allocate (gpp_c4grass                (numpatch)) ; gpp_c4grass                (:) = spval
+            allocate (npp_enftemp                (numpatch)) ; npp_enftemp                (:) = spval
+            allocate (npp_enfboreal              (numpatch)) ; npp_enfboreal              (:) = spval
+            allocate (npp_dnfboreal              (numpatch)) ; npp_dnfboreal              (:) = spval
+            allocate (npp_ebftrop                (numpatch)) ; npp_ebftrop                (:) = spval
+            allocate (npp_ebftemp                (numpatch)) ; npp_ebftemp                (:) = spval
+            allocate (npp_dbftrop                (numpatch)) ; npp_dbftrop                (:) = spval
+            allocate (npp_dbftemp                (numpatch)) ; npp_dbftemp                (:) = spval
+            allocate (npp_dbfboreal              (numpatch)) ; npp_dbfboreal              (:) = spval
+            allocate (npp_ebstemp                (numpatch)) ; npp_ebstemp                (:) = spval
+            allocate (npp_dbstemp                (numpatch)) ; npp_dbstemp                (:) = spval
+            allocate (npp_dbsboreal              (numpatch)) ; npp_dbsboreal              (:) = spval
+            allocate (npp_c3arcgrass             (numpatch)) ; npp_c3arcgrass             (:) = spval
+            allocate (npp_c3grass                (numpatch)) ; npp_c3grass                (:) = spval
+            allocate (npp_c4grass                (numpatch)) ; npp_c4grass                (:) = spval
+            allocate (npptoleafc_enftemp         (numpatch)) ; npptoleafc_enftemp         (:) = spval
+            allocate (npptoleafc_enfboreal       (numpatch)) ; npptoleafc_enfboreal       (:) = spval
+            allocate (npptoleafc_dnfboreal       (numpatch)) ; npptoleafc_dnfboreal       (:) = spval
+            allocate (npptoleafc_ebftrop         (numpatch)) ; npptoleafc_ebftrop         (:) = spval
+            allocate (npptoleafc_ebftemp         (numpatch)) ; npptoleafc_ebftemp         (:) = spval
+            allocate (npptoleafc_dbftrop         (numpatch)) ; npptoleafc_dbftrop         (:) = spval
+            allocate (npptoleafc_dbftemp         (numpatch)) ; npptoleafc_dbftemp         (:) = spval
+            allocate (npptoleafc_dbfboreal       (numpatch)) ; npptoleafc_dbfboreal       (:) = spval
+            allocate (npptoleafc_ebstemp         (numpatch)) ; npptoleafc_ebstemp         (:) = spval
+            allocate (npptoleafc_dbstemp         (numpatch)) ; npptoleafc_dbstemp         (:) = spval
+            allocate (npptoleafc_dbsboreal       (numpatch)) ; npptoleafc_dbsboreal       (:) = spval
+            allocate (npptoleafc_c3arcgrass      (numpatch)) ; npptoleafc_c3arcgrass      (:) = spval
+            allocate (npptoleafc_c3grass         (numpatch)) ; npptoleafc_c3grass         (:) = spval
+            allocate (npptoleafc_c4grass         (numpatch)) ; npptoleafc_c4grass         (:) = spval
             allocate (leafc_enftemp              (numpatch)) ; leafc_enftemp              (:) = spval
             allocate (leafc_enfboreal            (numpatch)) ; leafc_enfboreal            (:) = spval
             allocate (leafc_dnfboreal            (numpatch)) ; leafc_dnfboreal            (:) = spval
@@ -345,6 +401,34 @@ CONTAINS
             deallocate (gpp_c3arcgrass             ) !12
             deallocate (gpp_c3grass                ) !13
             deallocate (gpp_c4grass                ) !14
+            deallocate (npp_enftemp              ) !1
+            deallocate (npp_enfboreal            ) !2
+            deallocate (npp_dnfboreal            ) !3
+            deallocate (npp_ebftrop              ) !4
+            deallocate (npp_ebftemp              ) !5
+            deallocate (npp_dbftrop              ) !6
+            deallocate (npp_dbftemp              ) !7
+            deallocate (npp_dbfboreal            ) !8
+            deallocate (npp_ebstemp              ) !9
+            deallocate (npp_dbstemp              ) !10
+            deallocate (npp_dbsboreal            ) !11
+            deallocate (npp_c3arcgrass           ) !12
+            deallocate (npp_c3grass              ) !13
+            deallocate (npp_c4grass              ) !14
+            deallocate (npptoleafc_enftemp              ) !1
+            deallocate (npptoleafc_enfboreal            ) !2
+            deallocate (npptoleafc_dnfboreal            ) !3
+            deallocate (npptoleafc_ebftrop              ) !4
+            deallocate (npptoleafc_ebftemp              ) !5
+            deallocate (npptoleafc_dbftrop              ) !6
+            deallocate (npptoleafc_dbftemp              ) !7
+            deallocate (npptoleafc_dbfboreal            ) !8
+            deallocate (npptoleafc_ebstemp              ) !9
+            deallocate (npptoleafc_dbstemp              ) !10
+            deallocate (npptoleafc_dbsboreal            ) !11
+            deallocate (npptoleafc_c3arcgrass           ) !12
+            deallocate (npptoleafc_c3grass              ) !13
+            deallocate (npptoleafc_c4grass              ) !14
             deallocate (leafc_enftemp              ) !1
             deallocate (leafc_enfboreal            ) !2
             deallocate (leafc_dnfboreal            ) !3
@@ -500,6 +584,34 @@ SUBROUTINE set_1D_BGCFluxes(Values, Nan)
             gpp_c3arcgrass             (:)   = Values !12
             gpp_c3grass                (:)   = Values !13
             gpp_c4grass                (:)   = Values !14
+            npp_enftemp                (:)   = Values !1
+            npp_enfboreal              (:)   = Values !2
+            npp_dnfboreal              (:)   = Values !3
+            npp_ebftrop                (:)   = Values !4
+            npp_ebftemp                (:)   = Values !5
+            npp_dbftrop                (:)   = Values !6
+            npp_dbftemp                (:)   = Values !7
+            npp_dbfboreal              (:)   = Values !8
+            npp_ebstemp                (:)   = Values !9
+            npp_dbstemp                (:)   = Values !10
+            npp_dbsboreal              (:)   = Values !11
+            npp_c3arcgrass             (:)   = Values !12
+            npp_c3grass                (:)   = Values !13
+            npp_c4grass                (:)   = Values !14
+            npptoleafc_enftemp         (:)   = Values !1
+            npptoleafc_enfboreal       (:)   = Values !2
+            npptoleafc_dnfboreal       (:)   = Values !3
+            npptoleafc_ebftrop         (:)   = Values !4
+            npptoleafc_ebftemp         (:)   = Values !5
+            npptoleafc_dbftrop         (:)   = Values !6
+            npptoleafc_dbftemp         (:)   = Values !7
+            npptoleafc_dbfboreal       (:)   = Values !8
+            npptoleafc_ebstemp         (:)   = Values !9
+            npptoleafc_dbstemp         (:)   = Values !10
+            npptoleafc_dbsboreal       (:)   = Values !11
+            npptoleafc_c3arcgrass      (:)   = Values !12
+            npptoleafc_c3grass         (:)   = Values !13
+            npptoleafc_c4grass         (:)   = Values !14
             leafc_enftemp              (:)   = Values !1
             leafc_enfboreal            (:)   = Values !2
             leafc_dnfboreal            (:)   = Values !3
