@@ -1,7 +1,6 @@
 #include <define.h>
 
-#ifdef CatchLateralFlow
-MODULE MOD_Catch_IO
+MODULE MOD_Vector_ReadWrite
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
 !
@@ -10,14 +9,14 @@ MODULE MOD_Catch_IO
 ! Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------
 
-   PUBLIC :: vector_write_basin
-   PUBLIC :: vector_read_basin
+   PUBLIC :: vector_gather_and_write
+   PUBLIC :: vector_read_and_scatter
 
 CONTAINS
 
    ! -------
-   SUBROUTINE vector_write_basin ( &
-         file_basin, vector, vlen, totalvlen, varname, dimname, data_address, &
+   SUBROUTINE vector_gather_and_write ( &
+         fileinout, vector, vlen, totalvlen, varname, dimname, data_address, &
          is_hist, itime_in_file, longname, units)
 
    USE MOD_Precision
@@ -28,7 +27,7 @@ CONTAINS
    USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
-   character(len=*), intent(in) :: file_basin
+   character(len=*), intent(in) :: fileinout
    real(r8),         intent(in) :: vector (:)
    integer,          intent(in) :: vlen
    integer,          intent(in) :: totalvlen
@@ -94,22 +93,22 @@ CONTAINS
       IF (p_is_master) THEN
 
          IF (present(itime_in_file)) THEN
-            CALL ncio_write_serial_time (file_basin, varname, itime_in_file, wdata, &
+            CALL ncio_write_serial_time (fileinout, varname, itime_in_file, wdata, &
                dimname, 'time', DEF_HIST_CompressLevel)
          ELSE
-            CALL ncio_write_serial (file_basin, varname, wdata, &
+            CALL ncio_write_serial (fileinout, varname, wdata, &
                dimname, DEF_REST_CompressLevel)
          ENDIF
 
          IF (present(itime_in_file)) THEN
             IF (itime_in_file == 1) THEN
                IF (present(longname)) THEN
-                  CALL ncio_put_attr (file_basin, varname, 'long_name', longname)
+                  CALL ncio_put_attr (fileinout, varname, 'long_name', longname)
                ENDIF
                IF (present(units)) THEN
-                  CALL ncio_put_attr (file_basin, varname, 'units', units)
+                  CALL ncio_put_attr (fileinout, varname, 'units', units)
                ENDIF
-               CALL ncio_put_attr (file_basin, varname, 'missing_value', spval)
+               CALL ncio_put_attr (fileinout, varname, 'missing_value', spval)
             ENDIF
          ENDIF
 
@@ -117,11 +116,11 @@ CONTAINS
 
       ENDIF
 
-   END SUBROUTINE vector_write_basin
+   END SUBROUTINE vector_gather_and_write
 
    ! -----
-   SUBROUTINE vector_read_basin ( &
-         file_basin, vector, vlen, varname, data_address)
+   SUBROUTINE vector_read_and_scatter ( &
+         fileinout, vector, vlen, varname, data_address)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -129,7 +128,7 @@ CONTAINS
    USE MOD_NetCDFSerial
    IMPLICIT NONE
 
-   character(len=*),       intent(in)    :: file_basin
+   character(len=*),       intent(in)    :: fileinout
    real(r8),  allocatable, intent(inout) :: vector (:)
    integer,                intent(in)    :: vlen
    character(len=*),       intent(in)    :: varname
@@ -140,7 +139,7 @@ CONTAINS
    real(r8), allocatable :: rdata(:), rcache(:)
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (file_basin, varname, rdata)
+         CALL ncio_read_serial (fileinout, varname, rdata)
       ENDIF
 
 #ifdef USEMPI
@@ -178,7 +177,6 @@ CONTAINS
 
       IF (p_is_master) deallocate(rdata)
 
-   END SUBROUTINE vector_read_basin
+   END SUBROUTINE vector_read_and_scatter
 
-END MODULE MOD_Catch_IO
-#endif
+END MODULE MOD_Vector_ReadWrite

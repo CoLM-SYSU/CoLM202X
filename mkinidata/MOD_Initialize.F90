@@ -69,6 +69,10 @@ CONTAINS
    USE MOD_ElementNeighbour
    USE MOD_Catch_RiverLakeNetwork
 #endif
+#ifdef GridRiverLakeFlow
+   USE MOD_Grid_RiverLakeNetwork
+   USE MOD_Grid_Reservoir
+#endif
 #ifdef CROP
    USE MOD_CropReadin
 #endif
@@ -1517,6 +1521,32 @@ ENDIF
 
       IF (allocated(patcharea)) deallocate(patcharea)
 
+#endif
+
+#ifdef GridRiverLakeFlow
+
+      CALL build_riverlake_network ()
+
+      IF (DEF_Reservoir_Method > 0) THEN
+         CALL reservoir_init ()
+      ENDIF
+
+      IF (p_is_worker) THEN
+         IF (numucat > 0) THEN
+            wdsrf_ucat = topo_rivhgt
+            veloc_riv  = 0
+         ENDIF
+
+         IF (DEF_Reservoir_Method > 0) THEN
+            IF (numresv > 0) THEN
+               WHERE (idate(1) >= dam_build_year)
+                  volresv = volresv_normal
+               ELSEWHERE
+                  volresv = spval
+               END WHERE
+            ENDIF
+         ENDIF
+      ENDIF
 #endif
 
 #ifdef DataAssimilation

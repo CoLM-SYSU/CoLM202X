@@ -42,7 +42,7 @@ PROGRAM CoLMINI
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT)
+#if (defined UNSTRUCTURED || defined CATCHMENT || defined GridRiverLakeFlow)
    USE MOD_ElmVector
 #endif
 #ifdef CATCHMENT
@@ -140,7 +140,7 @@ PROGRAM CoLMINI
       CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, lc_year)
       CALL map_patch_to_urban
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT)
+#if (defined UNSTRUCTURED || defined CATCHMENT || defined GridRiverLakeFlow)
       CALL elm_vector_init ()
 #ifdef CATCHMENT
       CALL hru_vector_init ()

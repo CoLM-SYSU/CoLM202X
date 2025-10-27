@@ -397,7 +397,7 @@ MODULE MOD_Vars_TimeVariables
    USE MOD_Catch_Vars_TimeVariables
 #endif
 #ifdef GridRiverLakeFlow
-   USE MOD_Grid_RiverTimeVariables
+   USE MOD_Grid_RiverLakeTimeVars
 #endif
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_TimeVariables
@@ -650,7 +650,7 @@ CONTAINS
             allocate (laisha                      (numpatch)); laisha        (:) = spval
             allocate (tsai                        (numpatch)); tsai          (:) = spval
             allocate (sai                         (numpatch)); sai           (:) = spval
- 
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
             allocate (lai_enftemp                 (numpatch)); lai_enftemp   (:) = spval
             allocate (lai_enfboreal               (numpatch)); lai_enfboreal (:) = spval
@@ -766,7 +766,7 @@ CONTAINS
 #endif
 
 #ifdef GridRiverLakeFlow
-      CALL allocate_GridRiverTimeVariables
+      CALL allocate_GridRiverLakeTimeVars
 #endif
 
 #ifdef URBAN_MODEL
@@ -964,7 +964,7 @@ CONTAINS
 #endif
 
 #ifdef GridRiverLakeFlow
-      CALL deallocate_GridRiverTimeVariables
+      CALL deallocate_GridRiverLakeTimeVars
 #endif
 
 #if (defined URBAN_MODEL)
@@ -1204,7 +1204,7 @@ ENDIF
 
 #ifdef GridRiverLakeFlow
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_gridriver_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
-      CALL WRITE_GridRiverTimeVariables (file_restart)
+      CALL WRITE_GridRiverLakeTimeVars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
@@ -1389,7 +1389,7 @@ ENDIF
 
 #ifdef GridRiverLakeFlow
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_gridriver_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
-      CALL READ_GridRiverTimeVariables (file_restart)
+      CALL READ_GridRiverLakeTimeVars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)

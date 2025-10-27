@@ -57,6 +57,11 @@
 #undef CaMa_Flood
 #endif
 
+#define GridRiverLakeFlow
+#ifndef GRIDBASED
+#undef GridRiverLakeFlow
+#endif
+
 ! 7. If defined, BGC model is used.
 #undef BGC
 
