@@ -48,7 +48,7 @@ PROGRAM CoLM
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT || defined GridRiverLakeFlow)
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    USE MOD_ElmVector
 #endif
 #ifdef CATCHMENT
@@ -263,7 +263,7 @@ PROGRAM CoLM
       CALL map_patch_to_urban
 #endif
 
-#if (defined UNSTRUCTURED || defined CATCHMENT || defined GridRiverLakeFlow)
+#if (defined UNSTRUCTURED || defined CATCHMENT)
       CALL elm_vector_init ()
 #ifdef CATCHMENT
       CALL hru_vector_init ()

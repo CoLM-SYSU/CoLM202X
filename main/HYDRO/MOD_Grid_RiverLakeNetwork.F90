@@ -11,9 +11,11 @@ MODULE MOD_Grid_RiverLakeNetwork
 
    ! ----- River Lake network -----
 
+   integer :: totalnumucat
    integer :: numucat
 
-   integer,  allocatable :: addr_ucat (:)
+   integer, allocatable :: numucat_wrk (:)
+   type(pointer_int32_1d), allocatable :: ucat_data_address (:)
 
    ! ----- Part 1: between elements and unit catchments -----
    integer, allocatable :: ucat_elid (:)   ! index in element numbering
@@ -98,6 +100,7 @@ CONTAINS
    USE MOD_Mesh
    USE MOD_LandElm
    USE MOD_Utils
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    ! Local Variables
@@ -112,6 +115,7 @@ CONTAINS
 
    integer,  allocatable :: nups_nst  (:), iups_nst  (:), nups_all(:)
    integer,  allocatable :: uc_up2down(:), order_ucat(:)
+   integer,  allocatable :: addr_ucat (:)
 
    integer , allocatable :: nuc_rs(:), iwrk_rs(:), nwrk_rs(:), nave_rs(:)
    real(r8), allocatable :: wt_uc (:), wt_rs  (:), wt_wrk (:), nuc_wrk(:)
@@ -126,7 +130,7 @@ CONTAINS
    integer,  allocatable :: inpmat_uc2el_all    (:,:)
    real(r8), allocatable :: inpmat_area_u2e_all (:,:)
 
-   integer  :: totalnumucat, nucat, iriv, nelmall, nelm, irs
+   integer  :: nucat, iriv, nelmall, nelm, irs
    integer  :: p_np_rivsys, color
    integer  :: iworker, iwrkdsp
    integer  :: iloc, i, j, ithis
@@ -329,30 +333,43 @@ CONTAINS
 
       ENDIF
 
-      CALL mpi_barrier (p_comm_glb, p_err)
-
-      ! send unit catchment index to workers
       IF (p_is_master) THEN
 
          allocate(ucat_ucid (totalnumucat))
          ucat_ucid = (/(i, i = 1, totalnumucat)/)
 
+         allocate (numucat_wrk       (0:p_np_worker-1))
+         allocate (ucat_data_address (0:p_np_worker-1))
+
          DO iworker = 0, p_np_worker-1
             nucat = count(addr_ucat == p_address_worker(iworker))
-            CALL mpi_send (nucat, 1, MPI_INTEGER, p_address_worker(iworker), mpi_tag_mesg, p_comm_glb, p_err)
-
+            numucat_wrk(iworker) = nucat
             IF (nucat > 0) THEN
-               allocate (idata1d (nucat))
-
-               idata1d = pack(ucat_ucid, mask = (addr_ucat == p_address_worker(iworker)))
-               CALL mpi_send (idata1d, nucat, MPI_INTEGER, p_address_worker(iworker), &
-                  mpi_tag_data, p_comm_glb, p_err)
-
-               deallocate (idata1d)
+               allocate (ucat_data_address(iworker)%val (nucat))
+               ucat_data_address(iworker)%val = &
+                  pack(ucat_ucid, mask = (addr_ucat == p_address_worker(iworker)))
             ENDIF
          ENDDO
 
          deallocate (ucat_ucid)
+      ENDIF
+
+      CALL mpi_bcast (totalnumucat, 1, mpi_integer, p_address_master, p_comm_glb, p_err)
+
+      ! send unit catchment index to workers
+      IF (p_is_master) THEN
+
+         DO iworker = 0, p_np_worker-1
+
+            CALL mpi_send (numucat_wrk(iworker), 1, MPI_INTEGER, p_address_worker(iworker), &
+               mpi_tag_mesg, p_comm_glb, p_err)
+
+            nucat = numucat_wrk(iworker)
+            IF (nucat > 0) THEN
+               CALL mpi_send (ucat_data_address(iworker)%val, nucat, MPI_INTEGER, &
+                  p_address_worker(iworker), mpi_tag_data, p_comm_glb, p_err)
+            ENDIF
+         ENDDO
 
       ELSEIF (p_is_worker) THEN
 
@@ -369,9 +386,19 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
       numucat = totalnumcat
+
       allocate(ucat_ucid (totalnumucat))
       ucat_ucid = (/(i, i = 1, totalnumcat)/)
+
+      allocate (numucat_wrk (0:0))
+      numucat_wrk(0) = numucat
+
+      allocate (ucat_data_address (0:0))
+      allocate (ucat_data_address(0)%val (nucat))
+      ucat_data_address(0)%val = ucat_ucid
 #endif
+
+      IF (allocated(addr_ucat)) deallocate(addr_ucat)
 
       ! ----- Part 1: between elements and unit catchments -----
 
@@ -387,11 +414,11 @@ CONTAINS
       IF (p_is_master) THEN
 
          DO iworker = 0, p_np_worker-1
-            nucat = count(addr_ucat == p_address_worker(iworker))
+            nucat = numucat_wrk(iworker)
             IF (nucat > 0) THEN
                allocate (idata1d (nucat))
 
-               idata1d = pack(ucat_elid, mask = (addr_ucat == p_address_worker(iworker)))
+               idata1d = ucat_elid(ucat_data_address(iworker)%val)
                CALL mpi_send (idata1d, nucat, MPI_INTEGER, p_address_worker(iworker), &
                   mpi_tag_data, p_comm_glb, p_err)
 
@@ -493,17 +520,22 @@ CONTAINS
 
          DO iworker = 0, p_np_worker-1
 
-            nucat = count(addr_ucat == p_address_worker(iworker))
+            nucat = numucat_wrk(iworker)
 
             IF (nucat > 0) THEN
                allocate (idata2d (inpn, nucat))
-               allocate (rdata2d (inpn, nucat))
+               DO i = 1, nucat
+                  idata2d(:,i) = inpmat_el2uc(:,ucat_data_address(iworker)%val(i))
+               ENDDO
 
-               CALL pack_lastdim (inpmat_el2uc, (addr_ucat == p_address_worker(iworker)), idata2d)
                CALL mpi_send (idata2d, inpn*nucat, MPI_INTEGER, p_address_worker(iworker), &
                   mpi_tag_data, p_comm_glb, p_err)
 
-               CALL pack_lastdim (inpmat_area_e2u, (addr_ucat == p_address_worker(iworker)), rdata2d)
+               allocate (rdata2d (inpn, nucat))
+               DO i = 1, nucat
+                  rdata2d(:,i) = inpmat_area_e2u(:,ucat_data_address(iworker)%val(i))
+               ENDDO
+
                CALL mpi_send (rdata2d, inpn*nucat, MPI_REAL8, p_address_worker(iworker), &
                   mpi_tag_data, p_comm_glb, p_err)
 
@@ -648,17 +680,18 @@ CONTAINS
 
          DO iworker = 0, p_np_worker-1
 
-            nucat = count(addr_ucat == p_address_worker(iworker))
+            nucat = numucat_wrk(iworker)
 
             IF (nucat > 0) THEN
                allocate (idata1d (nucat))
-               allocate (idata2d (upnmax, nucat))
-
-               idata1d = pack(ucat_next, mask = (addr_ucat == p_address_worker(iworker)))
+               idata1d = ucat_next(ucat_data_address(iworker)%val)
                CALL mpi_send (idata1d, nucat, MPI_INTEGER, p_address_worker(iworker), &
                   mpi_tag_data, p_comm_glb, p_err)
 
-               CALL pack_lastdim (ucat_ups, (addr_ucat == p_address_worker(iworker)), idata2d)
+               allocate (idata2d (upnmax, nucat))
+               DO i = 1, nucat
+                  idata2d(:,i) = ucat_ups(:,ucat_data_address(iworker)%val(i))
+               ENDDO
                CALL mpi_send (idata2d, upnmax*nucat, MPI_INTEGER, p_address_worker(iworker), &
                   mpi_tag_data, p_comm_glb, p_err)
 
@@ -701,10 +734,10 @@ CONTAINS
 #ifdef USEMPI
       IF (p_is_master) THEN
          DO iworker = 0, p_np_worker-1
-            nucat = count(addr_ucat == p_address_worker(iworker))
+            nucat = numucat_wrk(iworker)
             IF (nucat > 0) THEN
                allocate (idata1d (nucat))
-               idata1d = pack(rivermouth, mask = (addr_ucat == p_address_worker(iworker)))
+               idata1d = rivermouth(ucat_data_address(iworker)%val)
                CALL mpi_send (idata1d, nucat, MPI_INTEGER, p_address_worker(iworker), &
                   mpi_tag_data, p_comm_glb, p_err)
                deallocate (idata1d)
@@ -830,8 +863,8 @@ CONTAINS
          ENDIF
       ENDIF
 
-      CALL worker_push_data (push_next2ucat, topo_rivelv, bedelv_next)
-      CALL worker_push_data (push_next2ucat, topo_rivwth, outletwth  )
+      CALL worker_push_data (push_next2ucat, topo_rivelv, bedelv_next, fillvalue = spval)
+      CALL worker_push_data (push_next2ucat, topo_rivwth, outletwth  , fillvalue = spval)
 
       IF (p_is_worker) THEN
          IF (numucat > 0) THEN
@@ -850,7 +883,6 @@ CONTAINS
 
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
-   USE MOD_Utils, only: pack_lastdim
    IMPLICIT NONE
 
    character(len=*), intent(in) :: parafile
@@ -861,7 +893,7 @@ CONTAINS
    integer,  allocatable, intent(inout), optional :: idata1d (:)
 
    ! Local Variables
-   integer :: iworker, nucat, ndim1
+   integer :: iworker, nucat, ndim1, i
    real(r8), allocatable :: rsend1d (:)
    real(r8), allocatable :: rsend2d (:,:)
    integer,  allocatable :: isend1d (:)
@@ -885,13 +917,13 @@ CONTAINS
 
          DO iworker = 0, p_np_worker-1
 
-            nucat = count(addr_ucat == p_address_worker(iworker))
+            nucat = numucat_wrk(iworker)
 
             IF (nucat > 0) THEN
                IF (present(rdata1d)) THEN
                   allocate (rsend1d (nucat))
 
-                  rsend1d = pack(rdata1d, mask = (addr_ucat == p_address_worker(iworker)))
+                  rsend1d = rdata1d(ucat_data_address(iworker)%val)
                   CALL mpi_send (rsend1d, nucat, MPI_REAL8, p_address_worker(iworker), &
                      mpi_tag_data, p_comm_glb, p_err)
 
@@ -901,7 +933,9 @@ CONTAINS
                IF (present(rdata2d)) THEN
                   allocate (rsend2d (ndim1,nucat))
 
-                  CALL pack_lastdim(rdata2d, (addr_ucat == p_address_worker(iworker)), rsend2d)
+                  DO i = 1, nucat
+                     rsend2d(:,i) = rdata2d(:,ucat_data_address(iworker)%val(i))
+                  ENDDO
                   CALL mpi_send (rsend2d, ndim1*nucat, MPI_REAL8, p_address_worker(iworker), &
                      mpi_tag_data, p_comm_glb, p_err)
 
@@ -911,7 +945,7 @@ CONTAINS
                IF (present(idata1d)) THEN
                   allocate (isend1d (nucat))
 
-                  isend1d = pack(idata1d, mask = (addr_ucat == p_address_worker(iworker)))
+                  isend1d = idata1d(ucat_data_address(iworker)%val)
                   CALL mpi_send (isend1d, nucat, MPI_INTEGER, p_address_worker(iworker), &
                      mpi_tag_data, p_comm_glb, p_err)
 
@@ -1082,30 +1116,32 @@ CONTAINS
 
    IMPLICIT NONE
 
-      IF (allocated(addr_ucat       )) deallocate(addr_ucat       )
-      IF (allocated(ucat_elid       )) deallocate(ucat_elid       )
-      IF (allocated(ucat_ucid       )) deallocate(ucat_ucid       )
-      IF (allocated(inpmat_el2uc    )) deallocate(inpmat_el2uc    )
-      IF (allocated(inpmat_area_e2u )) deallocate(inpmat_area_e2u )
-      IF (allocated(inpmat_uc2el    )) deallocate(inpmat_uc2el    )
-      IF (allocated(inpmat_area_u2e )) deallocate(inpmat_area_u2e )
-      IF (allocated(ucat_next       )) deallocate(ucat_next       )
-      IF (allocated(ucat_ups        )) deallocate(ucat_ups        )
-      IF (allocated(irivsys         )) deallocate(irivsys         )
+      IF (allocated(numucat_wrk      )) deallocate(numucat_wrk      )
+      IF (allocated(ucat_data_address)) deallocate(ucat_data_address)
 
-      IF (allocated(topo_rivelv     )) deallocate(topo_rivelv     )
-      IF (allocated(topo_rivhgt     )) deallocate(topo_rivhgt     )
-      IF (allocated(topo_rivlen     )) deallocate(topo_rivlen     )
-      IF (allocated(topo_rivman     )) deallocate(topo_rivman     )
-      IF (allocated(topo_rivwth     )) deallocate(topo_rivwth     )
-      IF (allocated(topo_rivare     )) deallocate(topo_rivare     )
-      IF (allocated(topo_rivstomax  )) deallocate(topo_rivstomax  )
-      IF (allocated(topo_area       )) deallocate(topo_area       )
-      IF (allocated(topo_fldhgt     )) deallocate(topo_fldhgt     )
-      IF (allocated(bedelv_next     )) deallocate(bedelv_next     )
-      IF (allocated(outletwth       )) deallocate(outletwth       )
+      IF (allocated(ucat_elid        )) deallocate(ucat_elid        )
+      IF (allocated(ucat_ucid        )) deallocate(ucat_ucid        )
+      IF (allocated(inpmat_el2uc     )) deallocate(inpmat_el2uc     )
+      IF (allocated(inpmat_area_e2u  )) deallocate(inpmat_area_e2u  )
+      IF (allocated(inpmat_uc2el     )) deallocate(inpmat_uc2el     )
+      IF (allocated(inpmat_area_u2e  )) deallocate(inpmat_area_u2e  )
+      IF (allocated(ucat_next        )) deallocate(ucat_next        )
+      IF (allocated(ucat_ups         )) deallocate(ucat_ups         )
+      IF (allocated(irivsys          )) deallocate(irivsys          )
 
-      IF (allocated(floodplain_curve)) deallocate(floodplain_curve)
+      IF (allocated(topo_rivelv      )) deallocate(topo_rivelv      )
+      IF (allocated(topo_rivhgt      )) deallocate(topo_rivhgt      )
+      IF (allocated(topo_rivlen      )) deallocate(topo_rivlen      )
+      IF (allocated(topo_rivman      )) deallocate(topo_rivman      )
+      IF (allocated(topo_rivwth      )) deallocate(topo_rivwth      )
+      IF (allocated(topo_rivare      )) deallocate(topo_rivare      )
+      IF (allocated(topo_rivstomax   )) deallocate(topo_rivstomax   )
+      IF (allocated(topo_area        )) deallocate(topo_area        )
+      IF (allocated(topo_fldhgt      )) deallocate(topo_fldhgt      )
+      IF (allocated(bedelv_next      )) deallocate(bedelv_next      )
+      IF (allocated(outletwth        )) deallocate(outletwth        )
+
+      IF (allocated(floodplain_curve )) deallocate(floodplain_curve )
 
    END SUBROUTINE riverlake_network_final
 

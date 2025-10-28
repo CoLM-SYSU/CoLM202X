@@ -1,6 +1,6 @@
 #include <define.h>
 
-#if (defined UNSTRUCTURED || defined CATCHMENT || defined GridRiverLakeFlow)
+#if (defined UNSTRUCTURED || defined CATCHMENT)
 MODULE MOD_ElmVector
 
 !-----------------------------------------------------------------------

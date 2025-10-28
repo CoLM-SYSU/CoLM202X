@@ -31,17 +31,17 @@ MODULE MOD_WorkerPushData
    END type worker_pushdata_type
 
    ! -- public subroutines --
-   interface build_worker_pushdata
+   INTERFACE build_worker_pushdata
       MODULE procedure build_worker_pushdata_single
       MODULE procedure build_worker_pushdata_multi
-   END interface build_worker_pushdata
+   END INTERFACE build_worker_pushdata
 
-   interface worker_push_data
+   INTERFACE worker_push_data
       MODULE procedure worker_push_data_single_real8
       MODULE procedure worker_push_data_single_int32
       MODULE procedure worker_push_data_multi_real8
       MODULE procedure worker_push_data_multi_int32
-   END interface worker_push_data
+   END INTERFACE worker_push_data
 
 CONTAINS
 
@@ -287,7 +287,7 @@ CONTAINS
 
 
    ! ----------
-   SUBROUTINE worker_push_data_single_real8 (pushdata, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_single_real8 (pushdata, vec_send, vec_recv, fillvalue)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -297,6 +297,7 @@ CONTAINS
 
    real(r8), intent(in)    :: vec_send (:)
    real(r8), intent(inout) :: vec_recv (:)
+   real(r8), intent(in)    :: fillvalue
 
    ! Local Variables
    real(r8), allocatable   :: vec_recv_uniq (:)
@@ -305,6 +306,7 @@ CONTAINS
 
          IF (pushdata%num_req_uniq > 0) THEN
             allocate (vec_recv_uniq (pushdata%num_req_uniq))
+            vec_recv_uniq(:) = fillvalue
          ENDIF
 
          CALL worker_push_data_uniq_real8 (pushdata, vec_send, vec_recv_uniq)
@@ -319,9 +321,8 @@ CONTAINS
    END SUBROUTINE worker_push_data_single_real8
 
    ! ----------
-   SUBROUTINE worker_push_data_multi_real8 (pushdata, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_multi_real8 (pushdata, vec_send, vec_recv, fillvalue)
 
-   USE MOD_Vars_Global
    USE MOD_Precision
    USE MOD_SPMD_Task
    IMPLICIT NONE
@@ -330,6 +331,7 @@ CONTAINS
 
    real(r8), intent(in)    :: vec_send (:)
    real(r8), intent(inout) :: vec_recv (:,:)
+   real(r8), intent(in)    :: fillvalue
 
    ! Local Variables
    real(r8), allocatable   :: vec_recv_uniq (:)
@@ -339,13 +341,14 @@ CONTAINS
 
          IF (pushdata%num_req_uniq > 0) THEN
             allocate (vec_recv_uniq (pushdata%num_req_uniq))
+            vec_recv_uniq(:) = fillvalue
          ENDIF
 
          CALL worker_push_data_uniq_real8 (pushdata, vec_send, vec_recv_uniq)
 
          IF (pushdata%num_req_uniq > 0) THEN
 
-            vec_recv(:,:) = spval
+            vec_recv(:,:) = fillvalue
             DO i = lbound(pushdata%addr_multi,1), ubound(pushdata%addr_multi,1)
                DO j = lbound(pushdata%addr_multi,2), ubound(pushdata%addr_multi,2)
                   IF (pushdata%addr_multi(i,j) > 0) THEN
@@ -452,9 +455,9 @@ CONTAINS
             CALL mpi_waitall(size(req_send), req_send, MPI_STATUSES_IGNORE, p_err)
          ENDIF
 
-         IF (allocated(req_send )) deallocate(req_send)
+         IF (allocated(req_send )) deallocate(req_send )
          IF (allocated(sendcache)) deallocate(sendcache)
-         IF (allocated(req_recv )) deallocate(req_recv)
+         IF (allocated(req_recv )) deallocate(req_recv )
          IF (allocated(recvcache)) deallocate(recvcache)
 
          CALL mpi_barrier (p_comm_worker, p_err)
@@ -465,7 +468,7 @@ CONTAINS
    END SUBROUTINE worker_push_data_uniq_real8
 
    ! ----------
-   SUBROUTINE worker_push_data_single_int32 (pushdata, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_single_int32 (pushdata, vec_send, vec_recv, fillvalue)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -475,6 +478,7 @@ CONTAINS
 
    integer, intent(in)    :: vec_send (:)
    integer, intent(inout) :: vec_recv (:)
+   integer, intent(in)    :: fillvalue
 
    ! Local Variables
    integer, allocatable   :: vec_recv_uniq (:)
@@ -483,6 +487,7 @@ CONTAINS
 
          IF (pushdata%num_req_uniq > 0) THEN
             allocate (vec_recv_uniq (pushdata%num_req_uniq))
+            vec_recv_uniq(:) = fillvalue
          ENDIF
 
          CALL worker_push_data_uniq_int32 (pushdata, vec_send, vec_recv_uniq)
@@ -497,7 +502,7 @@ CONTAINS
    END SUBROUTINE worker_push_data_single_int32
 
    ! ----------
-   SUBROUTINE worker_push_data_multi_int32 (pushdata, vec_send, vec_recv)
+   SUBROUTINE worker_push_data_multi_int32 (pushdata, vec_send, vec_recv, fillvalue)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -507,6 +512,7 @@ CONTAINS
 
    integer, intent(in)    :: vec_send (:)
    integer, intent(inout) :: vec_recv (:,:)
+   integer, intent(in)    :: fillvalue
 
    ! Local Variables
    integer, allocatable   :: vec_recv_uniq (:)
@@ -516,12 +522,14 @@ CONTAINS
 
          IF (pushdata%num_req_uniq > 0) THEN
             allocate (vec_recv_uniq (pushdata%num_req_uniq))
+            vec_recv_uniq(:) = fillvalue
          ENDIF
 
          CALL worker_push_data_uniq_int32 (pushdata, vec_send, vec_recv_uniq)
 
          IF (pushdata%num_req_uniq > 0) THEN
 
+            vec_recv(:,:) = fillvalue
             DO i = lbound(pushdata%addr_multi,1), ubound(pushdata%addr_multi,1)
                DO j = lbound(pushdata%addr_multi,2), ubound(pushdata%addr_multi,2)
                   IF (pushdata%addr_multi(i,j) > 0) THEN

@@ -63,11 +63,6 @@ MODULE MOD_Utils
       MODULE procedure unpack_inplace_lastdim_real8
    END INTERFACE unpack_inplace
 
-   INTERFACE pack_lastdim
-      MODULE procedure pack_lastdim_int32
-      MODULE procedure pack_lastdim_real8
-   END INTERFACE pack_lastdim
-
    PUBLIC :: num_max_frequency
 
    PUBLIC :: lmder
@@ -1154,52 +1149,6 @@ CONTAINS
       ENDDO
 
    END SUBROUTINE unpack_inplace_lastdim_real8
-
-   !-----------------------------------------------------
-   SUBROUTINE pack_lastdim_int32 (din, msk, dout)
-
-   USE MOD_Precision
-   IMPLICIT NONE
-
-   integer, intent(in) :: din (:,:)
-   logical, intent(in) :: msk (:)
-   integer, intent(inout) :: dout (:,:)
-
-   ! Local variables
-   integer :: n, i
-
-      n = 0
-      DO i = 1, size(msk)
-         IF (msk(i)) THEN
-            n = n + 1
-            dout(:,n) = din(:,i)
-         ENDIF
-      ENDDO
-
-   END SUBROUTINE pack_lastdim_int32
-
-   !-----------------------------------------------------
-   SUBROUTINE pack_lastdim_real8 (din, msk, dout)
-
-   USE MOD_Precision
-   IMPLICIT NONE
-
-   real(r8), intent(in) :: din (:,:)
-   logical,  intent(in) :: msk (:)
-   real(r8), intent(inout) :: dout (:,:)
-
-   ! Local variables
-   integer :: n, i
-
-      n = 0
-      DO i = 1, size(msk)
-         IF (msk(i)) THEN
-            n = n + 1
-            dout(:,n) = din(:,i)
-         ENDIF
-      ENDDO
-
-   END SUBROUTINE pack_lastdim_real8
 
    !---------------------------------------------------
    integer FUNCTION num_max_frequency (data_in)

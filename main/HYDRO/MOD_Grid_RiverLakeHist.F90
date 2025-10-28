@@ -89,7 +89,7 @@ CONTAINS
          IF (numucat  > 0) vec_ucat = 1.
          IF (numelm   > 0) vec_elm  = 0.
 
-         CALL worker_push_data (push_ucat2elm, vec_ucat, vec_elm)
+         CALL worker_push_data (push_ucat2elm, vec_ucat, vec_elm, fillvalue = 0.)
 
          DO ielm = 1, numelm
             istt = elm_patch%substt(ielm)
@@ -121,7 +121,6 @@ CONTAINS
    USE MOD_SPMD_Task
    USE MOD_Namelist
    USE MOD_NetCDFSerial
-   USE MOD_ElmVector
    USE MOD_WorkerPushData
    USE MOD_Grid_RiverLakeNetwork
    USE MOD_Grid_Reservoir
@@ -166,7 +165,7 @@ CONTAINS
 
       IF (DEF_hist_vars%riv_height) THEN
          IF (p_is_worker) THEN
-            CALL worker_push_data (push_ucat2elm, a_wdsrf_ucat, acc_vec)
+            CALL worker_push_data (push_ucat2elm, a_wdsrf_ucat, acc_vec, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
@@ -181,7 +180,7 @@ CONTAINS
 
       IF (DEF_hist_vars%riv_veloct) THEN
          IF (p_is_worker) THEN
-            CALL worker_push_data (push_ucat2elm, a_veloc_riv, acc_vec)
+            CALL worker_push_data (push_ucat2elm, a_veloc_riv, acc_vec, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
@@ -196,7 +195,7 @@ CONTAINS
 
       IF (DEF_hist_vars%discharge) THEN
          IF (p_is_worker) THEN
-            CALL worker_push_data (push_ucat2elm, a_discharge, acc_vec)
+            CALL worker_push_data (push_ucat2elm, a_discharge, acc_vec, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
@@ -222,7 +221,7 @@ CONTAINS
                allocate (a_floodfrc_inpmat (nucpart,numelm))
             ENDIF
 
-            CALL worker_push_data (push_ucat2inpmat, a_floodfrc, a_floodfrc_inpmat)
+            CALL worker_push_data (push_ucat2inpmat, a_floodfrc, a_floodfrc_inpmat, fillvalue = spval)
 
             DO ielm = 1, numelm
                acc_vec(ielm) = sum(a_floodfrc_inpmat(:,ielm) * inpmat_area_u2e(:,ielm), &

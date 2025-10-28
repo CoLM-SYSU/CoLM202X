@@ -125,7 +125,7 @@ CONTAINS
             rnof_el(ielm) = sum(rnof(istt:iend) * elm_patch%subfrc(istt:iend))
          ENDDO
 
-         CALL worker_push_data (push_inpmat2ucat, rnof_el, rnof_uc)
+         CALL worker_push_data (push_inpmat2ucat, rnof_el, rnof_uc, fillvalue = 0.)
 
          DO i = 1, numucat
 
@@ -185,8 +185,8 @@ CONTAINS
                ENDIF
             ENDDO
 
-            CALL worker_push_data (push_next2ucat, wdsrf_ucat, wdsrf_next)
-            CALL worker_push_data (push_next2ucat, veloc_riv,  veloc_next)
+            CALL worker_push_data (push_next2ucat, wdsrf_ucat, wdsrf_next, fillvalue = spval)
+            CALL worker_push_data (push_next2ucat, veloc_riv,  veloc_next, fillvalue = spval)
 
             ! velocity in ocean or inland depression is assumed to be 0.
             DO i = 1, numucat
@@ -334,9 +334,9 @@ CONTAINS
             mflux_allups(:,:) = 0.
             zgrad_allups(:,:) = 0.
 
-            CALL worker_push_data (push_ups2ucat, hflux_fc, hflux_allups)
-            CALL worker_push_data (push_ups2ucat, mflux_fc, mflux_allups)
-            CALL worker_push_data (push_ups2ucat, zgrad_dn, zgrad_allups)
+            CALL worker_push_data (push_ups2ucat, hflux_fc, hflux_allups, fillvalue = 0.)
+            CALL worker_push_data (push_ups2ucat, mflux_fc, mflux_allups, fillvalue = 0.)
+            CALL worker_push_data (push_ups2ucat, zgrad_dn, zgrad_allups, fillvalue = 0.)
 
             DO i = 1, numucat
                IF (ucatfilter(i)) THEN
@@ -384,8 +384,8 @@ CONTAINS
 
                ENDDO
 
-               CALL worker_push_data (push_ups2ucat, hflux_resv, hflux_allups)
-               CALL worker_push_data (push_ups2ucat, mflux_resv, mflux_allups)
+               CALL worker_push_data (push_ups2ucat, hflux_resv, hflux_allups, fillvalue = 0.)
+               CALL worker_push_data (push_ups2ucat, mflux_resv, mflux_allups, fillvalue = 0.)
 
                DO i = 1, numucat
                   IF (ucatfilter(i)) THEN
