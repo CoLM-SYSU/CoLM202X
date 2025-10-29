@@ -4,7 +4,7 @@ MODULE MOD_Vector_ReadWrite
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
 !
-!    Read/Write data in lateral hydrological processes.
+!    Read/Write data in vector form.
 !
 ! Created by Shupeng Zhang, May 2023
 !-----------------------------------------------------------------------
@@ -17,7 +17,7 @@ CONTAINS
    ! -------
    SUBROUTINE vector_gather_and_write ( &
          fileinout, vector, vlen, totalvlen, varname, dimname, data_address, &
-         is_hist, itime_in_file, longname, units)
+         itime_in_file, longname, units)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -36,7 +36,6 @@ CONTAINS
 
    type(pointer_int32_1d), intent(in) :: data_address (0:)
 
-   logical,          intent(in), optional :: is_hist
    integer,          intent(in), optional :: itime_in_file
    character(len=*), intent(in), optional :: longname
    character(len=*), intent(in), optional :: units
@@ -44,10 +43,8 @@ CONTAINS
    ! Local variables
    integer :: iwork, mesg(2), isrc, ndata
    real(r8), allocatable :: rcache(:), wdata(:)
+   logical :: write_attr
 
-      IF (present(is_hist)) THEN
-         IF (.not. is_hist) RETURN
-      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -101,15 +98,15 @@ CONTAINS
          ENDIF
 
          IF (present(itime_in_file)) THEN
-            IF (itime_in_file == 1) THEN
-               IF (present(longname)) THEN
-                  CALL ncio_put_attr (fileinout, varname, 'long_name', longname)
-               ENDIF
-               IF (present(units)) THEN
-                  CALL ncio_put_attr (fileinout, varname, 'units', units)
-               ENDIF
-               CALL ncio_put_attr (fileinout, varname, 'missing_value', spval)
-            ENDIF
+            write_attr = itime_in_file == 1
+         ELSE
+            write_attr = .true.
+         ENDIF
+
+         IF (write_attr) THEN
+            CALL ncio_put_attr (fileinout, varname, 'missing_value', spval)
+            IF (present(longname)) CALL ncio_put_attr (fileinout, varname, 'long_name', longname)
+            IF (present(units   )) CALL ncio_put_attr (fileinout, varname, 'units',     units   )
          ENDIF
 
          deallocate (wdata)

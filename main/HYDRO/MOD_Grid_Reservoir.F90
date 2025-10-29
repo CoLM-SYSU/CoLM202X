@@ -10,17 +10,13 @@ MODULE MOD_Grid_Reservoir
 ! Created by Shupeng Zhang, Oct 2025
 !-----------------------------------------------------------------------
    USE MOD_Precision
-   USE MOD_Grid_RiverLakeNetwork, only : numucat, ucat_ucid, lake_type
+   USE MOD_DataType
 
    integer :: totalnumresv
    integer :: numresv
    integer,  allocatable :: ucat2resv   (:)
-#ifdef USEMPI
-   integer :: sum_numresv_all
-   integer,  allocatable :: numresv_all (:)
-   integer,  allocatable :: numresv_dsp (:)
-   integer,  allocatable :: loc2all_all (:)
-#endif
+   type(pointer_int32_1d), allocatable :: resv_data_address (:)
+
 
    ! parameters
    integer,  allocatable :: dam_GRAND_ID  (:)  ! GRAND dam ID
@@ -43,7 +39,6 @@ MODULE MOD_Grid_Reservoir
    ! -- PUBLIC SUBROUTINEs --
    PUBLIC :: reservoir_init
    PUBLIC :: reservoir_operation
-   PUBLIC :: reservoir_gather_var
    PUBLIC :: reservoir_final
 
 CONTAINS
@@ -52,9 +47,10 @@ CONTAINS
    SUBROUTINE reservoir_init ( )
 
    USE MOD_SPMD_Task
-   USE MOD_Namelist, only: DEF_ReservoirPara_file
    USE MOD_NetCDFSerial
    USE MOD_Utils
+   USE MOD_Namelist,              only: DEF_ReservoirPara_file
+   USE MOD_Grid_RiverLakeNetwork, only: numucat, ucat_ucid, lake_type
 
    IMPLICIT NONE
 
@@ -65,7 +61,7 @@ CONTAINS
    real(r8), allocatable :: rcache (:)
    integer,  allocatable :: icache (:)
 
-   integer :: i, iloc, irsv
+   integer :: i, iloc, irsv, nresv, iworker
 
 
       parafile = DEF_ReservoirPara_file
@@ -99,30 +95,44 @@ CONTAINS
             ENDIF
          ENDDO
 
+      ENDIF
+
 #ifdef USEMPI
-         allocate (numresv_all (0:p_np_worker-1))
-         CALL mpi_allgather (numresv, 1, MPI_INTEGER, &
-            numresv_all, 1, MPI_INTEGER, p_comm_worker, p_err)
+      IF (p_is_master) THEN
 
-         sum_numresv_all = sum(numresv_all)
+         allocate (resv_data_address (0:p_np_worker-1))
 
-         IF (sum_numresv_all > 0) THEN
+         DO iworker = 0, p_np_worker-1
 
-            IF (p_iam_worker == p_root) THEN
-               allocate (numresv_dsp (0:p_np_worker-1))
-               allocate (loc2all_all (sum_numresv_all))
+            CALL mpi_recv (nresv, 1, MPI_INTEGER, &
+               p_address_worker(iworker), mpi_tag_mesg, p_comm_glb, p_stat, p_err)
 
-               numresv_dsp(0) = 0
-               DO i = 1, p_np_worker-1
-                  numresv_dsp(i) = numresv_dsp(i-1) + numresv_all(i-1)
-               ENDDO
+            IF (nresv > 0) THEN
+               allocate (resv_data_address(iworker)%val (nresv))
+               CALL mpi_recv (resv_data_address(iworker)%val, nresv, MPI_INTEGER, &
+                  p_address_worker(iworker), mpi_tag_data, p_comm_glb, p_stat, p_err)
             ENDIF
+         ENDDO
 
-            CALL mpi_gatherv (loc2all, numresv, MPI_INTEGER, &
-               loc2all_all, numresv_all, numresv_dsp, MPI_INTEGER, p_root, p_comm_worker, p_err)
+      ELSEIF (p_is_worker) THEN
 
+         CALL mpi_send (numresv, 1, MPI_INTEGER, p_address_master, mpi_tag_mesg, p_comm_glb, p_err)
+
+         IF (numresv > 0) THEN
+            CALL mpi_send (loc2all(1:numresv), numresv, MPI_INTEGER, p_address_master, &
+               mpi_tag_data, p_comm_glb, p_err)
          ENDIF
+
+      ENDIF
+#else
+      IF (numresv > 0) THEN
+         allocate (resv_data_address (0:0))
+         allocate (resv_data_address(0)%val (numresv))
+         resv_data_address(0)%val = loc2all(1:numresv)
+      ENDIF
 #endif
+
+      IF (p_is_worker) THEN
 
          IF (numresv > 0) THEN
 
@@ -227,88 +237,27 @@ CONTAINS
    END SUBROUTINE reservoir_operation
 
 
-   SUBROUTINE reservoir_gather_var (varin, varout)
-
-   USE MOD_SPMD_Task
-   USE MOD_Vars_Global, only: spval
-   IMPLICIT NONE
-
-   real(r8), intent(in)  :: varin  (:)
-   real(r8), intent(out) :: varout (:)
-
-   ! local variables
-   integer :: irsv
-   real(r8), allocatable :: varall (:)
-
-      IF (p_is_worker) THEN
-
-         IF (totalnumresv == 0) RETURN
-
-#ifdef USEMPI
-         IF (sum_numresv_all == 0) RETURN
-
-         IF (p_iam_worker == p_root) THEN
-            allocate (varall (sum_numresv_all))
-         ENDIF
-
-         CALL mpi_gatherv (varin, numresv, MPI_REAL8, &
-            varall, numresv_all, numresv_dsp, MPI_REAL8, p_root, p_comm_worker, p_err)
-
-         IF (p_iam_worker == p_root) THEN
-
-            varout(:) = spval
-            DO irsv = 1, sum_numresv_all
-               varout(loc2all_all(irsv)) = varall(irsv)
-            ENDDO
-
-            deallocate (varall)
-         ENDIF
-
-      ENDIF
-
-      IF (p_iam_worker == p_root) THEN
-         CALL mpi_send (varout, totalnumresv, MPI_REAL8, p_address_master, &
-            mpi_tag_data, p_comm_glb, p_err)
-      ENDIF
-      IF (p_is_master) THEN
-         CALL mpi_recv (varout, totalnumresv, MPI_REAL8, p_address_worker(p_root), &
-            mpi_tag_data, p_comm_glb, p_stat, p_err)
-      ENDIF
-#else
-      varout(:) = spval
-      DO irsv = 1, numresv
-         varout(loc2all(irsv)) = varin(irsv)
-      ENDDO
-#endif
-
-   END SUBROUTINE reservoir_gather_var
-
-
    SUBROUTINE reservoir_final ()
 
    IMPLICIT NONE
 
-      IF (allocated(ucat2resv     )) deallocate (ucat2resv     )
-#ifdef USEMPI
-      IF (allocated(numresv_all   )) deallocate (numresv_all   )
-      IF (allocated(numresv_dsp   )) deallocate (numresv_dsp   )
-      IF (allocated(loc2all_all   )) deallocate (loc2all_all   )
-#endif
+      IF (allocated(ucat2resv        )) deallocate (ucat2resv        )
+      IF (allocated(resv_data_address)) deallocate (resv_data_address)
 
-      IF (allocated(dam_GRAND_ID  )) deallocate (dam_GRAND_ID  )
-      IF (allocated(dam_build_year)) deallocate (dam_build_year)
+      IF (allocated(dam_GRAND_ID     )) deallocate (dam_GRAND_ID     )
+      IF (allocated(dam_build_year   )) deallocate (dam_build_year   )
 
-      IF (allocated(volresv_total )) deallocate (volresv_total )
-      IF (allocated(volresv_emerg )) deallocate (volresv_emerg )
-      IF (allocated(volresv_adjust)) deallocate (volresv_adjust)
-      IF (allocated(volresv_normal)) deallocate (volresv_normal)
+      IF (allocated(volresv_total    )) deallocate (volresv_total    )
+      IF (allocated(volresv_emerg    )) deallocate (volresv_emerg    )
+      IF (allocated(volresv_adjust   )) deallocate (volresv_adjust   )
+      IF (allocated(volresv_normal   )) deallocate (volresv_normal   )
 
-      IF (allocated(qresv_flood   )) deallocate (qresv_flood   )
-      IF (allocated(qresv_adjust  )) deallocate (qresv_adjust  )
-      IF (allocated(qresv_normal  )) deallocate (qresv_normal  )
+      IF (allocated(qresv_flood      )) deallocate (qresv_flood      )
+      IF (allocated(qresv_adjust     )) deallocate (qresv_adjust     )
+      IF (allocated(qresv_normal     )) deallocate (qresv_normal     )
 
-      IF (allocated(qresv_in      )) deallocate (qresv_in      )
-      IF (allocated(qresv_out     )) deallocate (qresv_out     )
+      IF (allocated(qresv_in         )) deallocate (qresv_in         )
+      IF (allocated(qresv_out        )) deallocate (qresv_out        )
 
    END SUBROUTINE reservoir_final
 

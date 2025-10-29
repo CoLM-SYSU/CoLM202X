@@ -87,7 +87,6 @@ CONTAINS
          IF (numucat  > 0) allocate (vec_ucat (numucat ))
          IF (numelm   > 0) allocate (vec_elm  (numelm  ))
          IF (numucat  > 0) vec_ucat = 1.
-         IF (numelm   > 0) vec_elm  = 0.
 
          CALL worker_push_data (push_ucat2elm, vec_ucat, vec_elm, fillvalue = 0.)
 
@@ -124,10 +123,11 @@ CONTAINS
    USE MOD_WorkerPushData
    USE MOD_Grid_RiverLakeNetwork
    USE MOD_Grid_Reservoir
-   USE MOD_SpatialMapping
+   USE MOD_Vector_ReadWrite
    USE MOD_HistGridded, only: flux_map_and_write_2d
    USE MOD_LandPatch,   only: numpatch, elm_patch
    USE MOD_Mesh,        only: numelm
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    character(len=*), intent(in) :: file_hist
@@ -146,25 +146,13 @@ CONTAINS
 
 
       IF (p_is_worker) THEN
-         IF (numucat > 0) THEN
-            WHERE (acctime > 0)
-               a_wdsrf_ucat = a_wdsrf_ucat / acctime
-               a_veloc_riv  = a_veloc_riv  / acctime
-               a_discharge  = a_discharge  / acctime
-               a_floodarea  = a_floodarea  / acctime
-            END WHERE
-         ENDIF
-      ENDIF
-
-      IF (p_is_worker) THEN
          IF (numelm   > 0) allocate (acc_vec     (numelm  ))
          IF (numpatch > 0) allocate (acc_vec_pch (numpatch))
-         IF (numelm   > 0) acc_vec     = 0.
-         IF (numpatch > 0) acc_vec_pch = 0.
       ENDIF
 
       IF (DEF_hist_vars%riv_height) THEN
          IF (p_is_worker) THEN
+            IF (numucat > 0)  a_wdsrf_ucat = a_wdsrf_ucat / acctime
             CALL worker_push_data (push_ucat2elm, a_wdsrf_ucat, acc_vec, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
@@ -180,6 +168,7 @@ CONTAINS
 
       IF (DEF_hist_vars%riv_veloct) THEN
          IF (p_is_worker) THEN
+            IF (numucat > 0)  a_veloc_riv = a_veloc_riv  / acctime
             CALL worker_push_data (push_ucat2elm, a_veloc_riv, acc_vec, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
@@ -195,6 +184,7 @@ CONTAINS
 
       IF (DEF_hist_vars%discharge) THEN
          IF (p_is_worker) THEN
+            IF (numucat > 0)  a_discharge = a_discharge  / acctime
             CALL worker_push_data (push_ucat2elm, a_discharge, acc_vec, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
@@ -211,10 +201,9 @@ CONTAINS
       IF (DEF_hist_vars%floodarea) THEN
          IF (p_is_worker) THEN
             IF (numucat > 0) THEN
+               a_floodarea = a_floodarea / acctime
                allocate (a_floodfrc (numucat))
-               WHERE (acctime > 0.)
-                  a_floodfrc = a_floodarea  / topo_area
-               END WHERE
+               a_floodfrc = a_floodarea / topo_area
             ENDIF
 
             IF (numelm > 0) then
@@ -224,8 +213,12 @@ CONTAINS
             CALL worker_push_data (push_ucat2inpmat, a_floodfrc, a_floodfrc_inpmat, fillvalue = spval)
 
             DO ielm = 1, numelm
-               acc_vec(ielm) = sum(a_floodfrc_inpmat(:,ielm) * inpmat_area_u2e(:,ielm), &
-                  mask = inpmat_area_u2e(:,ielm) > 0.)
+               IF (any(inpmat_area_u2e(:,ielm) > 0.)) THEN
+                  acc_vec(ielm) = sum(a_floodfrc_inpmat(:,ielm) * inpmat_area_u2e(:,ielm), &
+                     mask = inpmat_area_u2e(:,ielm) > 0.)
+               ELSE
+                  acc_vec(ielm) = spval
+               ENDIF
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
                acc_vec_pch(istt:iend) = acc_vec(ielm)
@@ -243,7 +236,11 @@ CONTAINS
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
-               acc_vec_pch(istt:iend) = acc_vec(ielm) / sum(inpmat_area_u2e(:,ielm))
+               IF (any(inpmat_area_u2e(:,ielm) > 0.)) THEN
+                  acc_vec_pch(istt:iend) = acc_vec(ielm) / sum(inpmat_area_u2e(:,ielm))
+               ELSE
+                  acc_vec_pch(istt:iend) = spval
+               ENDIF
             ENDDO
          ENDIF
 
@@ -279,11 +276,7 @@ CONTAINS
 
             ENDIF
 
-            allocate (acc_vec (totalnumresv))
-            acc_vec(:) = spval
-
             IF (DEF_hist_vars%volresv) THEN
-
                IF (p_is_worker) THEN
                   IF (numresv > 0) THEN
                      WHERE (acctime_resv > 0)
@@ -294,21 +287,12 @@ CONTAINS
                   ENDIF
                ENDIF
 
-               CALL reservoir_gather_var (a_volresv, acc_vec)
-
-               IF (p_is_master) THEN
-                  CALL ncio_write_serial_time (file_hist_resv, 'volresv', &
-                     itime_in_file_resv, acc_vec, 'reservoir', 'time', DEF_HIST_CompressLevel)
-                  IF (itime_in_file_resv == 1) THEN
-                     CALL ncio_put_attr (file_hist_resv, 'volresv', 'long_name', 'reservoir water volume')
-                     CALL ncio_put_attr (file_hist_resv, 'volresv', 'units',     'm^3')
-                     CALL ncio_put_attr (file_hist_resv, 'volresv', 'missing_value', spval)
-                  ENDIF
-               ENDIF
+               CALL vector_gather_and_write ( &
+                  file_hist_resv, a_volresv, numresv, totalnumresv, 'volresv', 'reservoir', resv_data_address, &
+                  itime_in_file_resv, 'reservoir water volume', 'm^3')
             ENDIF
 
             IF (DEF_hist_vars%qresv_in) THEN
-
                IF (p_is_worker) THEN
                   IF (numresv > 0) THEN
                      WHERE (acctime_resv > 0)
@@ -319,21 +303,12 @@ CONTAINS
                   ENDIF
                ENDIF
 
-               CALL reservoir_gather_var (a_qresv_in, acc_vec)
-
-               IF (p_is_master) THEN
-                  CALL ncio_write_serial_time (file_hist_resv, 'qresv_in', &
-                     itime_in_file_resv, acc_vec, 'reservoir', 'time', DEF_HIST_CompressLevel)
-                  IF (itime_in_file_resv == 1) THEN
-                     CALL ncio_put_attr (file_hist_resv, 'qresv_in', 'long_name', 'reservoir inflow')
-                     CALL ncio_put_attr (file_hist_resv, 'qresv_in', 'units',     'm^3/s')
-                     CALL ncio_put_attr (file_hist_resv, 'qresv_in', 'missing_value', spval)
-                  ENDIF
-               ENDIF
+               CALL vector_gather_and_write ( &
+                  file_hist_resv, a_qresv_in, numresv, totalnumresv, 'qresv_in', 'reservoir', resv_data_address, &
+                  itime_in_file_resv, 'reservoir inflow', 'm^3/s')
             ENDIF
 
             IF (DEF_hist_vars%qresv_out) THEN
-
                IF (p_is_worker) THEN
                   IF (numresv > 0) THEN
                      WHERE (acctime_resv > 0)
@@ -344,20 +319,10 @@ CONTAINS
                   ENDIF
                ENDIF
 
-               CALL reservoir_gather_var (a_qresv_out, acc_vec)
-
-               IF (p_is_master) THEN
-                  CALL ncio_write_serial_time (file_hist_resv, 'qresv_out', &
-                     itime_in_file_resv, acc_vec, 'reservoir', 'time', DEF_HIST_CompressLevel)
-                  IF (itime_in_file_resv == 1) THEN
-                     CALL ncio_put_attr (file_hist_resv, 'qresv_out', 'long_name', 'reservoir outflow')
-                     CALL ncio_put_attr (file_hist_resv, 'qresv_out', 'units',     'm^3/s')
-                     CALL ncio_put_attr (file_hist_resv, 'qresv_out', 'missing_value', spval)
-                  ENDIF
-               ENDIF
+               CALL vector_gather_and_write ( &
+                  file_hist_resv, a_qresv_out, numresv, totalnumresv, 'qresv_out', 'reservoir', resv_data_address, &
+                  itime_in_file_resv, 'reservoir outflow', 'm^3/s')
             ENDIF
-
-            deallocate (acc_vec)
 
          ENDIF
       ENDIF

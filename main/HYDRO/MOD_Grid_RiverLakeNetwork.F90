@@ -21,7 +21,6 @@ MODULE MOD_Grid_RiverLakeNetwork
    integer, allocatable :: ucat_elid (:)   ! index in element numbering
    integer, allocatable :: ucat_ucid (:)   ! index in unit catchment numbering
 
-   type(worker_pushdata_type) :: push_elm2ucat
    type(worker_pushdata_type) :: push_ucat2elm
 
    ! ----- Part 2: between runoff input elements and unit catchments -----
@@ -448,7 +447,6 @@ CONTAINS
          ENDIF
       ENDIF
 
-      CALL build_worker_pushdata (numelm,  elmindex,  numucat, ucat_elid, push_elm2ucat)
       CALL build_worker_pushdata (numucat, ucat_elid, numelm,  elmindex,  push_ucat2elm)
 
 
@@ -625,6 +623,8 @@ CONTAINS
 #else
       allocate (inpmat_uc2el    (nucpart, numelm))
       allocate (inpmat_area_u2e (nucpart, numelm))
+      inpmat_uc2el    = 0
+      inpmat_area_u2e = 0.
 
       DO = 1, numelm
          iloc = find_in_sorted_list1 (elmindex(i), nelmall, allelm_in_inp(1:nelmall))

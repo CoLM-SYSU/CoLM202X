@@ -10,12 +10,11 @@ MODULE MOD_Grid_RiverLakeFlow
 !-------------------------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_SPMD_Task
+   USE MOD_Namelist
    USE MOD_Grid_RiverLakeNetwork
    USE MOD_Grid_RiverLakeTimeVars
    USE MOD_Grid_Reservoir
    USE MOD_Grid_RiverLakeHist
-   USE MOD_Namelist, only: DEF_Reservoir_Method
    IMPLICIT NONE
 
    real(r8), parameter :: RIVERMIN  = 1.e-5_r8
@@ -36,7 +35,9 @@ CONTAINS
    ! ---------
    SUBROUTINE grid_riverlake_flow (year, deltime)
 
+   USE MOD_SPMD_Task
    USE MOD_Utils
+   USE MOD_Namelist,       only: DEF_Reservoir_Method
    USE MOD_Vars_1DFluxes,  only: rnof
    USE MOD_Mesh,           only: numelm
    USE MOD_LandPatch,      only: elm_patch
@@ -77,11 +78,12 @@ CONTAINS
    real(r8) :: veloct_fc, height_fc, momen_fc, zsurf_fc
    real(r8) :: bedelv_fc, height_up, height_dn
    real(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
-   real(r8) :: totalvolume, friction, floodarea
+   real(r8) :: volwater, friction, floodarea
    real(r8),  allocatable :: dt_res(:), dt_all(:)
    logical,   allocatable :: ucatfilter(:)
-
-
+#ifdef CoLMDEBUG
+   real(r8) :: totalvol_bef, totalvol_aft, totalrnof, totaldis
+#endif
 
 
       IF (p_is_worker) THEN
@@ -127,48 +129,59 @@ CONTAINS
 
          CALL worker_push_data (push_inpmat2ucat, rnof_el, rnof_uc, fillvalue = 0.)
 
+#ifdef CoLMDEBUG
+         totalrnof = sum(rnof_uc*inpmat_area_e2u)*1.e-3*deltime
+         totalvol_bef = 0.
+#endif
+
          DO i = 1, numucat
 
             is_built_resv(i) = .false.
             IF (lake_type(i) == 2) THEN
-               IF (year >= dam_build_year(ucat2resv(i))) THEN
+               irsv = ucat2resv(i)
+               IF (year >= dam_build_year(irsv)) THEN
                   is_built_resv(i) = .true.
-                  IF (volresv(ucat2resv(i)) == spval) THEN
-                     volresv(ucat2resv(i)) = floodplain_curve(i)%volume (wdsrf_ucat(i))
+                  IF (volresv(irsv) == spval) THEN
+                     volresv(irsv) = floodplain_curve(i)%volume (wdsrf_ucat(i))
                   ELSE
-                     wdsrf_ucat(i) = floodplain_curve(i)%depth (volresv(ucat2resv(i)))
+                     wdsrf_ucat(i) = floodplain_curve(i)%depth (volresv(irsv))
                   ENDIF
                ENDIF
             ENDIF
 
             IF (.not. is_built_resv(i)) THEN
                momen_riv(i) = wdsrf_ucat(i) * veloc_riv(i)
-               totalvolume  = floodplain_curve(i)%volume (wdsrf_ucat(i))
+               volwater = floodplain_curve(i)%volume (wdsrf_ucat(i))
             ELSE
                ! water in reservoirs is assumued to be stationary.
                momen_riv(i) = 0
                veloc_riv(i) = 0
-               totalvolume = volresv(ucat2resv(i))
+               volwater = volresv(ucat2resv(i))
             ENDIF
 
-            totalvolume = totalvolume + 1.e-3*deltime &
+#ifdef CoLMDEBUG
+            totalvol_bef = totalvol_bef + volwater
+#endif
+
+            volwater = volwater + 1.e-3*deltime &
                * sum(rnof_uc(:,i)*inpmat_area_e2u(:,i), mask = inpmat_area_e2u(:,i) > 0.)
 
             IF (.not. is_built_resv(i)) THEN
-               wdsrf_ucat(i) = floodplain_curve(i)%depth (totalvolume)
+               wdsrf_ucat(i) = floodplain_curve(i)%depth (volwater)
                IF (wdsrf_ucat(i) > RIVERMIN) THEN
                    veloc_riv(i) = momen_riv(i) / wdsrf_ucat(i)
                 ELSE
                    veloc_riv(i) = 0.
                ENDIF
             ELSE
-               volresv(ucat2resv(i)) = totalvolume
+               volresv(ucat2resv(i)) = volwater
             ENDIF
 
          ENDDO
 
 
          ntimestep = 0
+         totaldis  = 0.
 
          dt_res(:) = deltime
 
@@ -176,30 +189,21 @@ CONTAINS
 
             ntimestep = ntimestep + 1
 
-            DO i = 1, numucat
-               ucatfilter(i) = dt_res(irivsys(i)) > 0
-               IF (ucatfilter(i)) THEN
-                  sum_hflux_riv(i) = 0.
-                  sum_mflux_riv(i) = 0.
-                  sum_zgrad_riv(i) = 0.
-               ENDIF
-            ENDDO
-
             CALL worker_push_data (push_next2ucat, wdsrf_ucat, wdsrf_next, fillvalue = spval)
-            CALL worker_push_data (push_next2ucat, veloc_riv,  veloc_next, fillvalue = spval)
-
             ! velocity in ocean or inland depression is assumed to be 0.
-            DO i = 1, numucat
-               IF (ucat_next(i) <= 0) THEN
-                  veloc_next(i) = 0.
-               ENDIF
-            ENDDO
+            CALL worker_push_data (push_next2ucat, veloc_riv,  veloc_next, fillvalue = 0.)
 
             dt_all(:) = min(dt_res(:), 60.)
 
             DO i = 1, numucat
 
+               ucatfilter(i) = dt_all(irivsys(i)) > 0
+
                IF (.not. ucatfilter(i)) CYCLE
+
+               sum_hflux_riv(i) = 0.
+               sum_mflux_riv(i) = 0.
+               sum_zgrad_riv(i) = 0.
 
                ! reservoir
                IF (is_built_resv(i)) THEN
@@ -330,10 +334,6 @@ CONTAINS
 
             ENDDO
 
-            hflux_allups(:,:) = 0.
-            mflux_allups(:,:) = 0.
-            zgrad_allups(:,:) = 0.
-
             CALL worker_push_data (push_ups2ucat, hflux_fc, hflux_allups, fillvalue = 0.)
             CALL worker_push_data (push_ups2ucat, mflux_fc, mflux_allups, fillvalue = 0.)
             CALL worker_push_data (push_ups2ucat, zgrad_dn, zgrad_allups, fillvalue = 0.)
@@ -417,13 +417,13 @@ CONTAINS
                IF (sum_hflux_riv(i) > 0) THEN
                   IF (.not. is_built_resv(i)) THEN
                      ! for river or lake catchment
-                     totalvolume = floodplain_curve(i)%volume (wdsrf_ucat(i))
+                     volwater = floodplain_curve(i)%volume (wdsrf_ucat(i))
                   ELSE
                      ! for reservoir
-                     totalvolume = volresv(ucat2resv(i))
+                     volwater = volresv(ucat2resv(i))
                   ENDIF
 
-                  dt_this = min(dt_this, totalvolume / sum_hflux_riv(i))
+                  dt_this = min(dt_this, volwater / sum_hflux_riv(i))
 
                ENDIF
 
@@ -451,16 +451,16 @@ CONTAINS
                IF (.not. ucatfilter(i)) CYCLE
 
                IF (.not. is_built_resv(i)) THEN
-                  totalvolume = floodplain_curve(i)%volume (wdsrf_ucat(i))
+                  volwater = floodplain_curve(i)%volume (wdsrf_ucat(i))
                ELSE
-                  totalvolume = volresv(ucat2resv(i))
+                  volwater = volresv(ucat2resv(i))
                ENDIF
 
-               totalvolume   = totalvolume - sum_hflux_riv(i) * dt_all(irivsys(i))
-               wdsrf_ucat(i) = floodplain_curve(i)%depth (totalvolume)
+               volwater = volwater - sum_hflux_riv(i) * dt_all(irivsys(i))
+               wdsrf_ucat(i) = floodplain_curve(i)%depth (volwater)
 
                IF (is_built_resv(i)) THEN
-                  volresv(ucat2resv(i)) = totalvolume
+                  volresv(ucat2resv(i)) = volwater
                ENDIF
 
                IF ((.not. is_built_resv(i)) .and. (wdsrf_ucat(i) >= RIVERMIN)) THEN
@@ -488,6 +488,8 @@ CONTAINS
             DO i = 1, numucat
                IF (ucatfilter(i)) THEN
 
+                  totaldis = totaldis + hflux_fc(i)*dt_all(irivsys(i))
+
                   acctime(i) = acctime(i) + dt_all(irivsys(i))
 
                   a_wdsrf_ucat(i) = a_wdsrf_ucat(i) + wdsrf_ucat(i) * dt_all(irivsys(i))
@@ -512,18 +514,42 @@ CONTAINS
 
          ENDDO
 
-
-         CALL mpi_allreduce (MPI_IN_PLACE, ntimestep, 1, MPI_INTEGER, MPI_MAX, p_comm_worker, p_err)
-
-#ifdef RangeCheck
-         IF (p_iam_worker == 0) THEN
-            write(*,'(/,A)') 'Checking River Routing Flow ...'
-            write(*,'(A,F12.5,A)') 'River Lake Flow minimum average timestep: ', deltime/ntimestep, ' seconds'
-         ENDIF
+#ifdef CoLMDEBUG
+         totalvol_aft = 0.
+         DO i = 1, numucat
+            IF (.not. is_built_resv(i)) THEN
+               totalvol_aft = totalvol_aft + floodplain_curve(i)%volume (wdsrf_ucat(i))
+            ELSE
+               totalvol_aft = totalvol_aft + volresv(ucat2resv(i))
+            ENDIF
+         ENDDO
 #endif
-
       ENDIF
 
+#ifdef CoLMDEBUG
+#ifdef USEMPI
+      IF (.not. p_is_worker) ntimestep = 0
+      CALL mpi_allreduce (MPI_IN_PLACE, ntimestep, 1, MPI_INTEGER, MPI_MAX, p_comm_glb, p_err)
+
+      IF (.not. p_is_worker) totalvol_bef = 0.
+      IF (.not. p_is_worker) totalvol_aft = 0.
+      IF (.not. p_is_worker) totalrnof    = 0.
+      IF (.not. p_is_worker) totaldis     = 0.
+
+      CALL mpi_allreduce (MPI_IN_PLACE, totalvol_bef, 1, MPI_REAL8, MPI_SUM, p_comm_glb, p_err)
+      CALL mpi_allreduce (MPI_IN_PLACE, totalvol_aft, 1, MPI_REAL8, MPI_SUM, p_comm_glb, p_err)
+      CALL mpi_allreduce (MPI_IN_PLACE, totalrnof,    1, MPI_REAL8, MPI_SUM, p_comm_glb, p_err)
+      CALL mpi_allreduce (MPI_IN_PLACE, totaldis,     1, MPI_REAL8, MPI_SUM, p_comm_glb, p_err)
+#endif
+      IF (p_is_master) THEN
+         write(*,'(/,A)') 'Checking River Routing Flow ...'
+         write(*,'(A,F12.5,A)') 'River Lake Flow minimum average timestep: ', deltime/ntimestep, ' seconds'
+         write(*,'(A,ES8.1,A)') 'Total runoff :        ', totalrnof, ' m^3'
+         write(*,'(A,ES8.1,A)') 'Total discharge :     ', totaldis,  ' m^3'
+         write(*,'(A,ES8.1,A)') 'Total water change :  ', totalvol_aft-totalvol_bef,  ' m^3'
+         write(*,'(A,ES8.1,A)') 'Total water balance : ', totalvol_aft-totalvol_bef-totalrnof+totaldis,  ' m^3'
+      ENDIF
+#endif
 
       IF (allocated(rnof_el      )) deallocate(rnof_el      )
       IF (allocated(rnof_uc      )) deallocate(rnof_uc      )

@@ -54,32 +54,14 @@ CONTAINS
    USE MOD_Namelist
    USE MOD_Vector_ReadWrite
    USE MOD_Grid_RiverLakeNetwork, only: numucat, ucat_data_address
-   USE MOD_Grid_Reservoir,        only: ucat2resv
+   USE MOD_Grid_Reservoir,        only: numresv, resv_data_address
    IMPLICIT NONE
 
    character(len=*), intent(in) :: file_restart
 
-   ! -- auxiliary variables --
-   real(r8), allocatable :: volresv_ucat (:)
-   integer :: i
-
-      IF (p_is_worker) THEN
-         IF (numucat > 0)  allocate (volresv_ucat (numucat))
-      ENDIF
-
       CALL vector_read_and_scatter (file_restart, wdsrf_ucat, numucat, 'wdsrf_ucat', ucat_data_address)
       CALL vector_read_and_scatter (file_restart, veloc_riv,  numucat, 'veloc_riv',  ucat_data_address)
-
-      IF (DEF_Reservoir_Method > 0) THEN
-         CALL vector_read_and_scatter (file_restart, volresv_ucat, numucat, 'volresv', ucat_data_address)
-         IF (p_is_worker) THEN
-            DO i = 1, numucat
-               IF (ucat2resv(i) > 0) volresv(ucat2resv(i)) = volresv_ucat(i)
-            ENDDO
-         ENDIF
-      ENDIF
-
-      IF (allocated (volresv_ucat)) deallocate (volresv_ucat)
+      CALL vector_read_and_scatter (file_restart, volresv,    numresv, 'volresv',    resv_data_address)
 
    END SUBROUTINE READ_GridRiverLakeTimeVars
 
@@ -91,18 +73,11 @@ CONTAINS
    USE MOD_NetCDFSerial
    USE MOD_Vector_ReadWrite
    USE MOD_Grid_RiverLakeNetwork, only: numucat, totalnumucat, ucat_data_address
-   USE MOD_Grid_Reservoir,        only: ucat2resv
+   USE MOD_Grid_Reservoir,        only: numresv, totalnumresv, resv_data_address
    IMPLICIT NONE
 
    character(len=*), intent(in) :: file_restart
 
-   ! -- auxiliary variables --
-   real(r8), allocatable :: volresv_ucat (:)
-   integer :: i
-
-      IF (p_is_worker) THEN
-         IF (numucat > 0)  allocate (volresv_ucat (numucat))
-      ENDIF
 
       IF (p_is_master) THEN
          CALL ncio_create_file (trim(file_restart))
@@ -116,16 +91,12 @@ CONTAINS
          file_restart, veloc_riv, numucat, totalnumucat, 'veloc_riv', 'ucatch', ucat_data_address)
 
       IF (DEF_Reservoir_Method > 0) THEN
-         IF (p_is_worker) THEN
-            DO i = 1, numucat
-               IF (ucat2resv(i) > 0) volresv_ucat(i) = volresv(ucat2resv(i))
-            ENDDO
-         ENDIF
-         CALL vector_gather_and_write (&
-            file_restart, volresv_ucat, numucat, totalnumucat, 'volresv', 'ucatch', ucat_data_address)
-      ENDIF
 
-      IF (allocated (volresv_ucat)) deallocate (volresv_ucat)
+         IF (p_is_master) CALL ncio_define_dimension(file_restart, 'reservoir', totalnumresv)
+
+         CALL vector_gather_and_write (&
+            file_restart, volresv, numresv, totalnumresv, 'volresv', 'reservoir', resv_data_address)
+      ENDIF
 
    END SUBROUTINE WRITE_GridRiverLakeTimeVars
 
