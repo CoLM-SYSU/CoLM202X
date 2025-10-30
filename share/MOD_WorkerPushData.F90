@@ -79,7 +79,7 @@ CONTAINS
 
          pushdata%num_req_uniq = n_req_uniq
 
-         CALL build_worker_pushdata_uniq (num_me, ids_me, n_req_uniq, ids_req_uniq, pushdata)
+         CALL build_worker_pushdata_uniq (num_me, ids_me, n_req_uniq, ids_req_uniq(1:n_req_uniq), pushdata)
 
          IF (allocated (ids_req_uniq)) deallocate(ids_req_uniq)
 
@@ -131,7 +131,7 @@ CONTAINS
 
          pushdata%num_req_uniq = n_req_uniq
 
-         CALL build_worker_pushdata_uniq (num_me, ids_me, n_req_uniq, ids_req_uniq, pushdata)
+         CALL build_worker_pushdata_uniq (num_me, ids_me, n_req_uniq, ids_req_uniq(1:n_req_uniq), pushdata)
 
          IF (allocated (ids_req_uniq)) deallocate(ids_req_uniq)
 
@@ -211,7 +211,7 @@ CONTAINS
 
                IF (nreq_other > 0) THEN
                   allocate (ids (nreq_other))
-                  ids = pack(ids_req_uniq, self_from <= 0)
+                  ids = pack(ids_req_uniq(1:n_req_uniq), self_from <= 0)
                   allocate (other_to (nreq_other))
                   other_to = pack((/(i,i=1,n_req_uniq)/), self_from <= 0)
                ENDIF
@@ -251,7 +251,7 @@ CONTAINS
                   addrfrom = p_iam_worker
                END WHERE
 
-               CALL mpi_allreduce (addrfrom, nreq_other, MPI_INTEGER, MPI_MAX, p_comm_worker, p_err)
+               CALL mpi_allreduce (MPI_IN_PLACE, addrfrom, nreq_other, MPI_INTEGER, MPI_MAX, p_comm_worker, p_err)
 
                IF (p_iam_worker == iworker) THEN
                   DO jworker = 0, p_np_worker-1
@@ -269,6 +269,9 @@ CONTAINS
                IF (allocated(addrfrom     )) deallocate(addrfrom     )
 
             ELSE
+               IF (p_iam_worker == iworker) THEN
+                  pushdata%n_from_other(:) = 0
+               ENDIF
                pushdata%n_to_other(iworker) = 0
             ENDIF
 
@@ -394,8 +397,6 @@ CONTAINS
          ENDIF
 
 #ifdef USEMPI
-         CALL mpi_barrier (p_comm_worker, p_err)
-
          ndatasend = sum(pushdata%n_to_other)
          IF (ndatasend > 0) THEN
             allocate (sendcache(ndatasend))
@@ -459,8 +460,6 @@ CONTAINS
          IF (allocated(sendcache)) deallocate(sendcache)
          IF (allocated(req_recv )) deallocate(req_recv )
          IF (allocated(recvcache)) deallocate(recvcache)
-
-         CALL mpi_barrier (p_comm_worker, p_err)
 #endif
 
       ENDIF
@@ -575,8 +574,6 @@ CONTAINS
          ENDIF
 
 #ifdef USEMPI
-         CALL mpi_barrier (p_comm_worker, p_err)
-
          ndatasend = sum(pushdata%n_to_other)
          IF (ndatasend > 0) THEN
             allocate (sendcache(ndatasend))
@@ -640,8 +637,6 @@ CONTAINS
          IF (allocated(sendcache)) deallocate(sendcache)
          IF (allocated(req_recv )) deallocate(req_recv)
          IF (allocated(recvcache)) deallocate(recvcache)
-
-         CALL mpi_barrier (p_comm_worker, p_err)
 #endif
 
       ENDIF

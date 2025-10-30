@@ -51,6 +51,7 @@ MODULE MOD_Namelist
    ! A group includes one "IO" process and several "worker" processes.
    ! Its size determines number of IOs in a job.
    integer  :: DEF_PIO_groupsize = 12
+   logical  :: DEF_nIO_eq_nBlock = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 3: For Single Point -----
@@ -985,6 +986,7 @@ CONTAINS
       DEF_nx_blocks,                          &
       DEF_ny_blocks,                          &
       DEF_PIO_groupsize,                      &
+      DEF_nIO_eq_nBlock,                      &
       DEF_simulation_time,                    &
       DEF_dir_rawdata,                        &
       DEF_dir_runtime,                        &
@@ -1509,6 +1511,7 @@ CONTAINS
       CALL mpi_bcast (DEF_nx_blocks                          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_ny_blocks                          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_PIO_groupsize                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_nIO_eq_nBlock                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_simulation_time%greenwich          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 

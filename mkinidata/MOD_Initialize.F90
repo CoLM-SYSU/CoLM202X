@@ -261,8 +261,17 @@ CONTAINS
    real(r8), parameter :: BVIC_USDA(0:12) = (/ 1., 0.300,  0.280, 0.250, 0.230,  0.220, 0.200,  0.180, 0.100,  0.090, 0.150, 0.080,  0.050/)
 
 
+
 #ifdef CatchLateralFlow
       CALL build_basin_network ()
+#endif
+
+#ifdef GridRiverLakeFlow
+      CALL build_riverlake_network ()
+
+      IF (DEF_Reservoir_Method > 0) THEN
+         CALL reservoir_init ()
+      ENDIF
 #endif
 
 ! --------------------------------------------------------------------
@@ -1524,13 +1533,6 @@ ENDIF
 #endif
 
 #ifdef GridRiverLakeFlow
-
-      CALL build_riverlake_network ()
-
-      IF (DEF_Reservoir_Method > 0) THEN
-         CALL reservoir_init ()
-      ENDIF
-
       IF (p_is_worker) THEN
          IF (numucat > 0) THEN
             wdsrf_ucat = topo_rivhgt

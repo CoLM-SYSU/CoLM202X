@@ -54,7 +54,7 @@ MODULE MOD_Grid_RiverLakeNetwork
 
    ! ----- Parameters for River and Lake -----
 
-   integer,  allocatable :: lake_type      (:)
+   integer,  allocatable :: lake_type      (:)   ! 0: river; 2: reservoir.
 
    real(r8), allocatable :: topo_rivelv    (:)   ! river bed elevation [m]
    real(r8), allocatable :: topo_rivhgt    (:)   ! river channel depth [m]
@@ -129,7 +129,7 @@ CONTAINS
    integer,  allocatable :: inpmat_uc2el_all    (:,:)
    real(r8), allocatable :: inpmat_area_u2e_all (:,:)
 
-   integer  :: nucat, iriv, nelmall, nelm, irs
+   integer  :: nucat, iriv, nelmall, nelm
    integer  :: p_np_rivsys, color
    integer  :: iworker, iwrkdsp
    integer  :: iloc, i, j, ithis
@@ -189,6 +189,7 @@ CONTAINS
 
                ithis = ithis + 1
                uc_up2down(ithis) = i
+               iups_nst(i) = -1
 
                j = ucat_next(i)
                DO WHILE (j > 0)
@@ -198,6 +199,8 @@ CONTAINS
                   IF (iups_nst(j) == nups_nst(j)) THEN
                      ithis = ithis + 1
                      uc_up2down(ithis) = j
+                     iups_nst(j) = -1
+
                      j = ucat_next(j)
                   ELSE
                      EXIT
@@ -637,7 +640,7 @@ CONTAINS
 
 
       CALL build_worker_pushdata (numelm,  elmindex,  numucat, inpmat_el2uc, push_inpmat2ucat)
-      CALL build_worker_pushdata (numucat, ucat_elid, numelm,  inpmat_uc2el, push_ucat2inpmat)
+      CALL build_worker_pushdata (numucat, ucat_ucid, numelm,  inpmat_uc2el, push_ucat2inpmat)
 
 
       IF (p_is_master) THEN
@@ -725,6 +728,12 @@ CONTAINS
       CALL build_worker_pushdata (numucat, ucat_ucid, numucat, ucat_next, push_next2ucat)
       CALL build_worker_pushdata (numucat, ucat_ucid, numucat, ucat_ups,  push_ups2ucat )
 
+#ifdef CoLMDEBUG
+      ! IF (p_is_worker) THEN
+      !    write(*,'(A,I0,A,I0,A,I0,A)') 'worker ', p_iam_worker, ' has ', numucat, &
+      !       ' unit catchment with ', sum(push_next2ucat%n_from_other), ' downstream to other workers'
+      ! ENDIF
+#endif
 
       IF (allocated(nups_nst  )) deallocate(nups_nst  )
       IF (allocated(iups_nst  )) deallocate(iups_nst  )
@@ -783,13 +792,13 @@ CONTAINS
 
                CALL quicksort (numucat, rivermouth, order_ucat)
 
-               irs = 1
-               irivsys(order_ucat(1)) = irs
+               numrivsys = 1
+               irivsys(order_ucat(1)) = numrivsys
                DO i = 2, numucat
                   IF (rivermouth(i) /= rivermouth(i-1)) THEN
-                     irs = irs + 1
+                     numrivsys = numrivsys + 1
                   ENDIF
-                  irivsys(order_ucat(i)) = irs
+                  irivsys(order_ucat(i)) = numrivsys
                ENDDO
 
             ENDIF
@@ -907,13 +916,13 @@ CONTAINS
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 
+      IF (present(rdata2d)) THEN
+         IF (p_is_master) ndim1 = size(rdata2d,1)
+         CALL mpi_bcast (ndim1, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
+      ENDIF
+
       ! send unit catchment index to workers
       IF (p_is_master) THEN
-
-         IF (present(rdata2d)) THEN
-            ndim1 = size(rdata2d,1)
-            CALL mpi_bcast (ndim1, 1, mpi_integer, p_address_master, p_comm_glb, p_err)
-         ENDIF
 
          DO iworker = 0, p_np_worker-1
 
@@ -954,9 +963,9 @@ CONTAINS
             ENDIF
          ENDDO
 
-         IF (allocated(rdata1d)) deallocate (rdata1d)
-         IF (allocated(rdata2d)) deallocate (rdata2d)
-         IF (allocated(idata1d)) deallocate (idata1d)
+         IF (present(rdata1d))  deallocate (rdata1d)
+         IF (present(rdata2d))  deallocate (rdata2d)
+         IF (present(idata1d))  deallocate (idata1d)
 
       ELSEIF (p_is_worker) THEN
 

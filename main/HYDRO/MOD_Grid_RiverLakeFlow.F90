@@ -124,7 +124,12 @@ CONTAINS
          DO ielm = 1, numelm
             istt = elm_patch%substt(ielm)
             iend = elm_patch%subend(ielm)
-            rnof_el(ielm) = sum(rnof(istt:iend) * elm_patch%subfrc(istt:iend))
+            IF (any(rnof(istt:iend) /= spval)) THEN
+               rnof_el(ielm) = sum(rnof(istt:iend) * elm_patch%subfrc(istt:iend), &
+                  mask = rnof(istt:iend) /= spval)
+            ELSE
+               rnof_el(ielm) = 0.
+            ENDIF
          ENDDO
 
          CALL worker_push_data (push_inpmat2ucat, rnof_el, rnof_uc, fillvalue = 0.)
@@ -181,7 +186,9 @@ CONTAINS
 
 
          ntimestep = 0
+#ifdef CoLMDEBUG
          totaldis  = 0.
+#endif
 
          dt_res(:) = deltime
 
@@ -488,7 +495,11 @@ CONTAINS
             DO i = 1, numucat
                IF (ucatfilter(i)) THEN
 
-                  totaldis = totaldis + hflux_fc(i)*dt_all(irivsys(i))
+#ifdef CoLMDEBUG
+                  IF (ucat_next(i) <= 0) THEN
+                     totaldis = totaldis + hflux_fc(i)*dt_all(irivsys(i))
+                  ENDIF
+#endif
 
                   acctime(i) = acctime(i) + dt_all(irivsys(i))
 
@@ -544,6 +555,7 @@ CONTAINS
       IF (p_is_master) THEN
          write(*,'(/,A)') 'Checking River Routing Flow ...'
          write(*,'(A,F12.5,A)') 'River Lake Flow minimum average timestep: ', deltime/ntimestep, ' seconds'
+         write(*,'(A,ES8.1,A)') 'Total water before :  ', totalvol_bef,  ' m^3'
          write(*,'(A,ES8.1,A)') 'Total runoff :        ', totalrnof, ' m^3'
          write(*,'(A,ES8.1,A)') 'Total discharge :     ', totaldis,  ' m^3'
          write(*,'(A,ES8.1,A)') 'Total water change :  ', totalvol_aft-totalvol_bef,  ' m^3'

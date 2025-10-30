@@ -139,25 +139,25 @@ CONTAINS
    logical :: fexists
    integer :: itime_in_file_resv, ielm, istt, iend, i
 
-   real(r8), allocatable :: acc_vec     (:)
+   real(r8), allocatable :: acc_vec_elm (:)
    real(r8), allocatable :: acc_vec_pch (:)
    real(r8), allocatable :: a_floodfrc        (:)    ! flooded area fraction
    real(r8), allocatable :: a_floodfrc_inpmat (:,:)  ! flooded area fraction
 
 
       IF (p_is_worker) THEN
-         IF (numelm   > 0) allocate (acc_vec     (numelm  ))
+         IF (numelm   > 0) allocate (acc_vec_elm (numelm  ))
          IF (numpatch > 0) allocate (acc_vec_pch (numpatch))
       ENDIF
 
       IF (DEF_hist_vars%riv_height) THEN
          IF (p_is_worker) THEN
             IF (numucat > 0)  a_wdsrf_ucat = a_wdsrf_ucat / acctime
-            CALL worker_push_data (push_ucat2elm, a_wdsrf_ucat, acc_vec, fillvalue = spval)
+            CALL worker_push_data (push_ucat2elm, a_wdsrf_ucat, acc_vec_elm, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
-               acc_vec_pch(istt:iend) = acc_vec(ielm)
+               acc_vec_pch(istt:iend) = acc_vec_elm(ielm)
             ENDDO
          ENDIF
 
@@ -169,11 +169,11 @@ CONTAINS
       IF (DEF_hist_vars%riv_veloct) THEN
          IF (p_is_worker) THEN
             IF (numucat > 0)  a_veloc_riv = a_veloc_riv  / acctime
-            CALL worker_push_data (push_ucat2elm, a_veloc_riv, acc_vec, fillvalue = spval)
+            CALL worker_push_data (push_ucat2elm, a_veloc_riv, acc_vec_elm, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
-               acc_vec_pch(istt:iend) = acc_vec(ielm)
+               acc_vec_pch(istt:iend) = acc_vec_elm(ielm)
             ENDDO
          ENDIF
 
@@ -185,11 +185,11 @@ CONTAINS
       IF (DEF_hist_vars%discharge) THEN
          IF (p_is_worker) THEN
             IF (numucat > 0)  a_discharge = a_discharge  / acctime
-            CALL worker_push_data (push_ucat2elm, a_discharge, acc_vec, fillvalue = spval)
+            CALL worker_push_data (push_ucat2elm, a_discharge, acc_vec_elm, fillvalue = spval)
             DO ielm = 1, numelm
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
-               acc_vec_pch(istt:iend) = acc_vec(ielm)
+               acc_vec_pch(istt:iend) = acc_vec_elm(ielm)
             ENDDO
          ENDIF
 
@@ -214,14 +214,14 @@ CONTAINS
 
             DO ielm = 1, numelm
                IF (any(inpmat_area_u2e(:,ielm) > 0.)) THEN
-                  acc_vec(ielm) = sum(a_floodfrc_inpmat(:,ielm) * inpmat_area_u2e(:,ielm), &
+                  acc_vec_elm(ielm) = sum(a_floodfrc_inpmat(:,ielm) * inpmat_area_u2e(:,ielm), &
                      mask = inpmat_area_u2e(:,ielm) > 0.)
                ELSE
-                  acc_vec(ielm) = spval
+                  acc_vec_elm(ielm) = spval
                ENDIF
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
-               acc_vec_pch(istt:iend) = acc_vec(ielm)
+               acc_vec_pch(istt:iend) = acc_vec_elm(ielm)
             ENDDO
 
             IF (numucat > 0) deallocate (a_floodfrc       )
@@ -237,7 +237,7 @@ CONTAINS
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
                IF (any(inpmat_area_u2e(:,ielm) > 0.)) THEN
-                  acc_vec_pch(istt:iend) = acc_vec(ielm) / sum(inpmat_area_u2e(:,ielm))
+                  acc_vec_pch(istt:iend) = acc_vec_elm(ielm) / sum(inpmat_area_u2e(:,ielm))
                ELSE
                   acc_vec_pch(istt:iend) = spval
                ENDIF
@@ -249,7 +249,7 @@ CONTAINS
             'flooded area fraction', '100%')
       ENDIF
 
-      IF (allocated (acc_vec    )) deallocate (acc_vec    )
+      IF (allocated (acc_vec_elm)) deallocate (acc_vec_elm)
       IF (allocated (acc_vec_pch)) deallocate (acc_vec_pch)
 
 
@@ -267,6 +267,7 @@ CONTAINS
 
                inquire (file=file_hist_resv, exist=fexists)
                IF (.not. fexists) THEN
+                  CALL ncio_create_file (trim(file_hist_resv))
                   CALL ncio_define_dimension(file_hist_resv, 'reservoir', totalnumresv)
                   CALL ncio_write_serial (file_hist_resv, 'resv_GRAND_ID' , dam_GRAND_ID, 'reservoir')
                   CALL ncio_put_attr (file_hist_resv, 'resv_GRAND_ID', 'long_name', 'reservoir GRAND ID')
