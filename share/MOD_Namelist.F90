@@ -51,6 +51,7 @@ MODULE MOD_Namelist
    ! A group includes one "IO" process and several "worker" processes.
    ! Its size determines number of IOs in a job.
    integer  :: DEF_PIO_groupsize = 12
+   logical  :: DEF_nIO_eq_nBlock = .false.
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 3: For Single Point -----
@@ -313,66 +314,42 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_CaMa_Namelist = 'null'
 
    ! ----- lateral flow related -----
-   logical :: DEF_USE_EstimatedRiverDepth     = .true.
    character(len=256) :: DEF_ElementNeighbour_file = 'null'
+   character(len=256) :: DEF_UnitCatchment_file    = 'null'
+   character(len=256) :: DEF_ReservoirPara_file    = 'null'
+   logical :: DEF_USE_EstimatedRiverDepth = .true.
    integer :: DEF_Reservoir_Method = 0
 
+   ! ----- others -----
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
-   character(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
+   character(len=256) :: DEF_SSP        = '585'   ! Co2 path for CMIP6 future scenario.
 
-   !use irrigation
-   logical            :: DEF_USE_IRRIGATION      = .false.
+   logical :: DEF_USE_IRRIGATION        = .false. ! use irrigation
+   integer :: DEF_IRRIGATION_ALLOCATION = 1       ! irrigation allocated method
 
-   !irrigation allocated method
-   integer            :: DEF_IRRIGATION_ALLOCATION = 1
+   logical :: DEF_USE_NOSTRESSNITROGEN  = .false. ! photosynthesis stress option
+   integer :: DEF_RSTFAC                = 1       ! root resistance factors option
+   logical :: DEF_USE_PLANTHYDRAULICS   = .true.  ! Plant Hydraulics
+   logical :: DEF_USE_MEDLYNST          = .false. ! Medlyn stomata model
+   logical :: DEF_USE_WUEST             = .true.  ! WUE stomata model
 
-   !photosynthesis stress option 
-   logical            :: DEF_USE_NOSTRESSNITROGEN = .false.
+   logical :: DEF_USE_SASU              = .false. ! Semi-Analytic-Spin-Up
+   logical :: DEF_USE_DiagMatrix        = .false.
+   logical :: DEF_USE_PN                = .false. ! Punctuated nitrogen addition Spin up
 
-   !root resistance factors option
-   integer            :: DEF_RSTFAC               = 1
+   logical :: DEF_USE_FERT              = .true.  ! Fertilisation on crop
+   integer :: DEF_FERT_SOURCE           = 1       ! Fertilisation data source
+   logical :: DEF_USE_NITRIF            = .true.  ! Nitrification and denitrification switch
+   logical :: DEF_USE_CNSOYFIXN         = .true.  ! Soy nitrogen fixation
 
-   !Plant Hydraulics
-   logical            :: DEF_USE_PLANTHYDRAULICS = .true.
+   logical :: DEF_USE_FIRE              = .false. ! Fire MODULE
 
-   !Medlyn stomata model
-   logical            :: DEF_USE_MEDLYNST        = .false.
+   logical :: DEF_USE_Dynamic_Lake      = .false. ! Dynamic Lake model
 
-   !WUE stomata model
-   logical            :: DEF_USE_WUEST           = .true.
+   logical :: DEF_CheckEquilibrium      = .false.
 
-   !Semi-Analytic-Spin-Up
-   logical            :: DEF_USE_SASU            = .false.
-
-   logical            :: DEF_USE_DiagMatrix      = .false.
-
-   !Punctuated nitrogen addition Spin up
-   logical            :: DEF_USE_PN              = .false.
-
-   !Fertilisation on crop
-   logical            :: DEF_USE_FERT            = .true.
-
-   !Fertilisation data source
-   integer            :: DEF_FERT_SOURCE         = 1
-
-   !Nitrification and denitrification switch
-   logical            :: DEF_USE_NITRIF          = .true.
-
-   !Soy nitrogen fixation
-   logical            :: DEF_USE_CNSOYFIXN       = .true.
-
-   !Fire MODULE
-   logical            :: DEF_USE_FIRE            = .false.
-
-   !Dynamic Lake model
-   logical            :: DEF_USE_Dynamic_Lake    = .false.
-
-   !
-   logical            :: DEF_CheckEquilibrium    = .false.
-
-   !2m WMO temperature
-   logical            :: DEF_Output_2mWMO        = .false.
+   logical :: DEF_Output_2mWMO          = .false. ! 2m WMO temperature
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 12: forcing -----
@@ -951,6 +928,7 @@ MODULE MOD_Namelist
       logical :: riv_height                       = .true.
       logical :: riv_veloct                       = .true.
       logical :: discharge                        = .true.
+      logical :: floodarea                        = .true.
       logical :: wdsrf_hru                        = .true.
       logical :: veloc_hru                        = .true.
       logical :: volresv                          = .true.
@@ -1008,6 +986,7 @@ CONTAINS
       DEF_nx_blocks,                          &
       DEF_ny_blocks,                          &
       DEF_PIO_groupsize,                      &
+      DEF_nIO_eq_nBlock,                      &
       DEF_simulation_time,                    &
       DEF_dir_rawdata,                        &
       DEF_dir_runtime,                        &
@@ -1035,10 +1014,10 @@ CONTAINS
       DEF_LAI_END_YEAR,                       &
       DEF_LAI_CHANGE_YEARLY,                  &
       DEF_USE_LAIFEEDBACK,                    & !add by Xingjie Lu, use for updating LAI with leaf carbon
-      DEF_USE_IRRIGATION,                     & !add by Hongbin Liang @ sysu 
-      DEF_IRRIGATION_ALLOCATION,              & !add by Hongbin Liang @ sysu 
-      DEF_USE_NOSTRESSNITROGEN,               & !add by Hongbin Liang @ sysu 
-      DEF_RSTFAC,                             & !add by Hongbin Liang @ sysu 
+      DEF_USE_IRRIGATION,                     & !add by Hongbin Liang @ sysu
+      DEF_IRRIGATION_ALLOCATION,              & !add by Hongbin Liang @ sysu
+      DEF_USE_NOSTRESSNITROGEN,               & !add by Hongbin Liang @ sysu
+      DEF_RSTFAC,                             & !add by Hongbin Liang @ sysu
       DEF_LC_YEAR,                            &
       DEF_LULCC_SCHEME,                       &
 
@@ -1120,6 +1099,8 @@ CONTAINS
       DEF_CaMa_Namelist,                      &
 
       DEF_ElementNeighbour_file,              &
+      DEF_UnitCatchment_file,                 &
+      DEF_ReservoirPara_file,                 &
 
       DEF_DA_obsdir,                          &
       DEF_DA_GRACE,                           &
@@ -1530,6 +1511,7 @@ CONTAINS
       CALL mpi_bcast (DEF_nx_blocks                          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_ny_blocks                          ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_PIO_groupsize                      ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_nIO_eq_nBlock                      ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_simulation_time%greenwich          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
@@ -1682,6 +1664,8 @@ CONTAINS
       CALL mpi_bcast (DEF_CaMa_Namelist                      ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_ElementNeighbour_file              ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_UnitCatchment_file                 ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_ReservoirPara_file                 ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_DA_GRACE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -2139,7 +2123,7 @@ CONTAINS
 
       IF(DEF_USE_IRRIGATION)THEN
          CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig                    , set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%sum_deficit_irrig            , set_defaults)    
+         CALL sync_hist_vars_one (DEF_hist_vars%sum_deficit_irrig            , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig_count              , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%waterstorage                 , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%groundwater_demand           , set_defaults)
@@ -2297,6 +2281,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%riv_height  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%floodarea   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%volresv     , set_defaults)

@@ -21,7 +21,7 @@ MODULE MOD_Catch_Hist
    USE MOD_Catch_BasinNetwork, only: numbasin, numbsnhru
    USE MOD_Catch_Reservoir
    USE MOD_Catch_Vars_1DFluxes
-   USE MOD_Catch_IO
+   USE MOD_Vector_ReadWrite
 
    ! -- ACC Fluxes --
    integer :: nac_basin
@@ -186,100 +186,114 @@ CONTAINS
       ENDIF
 
       ! ----- water depth in basin -----
-      IF ((p_is_worker) .and. allocated(a_wdsrf_bsn)) THEN
-         WHERE(a_wdsrf_bsn /= spval)
-            a_wdsrf_bsn = a_wdsrf_bsn / nac_basin
-         END WHERE
+      IF (DEF_hist_vars%riv_height) THEN
+         IF ((p_is_worker) .and. allocated(a_wdsrf_bsn)) THEN
+            WHERE(a_wdsrf_bsn /= spval)
+               a_wdsrf_bsn = a_wdsrf_bsn / nac_basin
+            END WHERE
+         ENDIF
+
+         CALL worker_push_data (iam_bsn, iam_elm, a_wdsrf_bsn, a_wdsrf_elm)
+
+         CALL vector_gather_and_write (&
+            file_hist_basin, a_wdsrf_elm, numelm, totalnumelm, 'v_wdsrf_bsn', 'basin', elm_data_address, &
+            itime_in_file, 'River Height', 'm')
       ENDIF
-
-      CALL worker_push_data (iam_bsn, iam_elm, a_wdsrf_bsn, a_wdsrf_elm)
-
-      CALL vector_write_basin (&
-         file_hist_basin, a_wdsrf_elm, numelm, totalnumelm, 'v_wdsrf_bsn', 'basin', elm_data_address, &
-         DEF_hist_vars%riv_height, itime_in_file, 'River Height', 'm')
 
       ! ----- water velocity in river -----
-      IF ((p_is_worker) .and. allocated(a_veloc_riv)) THEN
-         WHERE(a_veloc_riv /= spval)
-            a_veloc_riv = a_veloc_riv / nac_basin
-         END WHERE
+      IF (DEF_hist_vars%riv_veloct) THEN
+         IF ((p_is_worker) .and. allocated(a_veloc_riv)) THEN
+            WHERE(a_veloc_riv /= spval)
+               a_veloc_riv = a_veloc_riv / nac_basin
+            END WHERE
+         ENDIF
+
+         CALL worker_push_data (iam_bsn, iam_elm, a_veloc_riv, a_veloc_elm)
+
+         CALL vector_gather_and_write (&
+            file_hist_basin, a_veloc_elm, numelm, totalnumelm, 'v_veloc_riv', 'basin', elm_data_address, &
+            itime_in_file, 'River Velocity', 'm/s')
       ENDIF
-
-      CALL worker_push_data (iam_bsn, iam_elm, a_veloc_riv, a_veloc_elm)
-
-      CALL vector_write_basin (&
-         file_hist_basin, a_veloc_elm, numelm, totalnumelm, 'v_veloc_riv', 'basin', elm_data_address, &
-         DEF_hist_vars%riv_veloct, itime_in_file, 'River Velocity', 'm/s')
 
       ! ----- discharge in river -----
-      IF ((p_is_worker) .and. allocated(a_discharge)) THEN
-         WHERE(a_discharge /= spval)
-            a_discharge = a_discharge / nac_basin
-         END WHERE
+      IF (DEF_hist_vars%discharge) THEN
+         IF ((p_is_worker) .and. allocated(a_discharge)) THEN
+            WHERE(a_discharge /= spval)
+               a_discharge = a_discharge / nac_basin
+            END WHERE
+         ENDIF
+
+         CALL worker_push_data (iam_bsn, iam_elm, a_discharge, a_dschg_elm)
+
+         CALL vector_gather_and_write (&
+            file_hist_basin, a_dschg_elm, numelm, totalnumelm, 'v_discharge', 'basin', elm_data_address, &
+            itime_in_file, 'River Discharge', 'm^3/s')
       ENDIF
-
-      CALL worker_push_data (iam_bsn, iam_elm, a_discharge, a_dschg_elm)
-
-      CALL vector_write_basin (&
-         file_hist_basin, a_dschg_elm, numelm, totalnumelm, 'v_discharge', 'basin', elm_data_address, &
-         DEF_hist_vars%discharge, itime_in_file, 'River Discharge', 'm^3/s')
 
       ! ----- number of time steps for each basin -----
       CALL worker_push_data (iam_bsn, iam_elm, ntacc_bsn, ntacc_elm)
 
-      CALL vector_write_basin (&
+      CALL vector_gather_and_write (&
          file_hist_basin, ntacc_elm, numelm, totalnumelm, 'timesteps', 'basin', elm_data_address, &
-         .true., itime_in_file, 'Number of accumulated timesteps for each basin', '-')
+         itime_in_file, 'Number of accumulated timesteps for each basin', '-')
 
       IF (p_is_worker .and. (numbasin > 0)) ntacc_bsn(:) = 0.
 
       ! ----- water depth in hydro unit -----
-      IF ((p_is_worker) .and. allocated(a_wdsrf_bsnhru)) THEN
-         WHERE(a_wdsrf_bsnhru /= spval)
-            a_wdsrf_bsnhru = a_wdsrf_bsnhru / nac_basin
-         END WHERE
+      IF (DEF_hist_vars%wdsrf_hru) THEN
+         IF ((p_is_worker) .and. allocated(a_wdsrf_bsnhru)) THEN
+            WHERE(a_wdsrf_bsnhru /= spval)
+               a_wdsrf_bsnhru = a_wdsrf_bsnhru / nac_basin
+            END WHERE
+         ENDIF
+
+         CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, a_wdsrf_bsnhru, a_wdsrf_hru)
+
+         CALL vector_gather_and_write (&
+            file_hist_basin, a_wdsrf_hru, numhru, totalnumhru, 'v_wdsrf_hru', 'hydrounit', hru_data_address, &
+            itime_in_file, 'Depth of Surface Water in Hydro unit', 'm')
       ENDIF
-
-      CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, a_wdsrf_bsnhru, a_wdsrf_hru)
-
-      CALL vector_write_basin (&
-         file_hist_basin, a_wdsrf_hru, numhru, totalnumhru, 'v_wdsrf_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%wdsrf_hru, itime_in_file, 'Depth of Surface Water in Hydro unit', 'm')
 
       ! ----- water velocity in hydro unit -----
-      IF ((p_is_worker) .and. allocated(a_veloc_bsnhru)) THEN
-         WHERE(a_veloc_bsnhru /= spval)
-            a_veloc_bsnhru = a_veloc_bsnhru / nac_basin
-         END WHERE
+      IF (DEF_hist_vars%veloc_hru) THEN
+         IF ((p_is_worker) .and. allocated(a_veloc_bsnhru)) THEN
+            WHERE(a_veloc_bsnhru /= spval)
+               a_veloc_bsnhru = a_veloc_bsnhru / nac_basin
+            END WHERE
+         ENDIF
+
+         CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, a_veloc_bsnhru, a_veloc_hru)
+
+         CALL vector_gather_and_write (&
+            file_hist_basin, a_veloc_hru, numhru, totalnumhru, 'v_veloc_hru', 'hydrounit', hru_data_address, &
+            itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
       ENDIF
-
-      CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, a_veloc_bsnhru, a_veloc_hru)
-
-      CALL vector_write_basin (&
-         file_hist_basin, a_veloc_hru, numhru, totalnumhru, 'v_veloc_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%veloc_hru, itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
 
       ! ----- subsurface water flow between elements -----
-      IF (p_is_worker) THEN
-         WHERE(a_xsubs_elm /= spval)
-            a_xsubs_elm = a_xsubs_elm / nac_basin
-         END WHERE
-      ENDIF
+      IF (DEF_hist_vars%xsubs_bsn) THEN
+         IF (p_is_worker) THEN
+            WHERE(a_xsubs_elm /= spval)
+               a_xsubs_elm = a_xsubs_elm / nac_basin
+            END WHERE
+         ENDIF
 
-      CALL vector_write_basin (&
-         file_hist_basin, a_xsubs_elm, numelm, totalnumelm, 'v_xsubs_bsn', 'basin', elm_data_address, &
-         DEF_hist_vars%xsubs_bsn, itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
+         CALL vector_gather_and_write (&
+            file_hist_basin, a_xsubs_elm, numelm, totalnumelm, 'v_xsubs_bsn', 'basin', elm_data_address, &
+            itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
+      ENDIF
 
       ! ----- subsurface water flow between hydro units -----
-      IF (p_is_worker) THEN
-         WHERE(a_xsubs_hru /= spval)
-            a_xsubs_hru = a_xsubs_hru / nac_basin
-         END WHERE
-      ENDIF
+      IF (DEF_hist_vars%xsubs_hru) THEN
+         IF (p_is_worker) THEN
+            WHERE(a_xsubs_hru /= spval)
+               a_xsubs_hru = a_xsubs_hru / nac_basin
+            END WHERE
+         ENDIF
 
-      CALL vector_write_basin (&
-         file_hist_basin, a_xsubs_hru, numhru, totalnumhru, 'v_xsubs_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%xsubs_hru, itime_in_file, 'SubSurface lateral flow between HRUs', 'm/s')
+         CALL vector_gather_and_write (&
+            file_hist_basin, a_xsubs_hru, numhru, totalnumhru, 'v_xsubs_hru', 'hydrounit', hru_data_address, &
+            itime_in_file, 'SubSurface lateral flow between HRUs', 'm/s')
+      ENDIF
 
       ! ----- reservoir variables -----
       IF (DEF_Reservoir_Method > 0) THEN

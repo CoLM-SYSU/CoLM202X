@@ -1059,12 +1059,12 @@ CONTAINS
 
    IMPLICIT NONE
 
-   ! Local Variables
-   integer :: i
-
    class(lake_info_type) :: this
    real(r8), intent(in)  :: surface
    real(r8) :: volume
+
+   ! Local Variables
+   integer :: i
 
       IF (surface <= 0) THEN
          volume = 0

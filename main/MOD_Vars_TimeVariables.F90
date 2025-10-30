@@ -396,6 +396,9 @@ MODULE MOD_Vars_TimeVariables
 #ifdef CatchLateralFlow
    USE MOD_Catch_Vars_TimeVariables
 #endif
+#ifdef GridRiverLakeFlow
+   USE MOD_Grid_RiverLakeTimeVars
+#endif
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_TimeVariables
 #endif
@@ -603,7 +606,7 @@ CONTAINS
             allocate (hk                (1:nl_soil,numpatch)); hk          (:,:) = spval
             allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
             allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
-            allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval  
+            allocate (rootflux          (1:nl_soil,numpatch)); rootflux    (:,:) = spval
 !Plant Hydraulic variables
             allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
             allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
@@ -647,7 +650,7 @@ CONTAINS
             allocate (laisha                      (numpatch)); laisha        (:) = spval
             allocate (tsai                        (numpatch)); tsai          (:) = spval
             allocate (sai                         (numpatch)); sai           (:) = spval
- 
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
             allocate (lai_enftemp                 (numpatch)); lai_enftemp   (:) = spval
             allocate (lai_enfboreal               (numpatch)); lai_enfboreal (:) = spval
@@ -743,7 +746,7 @@ CONTAINS
             allocate ( irrig_method_rice1         (numpatch)); irrig_method_rice1     (:) = spval_i4
             allocate ( irrig_method_rice2         (numpatch)); irrig_method_rice2     (:) = spval_i4
             allocate ( irrig_method_sugarcane     (numpatch)); irrig_method_sugarcane (:) = spval_i4
-            
+
             allocate ( irrig_gw_alloc             (numpatch)); irrig_gw_alloc         (:) = spval
             allocate ( irrig_sw_alloc             (numpatch)); irrig_sw_alloc         (:) = spval
             allocate ( zwt_stand                  (numpatch)); zwt_stand              (:) = spval
@@ -760,6 +763,10 @@ CONTAINS
 
 #ifdef CatchLateralFlow
       CALL allocate_CatchTimeVariables
+#endif
+
+#ifdef GridRiverLakeFlow
+      CALL allocate_GridRiverLakeTimeVars
 #endif
 
 #ifdef URBAN_MODEL
@@ -954,6 +961,10 @@ CONTAINS
 
 #ifdef CatchLateralFlow
       CALL deallocate_CatchTimeVariables
+#endif
+
+#ifdef GridRiverLakeFlow
+      CALL deallocate_GridRiverLakeTimeVars
 #endif
 
 #if (defined URBAN_MODEL)
@@ -1191,6 +1202,11 @@ ENDIF
       CALL WRITE_CatchTimeVariables (file_restart)
 #endif
 
+#ifdef GridRiverLakeFlow
+      file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_gridriver_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+      CALL WRITE_GridRiverLakeTimeVars (file_restart)
+#endif
+
 #if (defined URBAN_MODEL)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL WRITE_UrbanTimeVariables (file_restart)
@@ -1369,6 +1385,11 @@ ENDIF
 #if (defined CatchLateralFlow)
       file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
       CALL READ_CatchTimeVariables (file_restart)
+#endif
+
+#ifdef GridRiverLakeFlow
+      file_restart = trim(dir_restart)// '/'//trim(cdate)//'/' // trim(site) //'_restart_gridriver_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+      CALL READ_GridRiverLakeTimeVars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)

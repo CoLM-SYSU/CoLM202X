@@ -29,6 +29,9 @@ MODULE MOD_Hist
 #ifdef CatchLateralFlow
    USE MOD_Catch_Hist
 #endif
+#ifdef GridRiverLakeFlow
+   USE MOD_Grid_RiverLakeHist
+#endif
 #ifdef EXTERNAL_LAKE
    USE MOD_Lake_Hist
 #endif
@@ -80,6 +83,10 @@ CONTAINS
       CALL hist_basin_init ()
 #endif
 
+#ifdef GridRiverLakeFlow
+      CALL hist_grid_riverlake_init ()
+#endif
+
    END SUBROUTINE hist_init
 
 
@@ -95,6 +102,10 @@ CONTAINS
 
 #ifdef CatchLateralFlow
       CALL hist_basin_final ()
+#endif
+
+#ifdef GridRiverLakeFlow
+      CALL hist_grid_riverlake_final ()
 #endif
 
    END SUBROUTINE hist_final
@@ -167,7 +178,7 @@ CONTAINS
    logical,  allocatable ::  filter_dt  (:)
 
 #ifdef CROP
-   type(block_data_real8_2d) :: sumarea_crop                        
+   type(block_data_real8_2d) :: sumarea_crop
    type(block_data_real8_2d) :: sumarea_irrig
    logical,  allocatable ::  filter_crop (:)
    logical,  allocatable ::  filter_irrig (:)
@@ -1446,7 +1457,7 @@ ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_demand, &
                vecacc, file_hist, 'f_reservoirriver_demand', itime_in_file, sumarea_irrig, filter_irrig, &
                'irrigation demand for reservoir or river','kg/m2')
-            
+
             ! irrigation supply from reservoir or river [kg/m2]
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
@@ -1456,7 +1467,7 @@ ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
                vecacc, file_hist, 'f_reservoirriver_supply', itime_in_file, sumarea_irrig, filter_irrig, &
                'irrigation supply from reservoir or river','kg/m2')
-            
+
             ! irrigation supply from reservoir [kg/m2]
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
@@ -1476,7 +1487,7 @@ ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
                vecacc, file_hist, 'f_river_supply', itime_in_file, sumarea_irrig, filter_irrig, &
                'irrigation supply from river','kg/m2')
-            
+
             ! irrigation supply from runoff [kg/m2]
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
@@ -1485,7 +1496,7 @@ ENDIF
             ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
                vecacc, file_hist, 'f_runoff_supply', itime_in_file, sumarea_irrig, filter_irrig, &
-               'irrigation supply from runoff','kg/m2')   
+               'irrigation supply from runoff','kg/m2')
          ENDIF
 #endif
 
@@ -4514,6 +4525,10 @@ ENDIF
 
 #ifdef CatchLateralFlow
          CALL hist_basin_out (file_hist, idate)
+#endif
+
+#ifdef GridRiverLakeFlow
+         CALL hist_grid_riverlake_out (file_hist, idate, itime_in_file)
 #endif
 
          IF (allocated(filter    )) deallocate (filter    )
