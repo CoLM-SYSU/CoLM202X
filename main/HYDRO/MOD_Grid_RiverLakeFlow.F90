@@ -10,6 +10,7 @@ MODULE MOD_Grid_RiverLakeFlow
 !-------------------------------------------------------------------------------------
 
    USE MOD_Precision
+   USE MOD_SPMD_Task
    USE MOD_Namelist
    USE MOD_Grid_RiverLakeNetwork
    USE MOD_Grid_RiverLakeTimeVars
@@ -18,6 +19,11 @@ MODULE MOD_Grid_RiverLakeFlow
    IMPLICIT NONE
 
    real(r8), parameter :: RIVERMIN  = 1.e-5_r8
+
+   real(r8), parameter :: acctime_rnof_max = 10800.
+
+   real(r8) :: acctime_rnof
+   real(r8), allocatable :: acc_rnof_uc (:,:)
 
 CONTAINS
 
@@ -30,12 +36,20 @@ CONTAINS
          CALL reservoir_init ()
       ENDIF
 
+      acctime_rnof = 0.
+
+      IF (p_is_worker) THEN
+         IF (numucat > 0) THEN
+            allocate (acc_rnof_uc (inpn,numucat))
+            acc_rnof_uc = 0.
+         ENDIF
+      ENDIF
+
    END SUBROUTINE grid_riverlake_flow_init
 
    ! ---------
    SUBROUTINE grid_riverlake_flow (year, deltime)
 
-   USE MOD_SPMD_Task
    USE MOD_Utils
    USE MOD_Namelist,       only: DEF_Reservoir_Method
    USE MOD_Vars_1DFluxes,  only: rnof
@@ -88,13 +102,42 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         IF (numelm > 0) THEN
-            allocate (rnof_el (numelm))
-         ENDIF
+         IF (numelm  > 0) allocate (rnof_el (numelm))
+         IF (numucat > 0) allocate (rnof_uc (inpn, numucat))
+
+         DO ielm = 1, numelm
+            istt = elm_patch%substt(ielm)
+            iend = elm_patch%subend(ielm)
+            IF (any(rnof(istt:iend) /= spval)) THEN
+               rnof_el(ielm) = sum(rnof(istt:iend) * elm_patch%subfrc(istt:iend), &
+                  mask = rnof(istt:iend) /= spval)
+            ELSE
+               rnof_el(ielm) = 0.
+            ENDIF
+         ENDDO
+
+         CALL worker_push_data (push_inpmat2ucat, rnof_el, rnof_uc, fillvalue = 0.)
 
          IF (numucat > 0) THEN
+            acc_rnof_uc = acc_rnof_uc + rnof_uc*1.e-3*deltime
+         ENDIF
 
-            allocate (rnof_uc (inpn, numucat))
+         IF (allocated(rnof_el)) deallocate(rnof_el)
+         IF (allocated(rnof_uc)) deallocate(rnof_uc)
+
+      ENDIF
+
+
+      acctime_rnof = acctime_rnof + deltime
+
+      IF (acctime_rnof+0.01 < acctime_rnof_max) THEN
+         RETURN
+      ENDIF
+
+
+      IF (p_is_worker) THEN
+
+         IF (numucat > 0) THEN
 
             allocate (is_built_resv (numucat))
             allocate (wdsrf_next    (numucat))
@@ -121,21 +164,8 @@ CONTAINS
 
          ENDIF
 
-         DO ielm = 1, numelm
-            istt = elm_patch%substt(ielm)
-            iend = elm_patch%subend(ielm)
-            IF (any(rnof(istt:iend) /= spval)) THEN
-               rnof_el(ielm) = sum(rnof(istt:iend) * elm_patch%subfrc(istt:iend), &
-                  mask = rnof(istt:iend) /= spval)
-            ELSE
-               rnof_el(ielm) = 0.
-            ENDIF
-         ENDDO
-
-         CALL worker_push_data (push_inpmat2ucat, rnof_el, rnof_uc, fillvalue = 0.)
-
 #ifdef CoLMDEBUG
-         totalrnof = sum(rnof_uc*inpmat_area_e2u)*1.e-3*deltime
+         totalrnof = sum(acc_rnof_uc*inpmat_area_e2u)
          totalvol_bef = 0.
 #endif
 
@@ -168,8 +198,8 @@ CONTAINS
             totalvol_bef = totalvol_bef + volwater
 #endif
 
-            volwater = volwater + 1.e-3*deltime &
-               * sum(rnof_uc(:,i)*inpmat_area_e2u(:,i), mask = inpmat_area_e2u(:,i) > 0.)
+            volwater = volwater + sum(acc_rnof_uc(:,i)*inpmat_area_e2u(:,i), &
+               mask = inpmat_area_e2u(:,i) > 0.)
 
             IF (.not. is_built_resv(i)) THEN
                wdsrf_ucat(i) = floodplain_curve(i)%depth (volwater)
@@ -190,7 +220,7 @@ CONTAINS
          totaldis  = 0.
 #endif
 
-         dt_res(:) = deltime
+         dt_res(:) = acctime_rnof
 
          DO WHILE (any(dt_res > 0))
 
@@ -435,13 +465,13 @@ CONTAINS
                ENDIF
 
                ! constraint 3: Avoid change of flow direction (only for rivers)
-               IF (.not. is_built_resv(i)) THEN
-                  IF ((abs(veloc_riv(i)) > 0.1) &
-                     .and. (veloc_riv(i) * (sum_mflux_riv(i)-sum_zgrad_riv(i)) > 0)) THEN
-                     dt_this = min(dt_this, &
-                        abs(momen_riv(i) * topo_rivare(i) / (sum_mflux_riv(i)-sum_zgrad_riv(i))))
-                  ENDIF
-               ENDIF
+               ! IF (.not. is_built_resv(i)) THEN
+               !    IF ((abs(veloc_riv(i)) > 0.1) &
+               !       .and. (veloc_riv(i) * (sum_mflux_riv(i)-sum_zgrad_riv(i)) > 0)) THEN
+               !       dt_this = min(dt_this, &
+               !          abs(momen_riv(i) * topo_rivare(i) / (sum_mflux_riv(i)-sum_zgrad_riv(i))))
+               !    ENDIF
+               ! ENDIF
 
                dt_all(irivsys(i)) = min(dt_this, dt_all(irivsys(i)))
 
@@ -464,6 +494,15 @@ CONTAINS
                ENDIF
 
                volwater = volwater - sum_hflux_riv(i) * dt_all(irivsys(i))
+
+               ! for inland depression, remove excess water (to be optimized)
+               IF (ucat_next(i) == -10) THEN
+                  IF (volwater > topo_rivstomax(i)) THEN
+                     hflux_fc(i) = (volwater - topo_rivstomax(i)) / dt_all(irivsys(i))
+                     volwater = topo_rivstomax(i)
+                  ENDIF
+               ENDIF
+
                wdsrf_ucat(i) = floodplain_curve(i)%depth (volwater)
 
                IF (is_built_resv(i)) THEN
@@ -554,7 +593,7 @@ CONTAINS
 #endif
       IF (p_is_master) THEN
          write(*,'(/,A)') 'Checking River Routing Flow ...'
-         write(*,'(A,F12.5,A)') 'River Lake Flow minimum average timestep: ', deltime/ntimestep, ' seconds'
+         write(*,'(A,F12.5,A)') 'River Lake Flow minimum average timestep: ', acctime_rnof/ntimestep, ' seconds'
          write(*,'(A,ES8.1,A)') 'Total water before :  ', totalvol_bef,  ' m^3'
          write(*,'(A,ES8.1,A)') 'Total runoff :        ', totalrnof, ' m^3'
          write(*,'(A,ES8.1,A)') 'Total discharge :     ', totaldis,  ' m^3'
@@ -563,8 +602,14 @@ CONTAINS
       ENDIF
 #endif
 
-      IF (allocated(rnof_el      )) deallocate(rnof_el      )
-      IF (allocated(rnof_uc      )) deallocate(rnof_uc      )
+      acctime_rnof = 0.
+
+      IF (p_is_worker) THEN
+         IF (numucat > 0) THEN
+            acc_rnof_uc = 0.
+         ENDIF
+      ENDIF
+
       IF (allocated(is_built_resv)) deallocate(is_built_resv)
       IF (allocated(wdsrf_next   )) deallocate(wdsrf_next   )
       IF (allocated(veloc_next   )) deallocate(veloc_next   )
@@ -593,6 +638,8 @@ CONTAINS
       IF (DEF_Reservoir_Method > 0) THEN
          CALL reservoir_final ()
       ENDIF
+
+      IF (allocated(acc_rnof_uc)) deallocate(acc_rnof_uc)
 
    END SUBROUTINE grid_riverlake_flow_final
 
