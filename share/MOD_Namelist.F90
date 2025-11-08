@@ -319,6 +319,7 @@ MODULE MOD_Namelist
    character(len=256) :: DEF_ReservoirPara_file    = 'null'
    logical :: DEF_USE_EstimatedRiverDepth = .true.
    integer :: DEF_Reservoir_Method = 0
+   real(r8) :: DEF_GRIDBASED_ROUTING_MAX_DT = 3600.
 
    ! ----- others -----
    character(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
@@ -1078,6 +1079,7 @@ CONTAINS
       DEF_Aerosol_Clim,                       &
       DEF_USE_EstimatedRiverDepth,            &
       DEF_Reservoir_Method,                   &
+      DEF_GRIDBASED_ROUTING_MAX_DT,           &
 
       DEF_precip_phase_discrimination_scheme, &
 
@@ -1680,6 +1682,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_USE_EstimatedRiverDepth            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_Reservoir_Method                   ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_ROUTING_MAX_DT           ,1   ,mpi_real8     ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR                  ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
 
