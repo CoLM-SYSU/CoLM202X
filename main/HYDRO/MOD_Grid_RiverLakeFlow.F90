@@ -20,7 +20,7 @@ MODULE MOD_Grid_RiverLakeFlow
 
    real(r8), parameter :: RIVERMIN  = 1.e-5_r8
 
-   real(r8), parameter :: acctime_rnof_max = 10800.
+   real(r8), save :: acctime_rnof_max
 
    real(r8) :: acctime_rnof
    real(r8), allocatable :: acc_rnof_uc (:)
@@ -42,6 +42,7 @@ CONTAINS
          CALL reservoir_init ()
       ENDIF
 
+      acctime_rnof_max = DEF_GRIDBASED_ROUTING_MAX_DT
       acctime_rnof = 0.
 
       IF (p_is_worker) THEN
