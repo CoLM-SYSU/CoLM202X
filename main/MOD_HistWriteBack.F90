@@ -60,7 +60,7 @@ MODULE MOD_HistWriteBack
    integer*8, parameter :: MaxHistMemSize = 1073741824_8 ! 1024^3
    integer*8 :: TotalMemSize = 0
 
-   integer :: itime_in_file
+   integer :: itime_in_file_wb
 
    ! tags
    integer, parameter :: tag_next = 1
@@ -196,7 +196,7 @@ CONTAINS
 
             ENDIF
 
-            CALL ncio_write_time (filename, dataname, time, itime_in_file, DEF_HIST_FREQ)
+            CALL ncio_write_time (filename, dataname, time, itime_in_file_wb, DEF_HIST_FREQ)
 
          ELSE
 
@@ -318,34 +318,34 @@ CONTAINS
                deallocate(wdata2d)
             CASE (3) ! for variables with [lon,lat,time]
 
-               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata2d, &
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file_wb, wdata2d, &
                   dim1name, dim2name, dim3name, compress)
 
                deallocate(wdata2d)
             CASE (4) ! for variables with [lon,lat,dim3,time]
 
-               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata3d, &
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file_wb, wdata3d, &
                   dim1name, dim2name, dim3name, dim4name, compress)
 
                deallocate(tmp3d  )
                deallocate(wdata3d)
             CASE (5) ! for variables with [lon,lat,dim3,dim4,time]
 
-               CALL ncio_write_serial_time (filename, dataname, itime_in_file, wdata4d, &
+               CALL ncio_write_serial_time (filename, dataname, itime_in_file_wb, wdata4d, &
                   dim1name, dim2name, dim3name, dim4name, dim5name, compress)
 
                deallocate(tmp4d  )
                deallocate(wdata4d)
             ENDSELECT
 
-            IF (itime_in_file <= 1) THEN
+            IF (itime_in_file_wb <= 1) THEN
                CALL ncio_put_attr (filename, dataname, 'long_name', longname)
                CALL ncio_put_attr (filename, dataname, 'units', units)
                CALL ncio_put_attr (filename, dataname, 'missing_value', spval)
             ENDIF
 
             write(*,'(3A,I0,2A)') 'HIST WriteBack: ', trim(basename(filename)), &
-               ' (time ', itime_in_file, '): ', trim(dataname)
+               ' (time ', itime_in_file_wb, '): ', trim(dataname)
 
          ENDIF
 

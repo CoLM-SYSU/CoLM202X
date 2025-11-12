@@ -23,12 +23,18 @@ MODULE MOD_Grid_RiverLakeFlow
    real(r8), parameter :: acctime_rnof_max = 10800.
 
    real(r8) :: acctime_rnof
-   real(r8), allocatable :: acc_rnof_uc (:,:)
+   real(r8), allocatable :: acc_rnof_uc (:)
+   logical,  allocatable :: filter_rnof (:)
 
 CONTAINS
 
    ! ---------
    SUBROUTINE grid_riverlake_flow_init ()
+
+   USE MOD_LandPatch,           only: numpatch
+   USE MOD_Forcing,             only: forcmask_pch
+   USE MOD_Vars_TimeInvariants, only: patchtype, patchmask
+   IMPLICIT NONE
 
       CALL build_riverlake_network ()
 
@@ -40,8 +46,20 @@ CONTAINS
 
       IF (p_is_worker) THEN
          IF (numucat > 0) THEN
-            allocate (acc_rnof_uc (inpn,numucat))
+            allocate (acc_rnof_uc (numucat))
             acc_rnof_uc = 0.
+         ENDIF
+      ENDIF
+
+      ! excluding (patchtype >= 99), virtual patches and those forcing missed
+      IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            allocate (filter_rnof (numpatch))
+            filter_rnof = patchtype < 99
+            filter_rnof = filter_rnof .and. patchmask
+            IF (DEF_forcing%has_missing_value) THEN
+               filter_rnof = filter_rnof .and. forcmask_pch
+            ENDIF
          ENDIF
       ENDIF
 
@@ -63,11 +81,11 @@ CONTAINS
    real(r8), intent(in) :: deltime
 
    ! Local Variables
-   integer  :: ielm, istt, iend, i, j, irsv, ntimestep
+   integer  :: i, j, irsv, ntimestep
    real(r8) :: dt_this
 
-   real(r8), allocatable :: rnof_el(:)
-   real(r8), allocatable :: rnof_uc(:,:)
+   real(r8), allocatable :: rnof_gd(:)
+   real(r8), allocatable :: rnof_uc(:)
 
    logical,  allocatable :: is_built_resv(:)
 
@@ -81,9 +99,9 @@ CONTAINS
    real(r8), allocatable :: hflux_resv(:)
    real(r8), allocatable :: mflux_resv(:)
 
-   real(r8), allocatable :: hflux_allups(:,:)
-   real(r8), allocatable :: mflux_allups(:,:)
-   real(r8), allocatable :: zgrad_allups(:,:)
+   real(r8), allocatable :: hflux_sumups(:)
+   real(r8), allocatable :: mflux_sumups(:)
+   real(r8), allocatable :: zgrad_sumups(:)
 
    real(r8), allocatable :: sum_hflux_riv(:)
    real(r8), allocatable :: sum_mflux_riv(:)
@@ -102,27 +120,26 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         IF (numelm  > 0) allocate (rnof_el (numelm))
-         IF (numucat > 0) allocate (rnof_uc (inpn, numucat))
+         IF (numinpm > 0) allocate (rnof_gd (numinpm))
+         IF (numucat > 0) allocate (rnof_uc (numucat))
 
-         DO ielm = 1, numelm
-            istt = elm_patch%substt(ielm)
-            iend = elm_patch%subend(ielm)
-            IF (any(rnof(istt:iend) /= spval)) THEN
-               rnof_el(ielm) = sum(rnof(istt:iend) * elm_patch%subfrc(istt:iend), &
-                  mask = rnof(istt:iend) /= spval)
-            ELSE
-               rnof_el(ielm) = 0.
-            ENDIF
-         ENDDO
+         CALL worker_remap_data_pset2grid (remap_patch2inpm, rnof, rnof_gd, &
+            fillvalue = 0., filter = filter_rnof)
 
-         CALL worker_push_data (push_inpmat2ucat, rnof_el, rnof_uc, fillvalue = 0.)
+         IF (numinpm > 0) THEN
+            WHERE (push_ucat2inpm%sum_area > 0)
+               rnof_gd = rnof_gd / push_ucat2inpm%sum_area
+            END WHERE
+         ENDIF
+
+         CALL worker_push_data (push_inpm2ucat, rnof_gd, rnof_uc, &
+            fillvalue = 0., mode = 'sum')
 
          IF (numucat > 0) THEN
             acc_rnof_uc = acc_rnof_uc + rnof_uc*1.e-3*deltime
          ENDIF
 
-         IF (allocated(rnof_el)) deallocate(rnof_el)
+         IF (allocated(rnof_gd)) deallocate(rnof_gd)
          IF (allocated(rnof_uc)) deallocate(rnof_uc)
 
       ENDIF
@@ -150,9 +167,9 @@ CONTAINS
             allocate (sum_zgrad_riv (numucat))
             allocate (ucatfilter    (numucat))
 
-            allocate (hflux_allups  (upnmax,numucat))
-            allocate (mflux_allups  (upnmax,numucat))
-            allocate (zgrad_allups  (upnmax,numucat))
+            allocate (hflux_sumups  (numucat))
+            allocate (mflux_sumups  (numucat))
+            allocate (zgrad_sumups  (numucat))
 
             IF (DEF_Reservoir_Method > 0) THEN
                allocate (hflux_resv (numucat))
@@ -165,7 +182,7 @@ CONTAINS
          ENDIF
 
 #ifdef CoLMDEBUG
-         totalrnof = sum(acc_rnof_uc*inpmat_area_e2u)
+         totalrnof = sum(acc_rnof_uc)
          totalvol_bef = 0.
 #endif
 
@@ -198,8 +215,7 @@ CONTAINS
             totalvol_bef = totalvol_bef + volwater
 #endif
 
-            volwater = volwater + sum(acc_rnof_uc(:,i)*inpmat_area_e2u(:,i), &
-               mask = inpmat_area_e2u(:,i) > 0.)
+            volwater = volwater + acc_rnof_uc(i)
 
             IF (.not. is_built_resv(i)) THEN
                wdsrf_ucat(i) = floodplain_curve(i)%depth (volwater)
@@ -371,21 +387,17 @@ CONTAINS
 
             ENDDO
 
-            CALL worker_push_data (push_ups2ucat, hflux_fc, hflux_allups, fillvalue = 0.)
-            CALL worker_push_data (push_ups2ucat, mflux_fc, mflux_allups, fillvalue = 0.)
-            CALL worker_push_data (push_ups2ucat, zgrad_dn, zgrad_allups, fillvalue = 0.)
+            CALL worker_push_data (push_ups2ucat, hflux_fc, hflux_sumups, fillvalue = 0., mode = 'sum')
+            CALL worker_push_data (push_ups2ucat, mflux_fc, mflux_sumups, fillvalue = 0., mode = 'sum')
+            CALL worker_push_data (push_ups2ucat, zgrad_dn, zgrad_sumups, fillvalue = 0., mode = 'sum')
 
-            DO i = 1, numucat
-               IF (ucatfilter(i)) THEN
-                  DO j = 1, upnmax
-                     IF (ucat_ups(j,i) > 0) THEN
-                        sum_hflux_riv(i) = sum_hflux_riv(i) - hflux_allups(j,i)
-                        sum_mflux_riv(i) = sum_mflux_riv(i) - mflux_allups(j,i)
-                        sum_zgrad_riv(i) = sum_zgrad_riv(i) - zgrad_allups(j,i)
-                     ENDIF
-                  ENDDO
-               ENDIF
-            ENDDO
+            IF (numucat > 0) THEN
+               WHERE (ucatfilter)
+                  sum_hflux_riv = sum_hflux_riv - hflux_sumups
+                  sum_mflux_riv = sum_mflux_riv - mflux_sumups
+                  sum_zgrad_riv = sum_zgrad_riv - zgrad_sumups
+               END WHERE
+            ENDIF
 
             ! reservoir operation.
             IF (DEF_Reservoir_Method > 0) THEN
@@ -421,19 +433,15 @@ CONTAINS
 
                ENDDO
 
-               CALL worker_push_data (push_ups2ucat, hflux_resv, hflux_allups, fillvalue = 0.)
-               CALL worker_push_data (push_ups2ucat, mflux_resv, mflux_allups, fillvalue = 0.)
+               CALL worker_push_data (push_ups2ucat, hflux_resv, hflux_sumups, fillvalue = 0., mode = 'sum')
+               CALL worker_push_data (push_ups2ucat, mflux_resv, mflux_sumups, fillvalue = 0., mode = 'sum')
 
-               DO i = 1, numucat
-                  IF (ucatfilter(i)) THEN
-                     DO j = 1, upnmax
-                        IF (ucat_ups(j,i) > 0) THEN
-                           sum_hflux_riv(i) = sum_hflux_riv(i) - hflux_allups(j,i)
-                           sum_mflux_riv(i) = sum_mflux_riv(i) - mflux_allups(j,i)
-                        ENDIF
-                     ENDDO
-                  ENDIF
-               ENDDO
+               IF (numucat > 0) THEN
+                  WHERE (ucatfilter)
+                     sum_hflux_riv = sum_hflux_riv - hflux_sumups
+                     sum_mflux_riv = sum_mflux_riv - mflux_sumups
+                  END WHERE
+               ENDIF
 
             ENDIF
 
@@ -540,7 +548,7 @@ CONTAINS
                   ENDIF
 #endif
 
-                  acctime(i) = acctime(i) + dt_all(irivsys(i))
+                  acctime_ucat(i) = acctime_ucat(i) + dt_all(irivsys(i))
 
                   a_wdsrf_ucat(i) = a_wdsrf_ucat(i) + wdsrf_ucat(i) * dt_all(irivsys(i))
                   a_veloc_riv (i) = a_veloc_riv (i) + veloc_riv (i) * dt_all(irivsys(i))
@@ -618,9 +626,9 @@ CONTAINS
       IF (allocated(zgrad_dn     )) deallocate(zgrad_dn     )
       IF (allocated(hflux_resv   )) deallocate(hflux_resv   )
       IF (allocated(mflux_resv   )) deallocate(mflux_resv   )
-      IF (allocated(hflux_allups )) deallocate(hflux_allups )
-      IF (allocated(mflux_allups )) deallocate(mflux_allups )
-      IF (allocated(zgrad_allups )) deallocate(zgrad_allups )
+      IF (allocated(hflux_sumups )) deallocate(hflux_sumups )
+      IF (allocated(mflux_sumups )) deallocate(mflux_sumups )
+      IF (allocated(zgrad_sumups )) deallocate(zgrad_sumups )
       IF (allocated(sum_hflux_riv)) deallocate(sum_hflux_riv)
       IF (allocated(sum_mflux_riv)) deallocate(sum_mflux_riv)
       IF (allocated(sum_zgrad_riv)) deallocate(sum_zgrad_riv)
@@ -640,6 +648,7 @@ CONTAINS
       ENDIF
 
       IF (allocated(acc_rnof_uc)) deallocate(acc_rnof_uc)
+      IF (allocated(filter_rnof)) deallocate(filter_rnof)
 
    END SUBROUTINE grid_riverlake_flow_final
 

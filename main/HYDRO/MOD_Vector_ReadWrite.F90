@@ -10,41 +10,37 @@ MODULE MOD_Vector_ReadWrite
 !-----------------------------------------------------------------------
 
    PUBLIC :: vector_gather_and_write
+   PUBLIC :: vector_gather_map2grid_and_write
    PUBLIC :: vector_read_and_scatter
 
 CONTAINS
 
    ! -------
-   SUBROUTINE vector_gather_and_write ( &
-         fileinout, vector, vlen, totalvlen, varname, dimname, data_address, &
-         itime_in_file, longname, units)
+   SUBROUTINE vector_gather_to_master ( &
+         vector, vlen, totalvlen, data_address, wdata)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Namelist
    USE MOD_DataType
-   USE MOD_NetCDFSerial
-   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
-   character(len=*), intent(in) :: fileinout
-   real(r8),         intent(in) :: vector (:)
-   integer,          intent(in) :: vlen
-   integer,          intent(in) :: totalvlen
-   character(len=*), intent(in) :: varname
-   character(len=*), intent(in) :: dimname
+   real(r8), intent(in) :: vector (:)
+   integer,  intent(in) :: vlen
+   integer,  intent(in) :: totalvlen
 
    type(pointer_int32_1d), intent(in) :: data_address (0:)
 
-   integer,          intent(in), optional :: itime_in_file
-   character(len=*), intent(in), optional :: longname
-   character(len=*), intent(in), optional :: units
+   real(r8), allocatable,  intent(inout) :: wdata (:)
 
    ! Local variables
    integer :: iwork, mesg(2), isrc, ndata
-   real(r8), allocatable :: rcache(:), wdata(:)
-   logical :: write_attr
+   real(r8), allocatable :: rcache(:)
 
+      IF (totalvlen <= 0) RETURN
+
+      IF (p_is_master) THEN
+         allocate (wdata (totalvlen))
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -59,9 +55,6 @@ CONTAINS
       ENDIF
 
       IF (p_is_master) THEN
-
-         allocate (wdata (totalvlen))
-
          DO iwork = 0, p_np_worker-1
             CALL mpi_recv (mesg, 2, MPI_INTEGER, MPI_ANY_SOURCE, &
                mpi_tag_mesg, p_comm_glb, p_stat, p_err)
@@ -83,18 +76,123 @@ CONTAINS
 
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
-      allocate (wdata (totalvlen))
       wdata(data_address(0)%val) = vector
 #endif
+
+   END SUBROUTINE vector_gather_to_master
+
+   ! -------
+   SUBROUTINE vector_gather_and_write ( vector, vlen, totalvlen, data_address, &
+         fileout, varname, dimname, itime_in_file, longname, units)
+
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_NetCDFSerial
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
+
+   real(r8), intent(in) :: vector (:)
+   integer,  intent(in) :: vlen
+   integer,  intent(in) :: totalvlen
+
+   type(pointer_int32_1d), intent(in) :: data_address (0:)
+
+   character(len=*), intent(in) :: fileout
+   character(len=*), intent(in) :: varname
+   character(len=*), intent(in) :: dimname
+
+   integer,          intent(in), optional :: itime_in_file
+   character(len=*), intent(in), optional :: longname
+   character(len=*), intent(in), optional :: units
+
+   ! Local variables
+   real(r8), allocatable :: wdata(:)
+   logical :: write_attr
+
+
+      CALL vector_gather_to_master (vector, vlen, totalvlen, data_address, wdata)
 
       IF (p_is_master) THEN
 
          IF (present(itime_in_file)) THEN
-            CALL ncio_write_serial_time (fileinout, varname, itime_in_file, wdata, &
+            CALL ncio_write_serial_time (fileout, varname, itime_in_file, wdata, &
                dimname, 'time', DEF_HIST_CompressLevel)
          ELSE
-            CALL ncio_write_serial (fileinout, varname, wdata, &
+            CALL ncio_write_serial (fileout, varname, wdata, &
                dimname, DEF_REST_CompressLevel)
+         ENDIF
+
+         IF (present(itime_in_file)) THEN
+            write_attr = itime_in_file <= 1
+         ELSE
+            write_attr = .true.
+         ENDIF
+
+         IF (write_attr) THEN
+            CALL ncio_put_attr (fileout, varname, 'missing_value', spval)
+            IF (present(longname)) CALL ncio_put_attr (fileout, varname, 'long_name', longname)
+            IF (present(units   )) CALL ncio_put_attr (fileout, varname, 'units',     units   )
+         ENDIF
+
+         deallocate (wdata)
+
+      ENDIF
+
+   END SUBROUTINE vector_gather_and_write
+
+   ! -------
+   SUBROUTINE vector_gather_map2grid_and_write ( &
+         vector,  vlen,    totalvlen, data_address, nlon, x_vec,   nlat, y_vec,   &
+         fileout, varname, lon_name,  lat_name,     itime_in_file, longname, units)
+
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_DataType
+   USE MOD_NetCDFSerial
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
+
+   character(len=*), intent(in) :: fileout
+   real(r8),         intent(in) :: vector (:)
+   integer,          intent(in) :: vlen
+   integer,          intent(in) :: totalvlen
+   character(len=*), intent(in) :: varname
+   character(len=*), intent(in) :: lon_name, lat_name
+
+   type(pointer_int32_1d), intent(in) :: data_address (0:)
+
+   integer, intent(in) :: nlon, x_vec (:)
+   integer, intent(in) :: nlat, y_vec (:)
+
+   integer,          intent(in), optional :: itime_in_file
+   character(len=*), intent(in), optional :: longname
+   character(len=*), intent(in), optional :: units
+
+   ! Local variables
+   integer :: i
+   real(r8), allocatable :: wdata(:), wdata2d(:,:)
+   logical :: write_attr
+
+      CALL vector_gather_to_master (vector, vlen, totalvlen, data_address, wdata)
+
+      IF (p_is_master) THEN
+
+         allocate (wdata2d (nlon,nlat))
+         wdata2d(:,:) = spval
+
+         DO i = 1, totalvlen
+            wdata2d(x_vec(i),y_vec(i)) = wdata(i)
+         ENDDO
+
+         IF (present(itime_in_file)) THEN
+            CALL ncio_write_serial_time (fileout, varname, itime_in_file, wdata2d, &
+               lon_name, lat_name, 'time', DEF_HIST_CompressLevel)
+         ELSE
+            CALL ncio_write_serial (fileout, varname, wdata2d, &
+               lon_name, lat_name, DEF_REST_CompressLevel)
          ENDIF
 
          IF (present(itime_in_file)) THEN
@@ -104,20 +202,21 @@ CONTAINS
          ENDIF
 
          IF (write_attr) THEN
-            CALL ncio_put_attr (fileinout, varname, 'missing_value', spval)
-            IF (present(longname)) CALL ncio_put_attr (fileinout, varname, 'long_name', longname)
-            IF (present(units   )) CALL ncio_put_attr (fileinout, varname, 'units',     units   )
+            CALL ncio_put_attr (fileout, varname, 'missing_value', spval)
+            IF (present(longname)) CALL ncio_put_attr (fileout, varname, 'long_name', longname)
+            IF (present(units   )) CALL ncio_put_attr (fileout, varname, 'units',     units   )
          ENDIF
 
-         deallocate (wdata)
+         deallocate (wdata  )
+         deallocate (wdata2d)
 
       ENDIF
 
-   END SUBROUTINE vector_gather_and_write
+   END SUBROUTINE vector_gather_map2grid_and_write
 
    ! -----
    SUBROUTINE vector_read_and_scatter ( &
-         fileinout, vector, vlen, varname, data_address)
+         filein, vector, vlen, varname, data_address)
 
    USE MOD_Precision
    USE MOD_SPMD_Task
@@ -125,7 +224,7 @@ CONTAINS
    USE MOD_NetCDFSerial
    IMPLICIT NONE
 
-   character(len=*),       intent(in)    :: fileinout
+   character(len=*),       intent(in)    :: filein
    real(r8),  allocatable, intent(inout) :: vector (:)
    integer,                intent(in)    :: vlen
    character(len=*),       intent(in)    :: varname
@@ -136,7 +235,7 @@ CONTAINS
    real(r8), allocatable :: rdata(:), rcache(:)
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (fileinout, varname, rdata)
+         CALL ncio_read_serial (filein, varname, rdata)
       ENDIF
 
 #ifdef USEMPI
