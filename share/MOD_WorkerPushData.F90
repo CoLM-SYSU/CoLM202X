@@ -220,7 +220,8 @@ CONTAINS
    ! Local Variables
    integer, allocatable :: ids_me_sorted(:), order_ids(:), self_from(:)
 #ifdef USEMPI
-   integer, allocatable :: ids(:), loc_from_me(:)
+   integer, allocatable :: ids(:), loc_from_me(:), loc_from_other(:)
+   integer :: request(3)
 #endif
    integer :: i, iloc, iworker, jworker, n_req_other
 
@@ -265,73 +266,80 @@ CONTAINS
          allocate (pushdata%n_from_other (0:p_np_worker-1))
          allocate (pushdata%other_to     (0:p_np_worker-1))
 
-         DO iworker = 0, p_np_worker-1
+         pushdata%n_to_other  (:) = 0
+         pushdata%n_from_other(:) = 0
 
-            IF (p_iam_worker == iworker) n_req_other = n_req_uniq
-            CALL mpi_bcast (n_req_other, 1, MPI_INTEGER, iworker, p_comm_worker, p_err)
+         IF (n_req_uniq > 0) allocate (loc_from_other (n_req_uniq))
+
+         iworker = modulo(p_iam_worker+1, p_np_worker)
+         jworker = modulo(p_iam_worker-1, p_np_worker)
+         DO WHILE (iworker /= p_iam_worker)
+
+            CALL mpi_isend (n_req_uniq, 1, MPI_INTEGER, jworker, 10, &
+               p_comm_worker, request(1), p_err)
+
+            IF (n_req_uniq > 0) THEN
+               CALL mpi_isend(ids_req_uniq, n_req_uniq, MPI_INTEGER, jworker, 11, &
+                  p_comm_worker, request(2), p_err)
+            ENDIF
+
+            CALL mpi_recv (n_req_other, 1, MPI_INTEGER, iworker, 10, &
+               p_comm_worker, p_stat, p_err)
 
             IF (n_req_other > 0) THEN
 
-               allocate (ids         (n_req_other))
+               allocate (ids (n_req_other))
+               CALL mpi_recv (ids, n_req_other, MPI_INTEGER, iworker, 11, &
+                  p_comm_worker, p_stat, p_err)
+
                allocate (loc_from_me (n_req_other))
+               loc_from_me(:) = -1
 
-               IF (p_iam_worker == iworker) ids = ids_req_uniq
-               CALL mpi_bcast (ids, n_req_other, MPI_INTEGER, iworker, p_comm_worker, p_err)
-
-               IF (p_iam_worker /= iworker) THEN
-
-                  loc_from_me(:) = -1
-
-                  IF (num_me > 0) THEN
-                     DO i = 1, n_req_other
-                        iloc = find_in_sorted_list1 (ids(i), num_me, ids_me_sorted)
-                        IF (iloc > 0) THEN
-                           loc_from_me(i) = order_ids(iloc)
-                        ENDIF
-                     ENDDO
-                  ENDIF
-
-                  pushdata%n_to_other(iworker) = count(loc_from_me > 0)
-                  IF (pushdata%n_to_other(iworker) > 0) THEN
-                     allocate (pushdata%to_other(iworker)%val (pushdata%n_to_other(iworker)))
-                     pushdata%to_other(iworker)%val = pack(loc_from_me, loc_from_me > 0)
-                  ENDIF
-
-                  CALL mpi_send (loc_from_me, n_req_other, MPI_INTEGER, &
-                     iworker, mpi_tag_data, p_comm_worker, p_err)
-
-               ELSE
-
-                  pushdata%n_to_other  (iworker) = 0
-                  pushdata%n_from_other(iworker) = 0
-
-                  DO jworker = 0, p_np_worker-1
-                     IF (jworker /= iworker) THEN
-
-                        CALL mpi_recv (loc_from_me, n_req_other, MPI_INTEGER, &
-                           jworker, mpi_tag_data, p_comm_worker, p_stat, p_err)
-
-                        pushdata%n_from_other(jworker) = count(loc_from_me > 0)
-                        IF (pushdata%n_from_other(jworker) > 0) THEN
-                           allocate (pushdata%other_to(jworker)%val (pushdata%n_from_other(jworker)))
-                           pushdata%other_to(jworker)%val = pack((/(i,i=1,n_req_other)/), loc_from_me > 0)
-                        ENDIF
-
+               IF (num_me > 0) THEN
+                  DO i = 1, n_req_other
+                     iloc = find_in_sorted_list1 (ids(i), num_me, ids_me_sorted)
+                     IF (iloc > 0) THEN
+                        loc_from_me(i) = order_ids(iloc)
                      ENDIF
                   ENDDO
                ENDIF
 
-               deallocate(ids        )
-               deallocate(loc_from_me)
-
-            ELSE
-               IF (p_iam_worker == iworker) THEN
-                  pushdata%n_from_other(:) = 0
+               pushdata%n_to_other(iworker) = count(loc_from_me > 0)
+               IF (pushdata%n_to_other(iworker) > 0) THEN
+                  allocate (pushdata%to_other(iworker)%val (pushdata%n_to_other(iworker)))
+                  pushdata%to_other(iworker)%val = pack(loc_from_me, loc_from_me > 0)
                ENDIF
-               pushdata%n_to_other(iworker) = 0
+
+               CALL mpi_isend (loc_from_me, n_req_other, MPI_INTEGER, iworker, 12, &
+                  p_comm_worker, request(3), p_err)
+
             ENDIF
 
+            IF (n_req_uniq > 0) THEN
+
+               CALL mpi_recv (loc_from_other, n_req_uniq, MPI_INTEGER, &
+                  jworker, 12, p_comm_worker, p_stat, p_err)
+
+               pushdata%n_from_other(jworker) = count(loc_from_other > 0)
+               IF (pushdata%n_from_other(jworker) > 0) THEN
+                  allocate (pushdata%other_to(jworker)%val (pushdata%n_from_other(jworker)))
+                  pushdata%other_to(jworker)%val = pack((/(i,i=1,n_req_uniq)/), loc_from_other > 0)
+               ENDIF
+
+            ENDIF
+
+            CALL mpi_wait(request(1), MPI_STATUSES_IGNORE, p_err)
+            IF (n_req_uniq  > 0) CALL mpi_wait(request(2), MPI_STATUSES_IGNORE, p_err)
+            IF (n_req_other > 0) CALL mpi_wait(request(3), MPI_STATUSES_IGNORE, p_err)
+
+            IF (allocated(ids        )) deallocate(ids        )
+            IF (allocated(loc_from_me)) deallocate(loc_from_me)
+
+            iworker = modulo(iworker+1, p_np_worker)
+            jworker = modulo(jworker-1, p_np_worker)
          ENDDO
+
+         IF (allocated (loc_from_other)) deallocate (loc_from_other)
 
          CALL mpi_barrier (p_comm_worker, p_err)
 #endif

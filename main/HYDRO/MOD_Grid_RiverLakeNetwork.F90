@@ -135,7 +135,7 @@ CONTAINS
    integer,  allocatable :: idata1d(:), idata2d(:,:)
    real(r8), allocatable :: rdata1d(:), rdata2d(:,:)
 
-   integer,  allocatable :: allgrd_in_inp (:), nucat_grd(:), iucat_grd(:)
+   integer,  allocatable :: allgrd_in_inp (:), nucat_g2d(:,:), iucat_g(:)
 
    integer,  allocatable :: idmap_uc2gd_all(:,:)
    real(r8), allocatable :: area_uc2gd_all (:,:)
@@ -143,7 +143,7 @@ CONTAINS
    real(r8), allocatable :: ucat_area_all (:)
 
    integer  :: nlat_ucat, nlon_ucat
-   integer  :: nucat, iriv, ngrdall, ngrd
+   integer  :: nucat, iriv, ngrdall, igrd, ngrd
    integer  :: p_np_rivsys, color
    integer  :: iworker, iwrkdsp
    integer  :: iloc, i, j, ithis
@@ -469,43 +469,44 @@ CONTAINS
             area_gd2uc  = 0.
          END WHERE
 
-         allocate (allgrd_in_inp (inpn*totalnumucat))
-         allocate (nucat_grd     (inpn*totalnumucat))
+         allocate (nucat_g2d (nlon_ucat,nlat_ucat))
+         nucat_g2d(:,:) = 0
 
-         ngrdall = 0
-         nucat_grd(:) = 0
          DO i = 1, totalnumucat
             DO j = 1, inpn
                IF (idmap_gd2uc(j,i) > 0) THEN
-
-                  CALL insert_into_sorted_list1 (idmap_gd2uc(j,i), ngrdall, allgrd_in_inp, iloc, is_new)
-
-                  IF (is_new) THEN
-                     IF (iloc < ngrdall) THEN
-                        nucat_grd(iloc+1:ngrdall) = nucat_grd(iloc:ngrdall-1)
-                     ENDIF
-                     nucat_grd(iloc) = 1
-                  ELSE
-                     nucat_grd(iloc) = nucat_grd(iloc) + 1
-                  ENDIF
+                  nucat_g2d(idmap_x(j,i),idmap_y(j,i)) = nucat_g2d(idmap_x(j,i),idmap_y(j,i)) + 1
                ENDIF
             ENDDO
          ENDDO
 
-         nucpart = maxval(nucat_grd (1:ngrdall))
+         nucpart = maxval(nucat_g2d)
+         ngrdall = count(nucat_g2d > 0)
+
+         allocate (allgrd_in_inp (ngrdall))
+
+         igrd = 0
+         DO i = 1, nlat_ucat
+            DO j = 1, nlon_ucat
+               IF (nucat_g2d(j,i) > 0) THEN
+                  igrd = igrd + 1
+                  allgrd_in_inp(igrd) = (i-1)*nlon_ucat + j
+               ENDIF
+            ENDDO
+         ENDDO
 
          allocate (idmap_uc2gd_all (nucpart, ngrdall));  idmap_uc2gd_all(:,:) = 0
          allocate (area_uc2gd_all  (nucpart, ngrdall));  area_uc2gd_all (:,:) = 0.
 
-         allocate (iucat_grd (ngrdall)); iucat_grd(:) = 0
+         allocate (iucat_g (ngrdall)); iucat_g(:) = 0
 
          DO i = 1, totalnumucat
             DO j = 1, inpn
                IF (idmap_gd2uc(j,i) > 0) THEN
                   iloc = find_in_sorted_list1 (idmap_gd2uc(j,i), ngrdall, allgrd_in_inp(1:ngrdall))
-                  iucat_grd(iloc) = iucat_grd(iloc) + 1
-                  idmap_uc2gd_all(iucat_grd(iloc),iloc) = i
-                  area_uc2gd_all (iucat_grd(iloc),iloc) = area_gd2uc(j,i)
+                  iucat_g(iloc) = iucat_g(iloc) + 1
+                  idmap_uc2gd_all(iucat_g(iloc),iloc) = i
+                  area_uc2gd_all (iucat_g(iloc),iloc) = area_gd2uc(j,i)
                ENDIF
             ENDDO
          ENDDO
@@ -652,8 +653,8 @@ CONTAINS
          deallocate (idmap_x        )
          deallocate (idmap_y        )
          deallocate (allgrd_in_inp  )
-         deallocate (nucat_grd      )
-         deallocate (iucat_grd      )
+         deallocate (nucat_g2d      )
+         deallocate (iucat_g        )
          deallocate (idmap_uc2gd_all)
          deallocate (area_uc2gd_all )
       ENDIF
@@ -940,6 +941,7 @@ CONTAINS
                ENDIF
             ENDIF
          ENDDO
+
       ENDIF
 
 #ifdef USEMPI
