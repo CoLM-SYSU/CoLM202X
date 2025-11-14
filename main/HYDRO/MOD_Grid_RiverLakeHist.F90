@@ -110,6 +110,8 @@ CONTAINS
 
       ENDIF
 
+      CALL flush_acc_fluxes_riverlake ()
+
       ! ----- get longitude and latitude -----
       IF (p_is_master) THEN
          allocate (lon_ucat (griducat%nlon))
@@ -229,6 +231,12 @@ CONTAINS
 
       ! ----- 4) mask of unit catchments with all upstreams in simulation region -----
       IF (p_is_worker) THEN
+         IF (numpatch > 0) THEN
+            allocate (allups_mask_pch (numpatch))
+         ENDIF
+      ENDIF
+
+      IF (p_is_worker) THEN
          CALL worker_push_data (push_ucat2grid, allups_mask_ucat, vec_grid, fillvalue = spval)
          CALL worker_remap_data_grid2pset ( &
             remap_patch2inpm, vec_grid, allups_mask_pch, fillvalue = spval, mode = 'average')
@@ -274,7 +282,7 @@ CONTAINS
    USE MOD_Grid_Reservoir
    USE MOD_Vector_ReadWrite
    USE MOD_HistGridded
-#if (defined UNSTRUCTURED || defined CATCHMENT)
+#ifdef UNSTRUCTURED
    USE MOD_HistVector
 #endif
    USE MOD_LandPatch,   only: numpatch
@@ -315,8 +323,10 @@ CONTAINS
 
             CALL ncio_write_serial (file_hist_ucat, 'lat_ucat', lat_ucat, 'lat_ucat')
             CALL ncio_write_serial (file_hist_ucat, 'lon_ucat', lon_ucat, 'lon_ucat')
-            CALL ncio_write_time   (file_hist_ucat, 'time', idate, itime_in_file_ucat, DEF_HIST_FREQ)
          ENDIF
+
+         CALL ncio_write_time (file_hist_ucat, 'time', idate, itime_in_file_ucat, DEF_HIST_FREQ)
+
       ENDIF
 
       IF (is_first_in_file) THEN
@@ -324,7 +334,7 @@ CONTAINS
             CALL hist_write_var_real8_2d ( &
                file_hist, 'mask_complete_upstream_regird', ghist, -1, allups_mask_grid, compress = 1,   &
                longname = 'Mask of grids with all upstream located in simulation region', units = '100%')
-#if (defined UNSTRUCTURED || defined CATCHMENT)
+#ifdef UNSTRUCTURED
          ELSE
             CALL aggregate_to_vector_and_write_2d ( &
                allups_mask_pch, file_hist, 'mask_complete_upstream_regird', -1, filter_ucat,            &
@@ -411,7 +421,7 @@ CONTAINS
          ENDIF
 
          CALL vector_gather_map2grid_and_write ( a_discharge, numucat,                            &
-            totalnumucat, ucat_data_address, griducat%nlon, x_ucat, griducat%nlat, y_ucat,      &
+            totalnumucat, ucat_data_address, griducat%nlon, x_ucat, griducat%nlat, y_ucat,        &
             file_hist_ucat, 'f_discharge_rivermouth', 'lon_ucat', 'lat_ucat', itime_in_file_ucat, &
             'river mouth discharge into ocean', 'm^3/s')
       ENDIF
@@ -430,6 +440,8 @@ CONTAINS
                   a_floodfrc_ucat = spval
                END WHERE
             ENDIF
+
+            IF (numinpm > 0) allocate (a_floodfrc_inpm (numinpm))
 
             CALL worker_push_data (push_ucat2inpm, a_floodfrc_ucat, a_floodfrc_inpm, &
                fillvalue = spval, mode = 'average')

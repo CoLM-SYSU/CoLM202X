@@ -36,12 +36,6 @@ CONTAINS
    USE MOD_Vars_TimeInvariants, only: patchtype, patchmask
    IMPLICIT NONE
 
-      CALL build_riverlake_network ()
-
-      IF (DEF_Reservoir_Method > 0) THEN
-         CALL reservoir_init ()
-      ENDIF
-
       acctime_rnof_max = DEF_GRIDBASED_ROUTING_MAX_DT
       acctime_rnof = 0.
 
@@ -503,6 +497,7 @@ CONTAINS
                ENDIF
 
                volwater = volwater - sum_hflux_riv(i) * dt_all(irivsys(i))
+               volwater = max(volwater, 0.)
 
                ! for inland depression, remove excess water (to be optimized)
                IF (ucat_next(i) == -10) THEN

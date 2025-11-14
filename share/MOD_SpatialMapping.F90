@@ -511,7 +511,13 @@ CONTAINS
       ENDIF
 
       IF (p_is_io) CALL allocate_block_data (fgrid, this%areagrid)
-      CALL this%get_sumarea (this%areagrid, pixelset%ipxstt > 0 .and. pixelset%ipxend > 0)
+      IF (p_is_worker) THEN
+         IF (this%npset > 0) THEN
+            allocate (msk (this%npset))
+            msk = pixelset%ipxstt > 0 .and. pixelset%ipxend > 0
+         ENDIF
+      ENDIF
+      CALL this%get_sumarea (this%areagrid, msk)
 
 
 #ifdef USEMPI
@@ -936,7 +942,13 @@ CONTAINS
       ENDIF
 
       IF (p_is_io)  CALL allocate_block_data (fgrid, this%areagrid)
-      CALL this%get_sumarea (this%areagrid, pixelset%ipxstt > 0 .and. pixelset%ipxend > 0)
+      IF (p_is_worker) THEN
+         IF (this%npset > 0) THEN
+            allocate (msk (this%npset))
+            msk = pixelset%ipxstt > 0 .and. pixelset%ipxend > 0
+         ENDIF
+      ENDIF
+      CALL this%get_sumarea (this%areagrid, msk)
 
 
       IF (allocated(this%grid%lat_s)) deallocate(this%grid%lat_s)

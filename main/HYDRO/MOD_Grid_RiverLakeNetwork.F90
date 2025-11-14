@@ -19,6 +19,7 @@ MODULE MOD_Grid_RiverLakeNetwork
    integer, allocatable :: ucat_ucid (:)   ! index in unit catchment numbering
    integer, allocatable :: x_ucat    (:)   !
    integer, allocatable :: y_ucat    (:)   !
+   integer, allocatable :: ucat_gdid (:)   !
 
    integer, allocatable :: numucat_wrk (:)
    type(pointer_int32_1d), allocatable :: ucat_data_address (:)
@@ -382,8 +383,21 @@ CONTAINS
 
             nucat = numucat_wrk(iworker)
             IF (nucat > 0) THEN
+
                CALL mpi_send (ucat_data_address(iworker)%val, nucat, MPI_INTEGER, &
                   p_address_worker(iworker), mpi_tag_data, p_comm_glb, p_err)
+
+               allocate (idata1d (nucat))
+
+               idata1d = x_ucat (ucat_data_address(iworker)%val)
+               CALL mpi_send (idata1d, nucat, MPI_INTEGER, &
+                  p_address_worker(iworker), mpi_tag_data, p_comm_glb, p_err)
+
+               idata1d = y_ucat (ucat_data_address(iworker)%val)
+               CALL mpi_send (idata1d, nucat, MPI_INTEGER, &
+                  p_address_worker(iworker), mpi_tag_data, p_comm_glb, p_err)
+
+               deallocate (idata1d)
             ENDIF
          ENDDO
 
@@ -393,7 +407,13 @@ CONTAINS
 
          IF (numucat > 0) THEN
             allocate (ucat_ucid (numucat))
+            allocate (x_ucat    (numucat))
+            allocate (y_ucat    (numucat))
             CALL mpi_recv (ucat_ucid, numucat, MPI_INTEGER, p_address_master, &
+               mpi_tag_data, p_comm_glb, p_stat, p_err)
+            CALL mpi_recv (x_ucat, numucat, MPI_INTEGER, p_address_master, &
+               mpi_tag_data, p_comm_glb, p_stat, p_err)
+            CALL mpi_recv (y_ucat, numucat, MPI_INTEGER, p_address_master, &
                mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 
@@ -616,9 +636,16 @@ CONTAINS
       ENDDO
 #endif
 
+      IF (p_is_worker) THEN
+         IF (numucat > 0) THEN
+            allocate (ucat_gdid (numucat))
+            ucat_gdid = (y_ucat-1)*nlon_ucat + x_ucat
+         ENDIF
+      ENDIF
+
       CALL build_worker_pushdata (numinpm, inpm_gdid, numucat, idmap_gd2uc, area_gd2uc, push_inpm2ucat)
       CALL build_worker_pushdata (numucat, ucat_ucid, numinpm, idmap_uc2gd, area_uc2gd, push_ucat2inpm)
-      CALL build_worker_pushdata (numucat, ucat_ucid, numinpm, inpm_gdid, push_ucat2grid)
+      CALL build_worker_pushdata (numucat, ucat_gdid, numinpm, inpm_gdid, push_ucat2grid)
       CALL build_worker_pushdata (numinpm, inpm_gdid, numinpm, inpm_gdid, allreduce_inpm)
 
       IF (p_is_master) THEN
@@ -1187,6 +1214,7 @@ CONTAINS
       IF (allocated(y_ucat           )) deallocate(y_ucat           )
 
       IF (allocated(ucat_ucid        )) deallocate(ucat_ucid        )
+      IF (allocated(ucat_gdid        )) deallocate(ucat_gdid        )
 
       IF (allocated(numucat_wrk      )) deallocate(numucat_wrk      )
       IF (allocated(ucat_data_address)) deallocate(ucat_data_address)

@@ -58,7 +58,8 @@
 #endif
 
 #define GridRiverLakeFlow
-#ifndef GRIDBASED
+!    Conflicts :
+#if (defined CATCHMENT || defined SinglePoint)
 #undef GridRiverLakeFlow
 #endif
 

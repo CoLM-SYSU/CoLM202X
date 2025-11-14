@@ -4568,7 +4568,7 @@ ENDIF
          IF (trim(HistForm) == 'Gridded') THEN
             CALL write_history_variable_2d ( DEF_hist_vars%floodarea, a_floodfrc_pch,   &
                file_hist, 'f_floodarea', itime_in_file, sumarea_one, filter_inpm,       &
-               'flooded area', 'm^2', nac_one)
+               'flooded area', 'km^2', nac_one)
          ENDIF
 
          IF (allocated(nac_one   )) deallocate (nac_one   )

@@ -302,7 +302,8 @@ CONTAINS
 
                ELSE
 
-                  pushdata%n_to_other(iworker) = 0
+                  pushdata%n_to_other  (iworker) = 0
+                  pushdata%n_from_other(iworker) = 0
 
                   DO jworker = 0, p_np_worker-1
                      IF (jworker /= iworker) THEN
@@ -418,7 +419,8 @@ CONTAINS
                   iloc  = mapping%address(iset)%val(2,ipart)
                   remapdata%part_to(iset)%val(ipart)  = find_in_sorted_list2 ( &
                      mapping%glist(iproc)%ilon(iloc), mapping%glist(iproc)%ilat(iloc), ngrid, ilon_me, ilat_me)
-                  remapdata%areapart(iset)%val(ipart) = mapping%areapart(iset)%val(ipart)
+                  ! from km^2 to m^2
+                  remapdata%areapart(iset)%val(ipart) = mapping%areapart(iset)%val(ipart) * 1.e6
                ENDDO
 
                IF (remapdata%npart(iset) > 0) THEN
