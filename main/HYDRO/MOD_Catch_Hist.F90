@@ -193,10 +193,10 @@ CONTAINS
             END WHERE
          ENDIF
 
-         CALL worker_push_data (iam_bsn, iam_elm, a_wdsrf_bsn, a_wdsrf_elm)
+         CALL worker_push_data (push_bsn2elm, a_wdsrf_bsn, a_wdsrf_elm, spval)
 
          CALL vector_gather_and_write (&
-            file_hist_basin, a_wdsrf_elm, numelm, totalnumelm, 'v_wdsrf_bsn', 'basin', elm_data_address, &
+            a_wdsrf_elm, numelm, totalnumelm, elm_data_address, file_hist_basin, 'v_wdsrf_bsn', 'basin', &
             itime_in_file, 'River Height', 'm')
       ENDIF
 
@@ -208,10 +208,10 @@ CONTAINS
             END WHERE
          ENDIF
 
-         CALL worker_push_data (iam_bsn, iam_elm, a_veloc_riv, a_veloc_elm)
+         CALL worker_push_data (push_bsn2elm, a_veloc_riv, a_veloc_elm, spval)
 
          CALL vector_gather_and_write (&
-            file_hist_basin, a_veloc_elm, numelm, totalnumelm, 'v_veloc_riv', 'basin', elm_data_address, &
+            a_veloc_elm, numelm, totalnumelm, elm_data_address, file_hist_basin, 'v_veloc_riv', 'basin', &
             itime_in_file, 'River Velocity', 'm/s')
       ENDIF
 
@@ -223,18 +223,18 @@ CONTAINS
             END WHERE
          ENDIF
 
-         CALL worker_push_data (iam_bsn, iam_elm, a_discharge, a_dschg_elm)
+         CALL worker_push_data (push_bsn2elm, a_discharge, a_dschg_elm, spval)
 
          CALL vector_gather_and_write (&
-            file_hist_basin, a_dschg_elm, numelm, totalnumelm, 'v_discharge', 'basin', elm_data_address, &
+            a_dschg_elm, numelm, totalnumelm, elm_data_address, file_hist_basin, 'v_discharge', 'basin', &
             itime_in_file, 'River Discharge', 'm^3/s')
       ENDIF
 
       ! ----- number of time steps for each basin -----
-      CALL worker_push_data (iam_bsn, iam_elm, ntacc_bsn, ntacc_elm)
+      CALL worker_push_data (push_bsn2elm, ntacc_bsn, ntacc_elm, spval)
 
       CALL vector_gather_and_write (&
-         file_hist_basin, ntacc_elm, numelm, totalnumelm, 'timesteps', 'basin', elm_data_address, &
+         ntacc_elm, numelm, totalnumelm, elm_data_address, file_hist_basin, 'timesteps', 'basin', &
          itime_in_file, 'Number of accumulated timesteps for each basin', '-')
 
       IF (p_is_worker .and. (numbasin > 0)) ntacc_bsn(:) = 0.
@@ -247,10 +247,10 @@ CONTAINS
             END WHERE
          ENDIF
 
-         CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, a_wdsrf_bsnhru, a_wdsrf_hru)
+         CALL worker_push_data (push_bsnhru2elmhru, a_wdsrf_bsnhru, a_wdsrf_hru, spval)
 
          CALL vector_gather_and_write (&
-            file_hist_basin, a_wdsrf_hru, numhru, totalnumhru, 'v_wdsrf_hru', 'hydrounit', hru_data_address, &
+            a_wdsrf_hru, numhru, totalnumhru, hru_data_address, file_hist_basin, 'v_wdsrf_hru', 'hydrounit', &
             itime_in_file, 'Depth of Surface Water in Hydro unit', 'm')
       ENDIF
 
@@ -262,10 +262,10 @@ CONTAINS
             END WHERE
          ENDIF
 
-         CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, a_veloc_bsnhru, a_veloc_hru)
+         CALL worker_push_data (push_bsnhru2elmhru, a_veloc_bsnhru, a_veloc_hru, spval)
 
          CALL vector_gather_and_write (&
-            file_hist_basin, a_veloc_hru, numhru, totalnumhru, 'v_veloc_hru', 'hydrounit', hru_data_address, &
+            a_veloc_hru, numhru, totalnumhru, hru_data_address, file_hist_basin, 'v_veloc_hru', 'hydrounit', &
             itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
       ENDIF
 
@@ -278,7 +278,7 @@ CONTAINS
          ENDIF
 
          CALL vector_gather_and_write (&
-            file_hist_basin, a_xsubs_elm, numelm, totalnumelm, 'v_xsubs_bsn', 'basin', elm_data_address, &
+            a_xsubs_elm, numelm, totalnumelm, elm_data_address, file_hist_basin, 'v_xsubs_bsn', 'basin', &
             itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
       ENDIF
 
@@ -291,7 +291,7 @@ CONTAINS
          ENDIF
 
          CALL vector_gather_and_write (&
-            file_hist_basin, a_xsubs_hru, numhru, totalnumhru, 'v_xsubs_hru', 'hydrounit', hru_data_address, &
+            a_xsubs_hru, numhru, totalnumhru, hru_data_address, file_hist_basin, 'v_xsubs_hru', 'hydrounit', &
             itime_in_file, 'SubSurface lateral flow between HRUs', 'm/s')
       ENDIF
 

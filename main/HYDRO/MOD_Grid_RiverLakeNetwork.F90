@@ -43,7 +43,7 @@ MODULE MOD_Grid_RiverLakeNetwork
    type(worker_pushdata_type)  :: allreduce_inpm
 
    ! ----- Part 2: between upstream and downstream unit catchments -----
-   integer,  allocatable :: ucat_next (:)   ! next unit catchment
+   integer,  allocatable :: ucat_next (:)  ! next unit catchment
    integer :: upnmax
    integer,  allocatable :: ucat_ups (:,:) ! upstream unit catchments
    real(r8), allocatable :: wts_ups  (:,:)

@@ -12,6 +12,7 @@ MODULE MOD_Catch_Vars_TimeVariables
 
    USE MOD_Precision
    USE MOD_Catch_BasinNetwork
+   USE MOD_Vars_Global, only: spval
    IMPLICIT NONE
 
    ! -- state variables (1): necessary for restart --
@@ -88,16 +89,16 @@ CONTAINS
    character(len=*), intent(in) :: file_restart
 
       CALL vector_read_and_scatter (file_restart, veloc_elm, numelm, 'veloc_riv', elm_data_address)
-      CALL worker_push_data  (iam_elm, iam_bsn, veloc_elm, veloc_riv)
+      CALL worker_push_data (push_elm2bsn, veloc_elm, veloc_riv, spval)
 
       CALL vector_read_and_scatter (file_restart, wdsrf_elm_prev, numelm, 'wdsrf_bsn_prev', elm_data_address)
-      CALL worker_push_data  (iam_elm, iam_bsn, wdsrf_elm_prev, wdsrf_bsn_prev)
+      CALL worker_push_data (push_elm2bsn, wdsrf_elm_prev, wdsrf_bsn_prev, spval)
 
       CALL vector_read_and_scatter (file_restart, veloc_hru, numhru, 'veloc_hru', hru_data_address)
-      CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, veloc_hru, veloc_bsnhru)
+      CALL worker_push_data (push_elmhru2bsnhru, veloc_hru, veloc_bsnhru, spval)
 
       CALL vector_read_and_scatter (file_restart, wdsrf_hru_prev, numhru, 'wdsrf_hru_prev', hru_data_address)
-      CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, wdsrf_hru_prev, wdsrf_bsnhru_prev)
+      CALL worker_push_data (push_elmhru2bsnhru, wdsrf_hru_prev, wdsrf_bsnhru_prev, spval)
 
    END SUBROUTINE READ_CatchTimeVariables
 
@@ -132,21 +133,21 @@ CONTAINS
             'long_name', 'index of hydrological units inside basin')
       ENDIF
 
-      CALL worker_push_data (iam_bsn, iam_elm, veloc_riv, veloc_elm)
+      CALL worker_push_data (push_bsn2elm, veloc_riv, veloc_elm, spval)
       CALL vector_gather_and_write (&
-         file_restart, veloc_elm, numelm, totalnumelm, 'veloc_riv', 'basin', elm_data_address)
+         veloc_elm, numelm, totalnumelm, elm_data_address, file_restart, 'veloc_riv', 'basin')
 
-      CALL worker_push_data (iam_bsn, iam_elm, wdsrf_bsn_prev, wdsrf_elm_prev)
+      CALL worker_push_data (push_bsn2elm, wdsrf_bsn_prev, wdsrf_elm_prev, spval)
       CALL vector_gather_and_write (&
-         file_restart, wdsrf_elm_prev, numelm, totalnumelm, 'wdsrf_bsn_prev', 'basin', elm_data_address)
+         wdsrf_elm_prev, numelm, totalnumelm, elm_data_address, file_restart, 'wdsrf_bsn_prev', 'basin')
 
-      CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, veloc_bsnhru, veloc_hru)
+      CALL worker_push_data (push_bsnhru2elmhru, veloc_bsnhru, veloc_hru, spval)
       CALL vector_gather_and_write (&
-         file_restart, veloc_hru, numhru, totalnumhru, 'veloc_hru', 'hydrounit', hru_data_address)
+         veloc_hru, numhru, totalnumhru, hru_data_address, file_restart, 'veloc_hru', 'hydrounit')
 
-      CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, wdsrf_bsnhru_prev, wdsrf_hru_prev)
+      CALL worker_push_data (push_bsnhru2elmhru, wdsrf_bsnhru_prev, wdsrf_hru_prev, spval)
       CALL vector_gather_and_write (&
-         file_restart, wdsrf_hru_prev, numhru, totalnumhru, 'wdsrf_hru_prev', 'hydrounit', hru_data_address)
+         wdsrf_hru_prev, numhru, totalnumhru, hru_data_address, file_restart, 'wdsrf_hru_prev', 'hydrounit')
 
    END SUBROUTINE WRITE_CatchTimeVariables
 

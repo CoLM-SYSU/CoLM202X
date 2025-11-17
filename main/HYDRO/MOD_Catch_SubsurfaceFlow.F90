@@ -59,7 +59,8 @@ CONTAINS
    USE MOD_LandElm
    USE MOD_LandPatch
    USE MOD_ElementNeighbour
-   USE MOD_Catch_BasinNetwork,     only: worker_push_data, iam_bsn, iam_elm
+   USE MOD_WorkerPushData,         only: worker_push_data
+   USE MOD_Catch_BasinNetwork,     only: push_bsn2elm
    USE MOD_Catch_RiverLakeNetwork, only: lake_id, riverdpth
    USE MOD_Vars_TimeInvariants,    only: patchtype, lakedepth
    IMPLICIT NONE
@@ -96,8 +97,8 @@ CONTAINS
          IF (numelm > 0) allocate (lakedepth_elm(numelm))
          IF (numelm > 0) allocate (wdsrf_elm    (numelm))
 
-         CALL worker_push_data (iam_bsn, iam_elm, lake_id,   lake_id_elm  )
-         CALL worker_push_data (iam_bsn, iam_elm, riverdpth, riverdpth_elm)
+         CALL worker_push_data (push_bsn2elm, lake_id,   lake_id_elm,   -9999)
+         CALL worker_push_data (push_bsn2elm, riverdpth, riverdpth_elm, spval)
 
          DO ielm = 1, numelm
             IF (lake_id_elm(ielm) <= 0) THEN

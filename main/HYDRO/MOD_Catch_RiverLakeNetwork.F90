@@ -533,8 +533,8 @@ CONTAINS
 
       ENDIF
 
-      CALL worker_push_data (iam_bsn, iam_elm, lake_id, lake_id_elm)
-      CALL worker_push_data (iam_bsn, iam_elm, lakedown_id_bsn, lakedown_id_elm)
+      CALL worker_push_data (push_bsn2elm, lake_id, lake_id_elm, -9999)
+      CALL worker_push_data (push_bsn2elm, lakedown_id_bsn, lakedown_id_elm, -9999)
 
       IF (p_is_worker) THEN
 
@@ -563,10 +563,10 @@ CONTAINS
          ENDDO
       ENDIF
 
-      CALL worker_push_data (iam_elm, iam_bsn, lakeoutlet_elm, lakeoutlet_bsn)
+      CALL worker_push_data (push_elm2bsn, lakeoutlet_elm, lakeoutlet_bsn, spval)
 
-      CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, unitarea_hru,  unitarea_bsnhru )
-      CALL worker_push_subset_data (iam_elm, iam_bsn, elm_hru, basin_hru, lakedepth_hru, lakedepth_bsnhru)
+      CALL worker_push_data (push_elmhru2bsnhru, unitarea_hru,  unitarea_bsnhru,  spval)
+      CALL worker_push_data (push_elmhru2bsnhru, lakedepth_hru, lakedepth_bsnhru, spval)
 
       IF (allocated (lake_id_elm    )) deallocate (lake_id_elm    )
       IF (allocated (lakedepth_hru  )) deallocate (lakedepth_hru  )
