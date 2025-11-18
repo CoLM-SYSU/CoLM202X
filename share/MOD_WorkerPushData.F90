@@ -484,6 +484,7 @@ CONTAINS
 
 #ifdef USEMPI
          allocate (pushdata_out%n_to_other (0:p_np_worker-1))
+         allocate (pushdata_out%to_other   (0:p_np_worker-1))
 
          DO iworker = 0, p_np_worker-1
 
@@ -509,6 +510,7 @@ CONTAINS
          ENDDO
 
          allocate (pushdata_out%n_from_other (0:p_np_worker-1))
+         allocate (pushdata_out%other_to     (0:p_np_worker-1))
 
          DO iworker = 0, p_np_worker-1
             pushdata_out%n_from_other(iworker) = 0

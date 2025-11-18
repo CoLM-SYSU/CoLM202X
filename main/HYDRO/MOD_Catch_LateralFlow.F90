@@ -226,7 +226,7 @@ CONTAINS
          ENDIF
 
          ! update surface water depth on patches
-         CALL worker_push_data (push_elmhru2bsnhru, wdsrf_bsnhru, wdsrf_hru, spval)
+         CALL worker_push_data (push_bsnhru2elmhru, wdsrf_bsnhru, wdsrf_hru, spval)
          DO i = 1, numhru
             wdsrf_hru(i) = max(0., wdsrf_hru(i))
             ps = hru_patch%substt(i)
