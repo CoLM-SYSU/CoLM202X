@@ -112,6 +112,10 @@ MODULE MOD_Grid
       final :: grid_concat_free_mem
    END type grid_concat_type
 
+
+   ! -- PUBLIC SUBROUTINEs --
+   PUBLIC :: get_region_by_this_IO
+
 CONTAINS
 
    ! --------------------------------
@@ -945,5 +949,56 @@ CONTAINS
       IF (allocated(this%ginfo%lon_c)) deallocate(this%ginfo%lon_c)
 
    END SUBROUTINE grid_concat_free_mem
+
+   ! -------
+   SUBROUTINE get_region_by_this_IO ( grid, &
+         west, east, north, south, iwest, ieast, isouth, inorth)
+
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
+
+   type(grid_type), intent(in) :: grid
+
+   real(r8), intent(out) :: west,  east,  north,  south
+   integer,  intent(out) :: iwest, ieast, inorth, isouth
+
+   ! Local Variables
+   integer :: iblk, jblk
+
+      IF (p_is_io) THEN
+
+         IF (gblock%nblkme /= 1) THEN
+            write(*,*) 'Warning: more than one block is on IO processor: ', p_iam_glb
+            west  = spval; iwest  = -1
+            east  = spval; ieast  = -1
+            north = spval; inorth = -1
+            south = spval; isouth = -1
+            RETURN
+         ENDIF
+
+         iblk = gblock%xblkme(1)
+         jblk = gblock%yblkme(1)
+
+         iwest = grid%xdsp(iblk) + 1
+         ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
+
+         IF (grid%yinc == 1) THEN
+            inorth = grid%ydsp(jblk) + grid%ycnt(jblk)
+            isouth = grid%ydsp(jblk) + 1
+         ELSE
+            inorth = grid%ydsp(jblk) + 1
+            isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
+         ENDIF
+
+         west  = grid%lon_w(iwest )
+         east  = grid%lon_e(ieast )
+         north = grid%lat_n(inorth)
+         south = grid%lat_s(isouth)
+
+      ENDIF
+
+   END SUBROUTINE get_region_by_this_IO
 
 END MODULE MOD_Grid

@@ -69,6 +69,10 @@ CONTAINS
    USE MOD_ElementNeighbour
    USE MOD_Catch_RiverLakeNetwork
 #endif
+#ifdef GridRiverLakeFlow
+   USE MOD_Grid_RiverLakeNetwork
+   USE MOD_Grid_Reservoir
+#endif
 #ifdef CROP
    USE MOD_CropReadin
 #endif
@@ -257,8 +261,17 @@ CONTAINS
    real(r8), parameter :: BVIC_USDA(0:12) = (/ 1., 0.300,  0.280, 0.250, 0.230,  0.220, 0.200,  0.180, 0.100,  0.090, 0.150, 0.080,  0.050/)
 
 
+
 #ifdef CatchLateralFlow
       CALL build_basin_network ()
+#endif
+
+#ifdef GridRiverLakeFlow
+      CALL build_riverlake_network ()
+
+      IF (DEF_Reservoir_Method > 0) THEN
+         CALL reservoir_init ()
+      ENDIF
 #endif
 
 ! --------------------------------------------------------------------
@@ -653,7 +666,7 @@ ENDIF
       max_depth_cryoturb         = 3._r8
 
       br              = 2.525e-6_r8
-      br_root         = 0.83e-6_r8
+      br_root         = 2.000e-6_r8
 
       fstor2tran      = 0.5
       ndays_on        = 30
@@ -1517,6 +1530,25 @@ ENDIF
 
       IF (allocated(patcharea)) deallocate(patcharea)
 
+#endif
+
+#ifdef GridRiverLakeFlow
+      IF (p_is_worker) THEN
+         IF (numucat > 0) THEN
+            wdsrf_ucat = topo_rivhgt
+            veloc_riv  = 0
+         ENDIF
+
+         IF (DEF_Reservoir_Method > 0) THEN
+            IF (numresv > 0) THEN
+               WHERE (idate(1) >= dam_build_year)
+                  volresv = volresv_normal
+               ELSEWHERE
+                  volresv = spval
+               END WHERE
+            ENDIF
+         ENDIF
+      ENDIF
 #endif
 
 #ifdef DataAssimilation

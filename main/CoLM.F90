@@ -64,6 +64,9 @@ PROGRAM CoLM
    USE MOD_Catch_BasinNetwork
    USE MOD_Catch_LateralFlow
 #endif
+#if (defined GridRiverLakeFlow)
+   USE MOD_Grid_RiverLakeFlow
+#endif
 
    USE MOD_Ozone, only: init_ozone_data, update_ozone_data
 
@@ -269,6 +272,10 @@ PROGRAM CoLM
 
 #ifdef CatchLateralFlow
       CALL build_basin_network ()
+#endif
+
+#ifdef GridRiverLakeFlow
+      CALL grid_riverlake_flow_init ()
 #endif
 #endif
 
@@ -482,15 +489,21 @@ PROGRAM CoLM
 #if (defined CatchLateralFlow)
          CALL lateral_flow (idate(1), deltim)
 #endif
+
+#if (defined GridRiverLakeFlow)
+         CALL grid_riverlake_flow (idate(1), deltim)
+#endif
+
 #if (defined CaMa_Flood)
 #ifdef USEMPI
-            CALL mpi_barrier (p_comm_glb, p_err)
+         CALL mpi_barrier (p_comm_glb, p_err)
 #endif
          CALL colm_CaMa_drv(idate(3)) ! run CaMa-Flood
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 #endif
+
 #ifdef DataAssimilation
          CALL run_DA (idate, deltim)
 #endif
@@ -648,6 +661,10 @@ PROGRAM CoLM
 
 #if (defined CatchLateralFlow)
       CALL lateral_flow_final ()
+#endif
+
+#if (defined GridRiverLakeFlow)
+      CALL grid_riverlake_flow_final ()
 #endif
 
       CALL forcing_final ()

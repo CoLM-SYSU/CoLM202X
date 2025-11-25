@@ -338,8 +338,13 @@ CONTAINS
 #ifdef USEMPI
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
 
-      ngrp = max((p_np_glb-1) / DEF_PIO_groupsize, 1)
-      ngrp = min(ngrp, numblocks)
+      IF ((mod(p_np_glb,DEF_PIO_groupsize) == 0) .and. (DEF_PIO_groupsize > 2)) THEN
+         ngrp = p_np_glb / DEF_PIO_groupsize
+      ELSE
+         ngrp = (p_np_glb-1) / DEF_PIO_groupsize
+      ENDIF
+      ngrp = min(max(ngrp, 1), numblocks)
+
       CALL divide_processes_into_groups (ngrp)
 #endif
 
@@ -428,8 +433,13 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_master) THEN
-         ngrp = max((p_np_glb-1) / DEF_PIO_groupsize, 1)
-         ngrp = min(ngrp, numblocks)
+
+         IF ((mod(p_np_glb,DEF_PIO_groupsize) == 0) .and. (DEF_PIO_groupsize > 2)) THEN
+            ngrp = p_np_glb / DEF_PIO_groupsize
+         ELSE
+            ngrp = (p_np_glb-1) / DEF_PIO_groupsize
+         ENDIF
+         ngrp = min(max(ngrp, 1), numblocks)
 
          DO WHILE (.true.)
 
@@ -461,7 +471,16 @@ CONTAINS
                deallocate (nelm_io)
             ENDIF
          ENDDO
+
+         IF (DEF_nIO_eq_nBlock) THEN
+            ngrp = numblocks
+         ENDIF
+
+         IF ((p_np_glb-1)/ngrp < 2) THEN
+            CALL CoLM_stop ('CoLM called STOP: Too many groups or Too few processors for this case.')
+         ENDIF
       ENDIF
+
 
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)
       CALL mpi_bcast (ngrp,      1, MPI_INTEGER, p_address_master, p_comm_glb, p_err)

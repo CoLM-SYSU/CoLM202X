@@ -29,6 +29,9 @@ MODULE MOD_Hist
 #ifdef CatchLateralFlow
    USE MOD_Catch_Hist
 #endif
+#ifdef GridRiverLakeFlow
+   USE MOD_Grid_RiverLakeHist
+#endif
 #ifdef EXTERNAL_LAKE
    USE MOD_Lake_Hist
 #endif
@@ -80,6 +83,10 @@ CONTAINS
       CALL hist_basin_init ()
 #endif
 
+#ifdef GridRiverLakeFlow
+      CALL hist_grid_riverlake_init ()
+#endif
+
    END SUBROUTINE hist_init
 
 
@@ -95,6 +102,10 @@ CONTAINS
 
 #ifdef CatchLateralFlow
       CALL hist_basin_final ()
+#endif
+
+#ifdef GridRiverLakeFlow
+      CALL hist_grid_riverlake_final ()
 #endif
 
    END SUBROUTINE hist_final
@@ -167,7 +178,7 @@ CONTAINS
    logical,  allocatable ::  filter_dt  (:)
 
 #ifdef CROP
-   type(block_data_real8_2d) :: sumarea_crop                        
+   type(block_data_real8_2d) :: sumarea_crop
    type(block_data_real8_2d) :: sumarea_irrig
    logical,  allocatable ::  filter_crop (:)
    logical,  allocatable ::  filter_irrig (:)
@@ -1446,7 +1457,7 @@ ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_demand, &
                vecacc, file_hist, 'f_reservoirriver_demand', itime_in_file, sumarea_irrig, filter_irrig, &
                'irrigation demand for reservoir or river','kg/m2')
-            
+
             ! irrigation supply from reservoir or river [kg/m2]
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
@@ -1456,7 +1467,7 @@ ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
                vecacc, file_hist, 'f_reservoirriver_supply', itime_in_file, sumarea_irrig, filter_irrig, &
                'irrigation supply from reservoir or river','kg/m2')
-            
+
             ! irrigation supply from reservoir [kg/m2]
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
@@ -1476,7 +1487,7 @@ ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
                vecacc, file_hist, 'f_river_supply', itime_in_file, sumarea_irrig, filter_irrig, &
                'irrigation supply from river','kg/m2')
-            
+
             ! irrigation supply from runoff [kg/m2]
             IF (p_is_worker) THEN
                IF (numpatch > 0) THEN
@@ -1485,7 +1496,7 @@ ENDIF
             ENDIF
             CALL write_history_variable_2d ( DEF_hist_vars%reservoirriver_supply, &
                vecacc, file_hist, 'f_runoff_supply', itime_in_file, sumarea_irrig, filter_irrig, &
-               'irrigation supply from runoff','kg/m2')   
+               'irrigation supply from runoff','kg/m2')
          ENDIF
 #endif
 
@@ -1947,6 +1958,21 @@ ENDIF
              a_leafc_enftemp, file_hist, 'f_leafc_enftemp', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for needleleaf evergreen temperate tree','gC/m2')
 
+         ! 1: leaf area index enf temperate
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_enftemp, &
+             a_lai_enftemp, file_hist, 'f_lai_enftemp', itime_in_file, sumarea, filter, &
+             'leaf area index for needleleaf evergreen temperate tree','m2/m2')
+
+         ! 1: npp enf temperate
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_enftemp, &
+             a_npp_enftemp, file_hist, 'f_npp_enftemp', itime_in_file, sumarea, filter, &
+             'npp for needleleaf evergreen temperate tree','m2/m2')
+
+         ! 1: npp to leafc enf temperate
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_enftemp, &
+             a_npptoleafc_enftemp, file_hist, 'f_npptoleafc_enftemp', itime_in_file, sumarea, filter, &
+             'npp to leafc for needleleaf evergreen temperate tree','m2/m2')
+
          ! 2: gpp enf boreal
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_enfboreal, &
              a_gpp_enfboreal, file_hist, 'f_gpp_enfboreal', itime_in_file, sumarea, filter, &
@@ -1956,6 +1982,21 @@ ENDIF
          CALL write_history_variable_2d ( DEF_hist_vars%leafc_enfboreal, &
              a_leafc_enfboreal, file_hist, 'f_leafc_enfboreal', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for needleleaf evergreen boreal tree','gC/m2')
+
+         ! 2: leaf area index enf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_enfboreal, &
+             a_lai_enfboreal, file_hist, 'f_lai_enfboreal', itime_in_file, sumarea, filter, &
+             'leaf area index for needleleaf evergreen boreal tree','m2/m2')
+
+         ! 2: npp enf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_enfboreal, &
+             a_npp_enfboreal, file_hist, 'f_npp_enfboreal', itime_in_file, sumarea, filter, &
+             'npp for needleleaf evergreen boreal tree','m2/m2')
+
+         ! 2: npp to leafc enf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_enfboreal, &
+             a_npptoleafc_enfboreal, file_hist, 'f_npptoleafc_enfboreal', itime_in_file, sumarea, filter, &
+             'npp to leafc for needleleaf evergreen boreal tree','m2/m2')
 
          ! 3: gpp dnf boreal
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_dnfboreal, &
@@ -1967,6 +2008,21 @@ ENDIF
              a_leafc_dnfboreal, file_hist, 'f_leafc_dnfboreal', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for needleleaf deciduous boreal tree','gC/m2')
 
+         ! 3: leaf area index dnf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_dnfboreal, &
+             a_lai_dnfboreal, file_hist, 'f_lai_dnfboreal', itime_in_file, sumarea, filter, &
+             'leaf area index for needleleaf deciduous boreal tree','m2/m2')
+
+         ! 3: npp dnf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_dnfboreal, &
+             a_npp_dnfboreal, file_hist, 'f_npp_dnfboreal', itime_in_file, sumarea, filter, &
+             'npp for needleleaf deciduous boreal tree','m2/m2')
+
+         ! 3: npp to leafc dnf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_dnfboreal, &
+             a_npptoleafc_dnfboreal, file_hist, 'f_npptoleafc_dnfboreal', itime_in_file, sumarea, filter, &
+             'npp to leafc for needleleaf deciduous boreal tree','m2/m2')
+
          ! 4: gpp ebf trop
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_ebftrop, &
              a_gpp_ebftrop, file_hist, 'f_gpp_ebftrop', itime_in_file, sumarea, filter, &
@@ -1976,6 +2032,21 @@ ENDIF
          CALL write_history_variable_2d ( DEF_hist_vars%leafc_ebftrop, &
              a_leafc_ebftrop, file_hist, 'f_leafc_ebftrop', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf evergreen tropical tree','gC/m2')
+
+         ! 4: leaf area index ebf trop
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_ebftrop, &
+             a_lai_ebftrop, file_hist, 'f_lai_ebftrop', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf evergreen tropical tree','m2/m2')
+
+         ! 4: npp ebf trop
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_ebftrop, &
+             a_npp_ebftrop, file_hist, 'f_npp_ebftrop', itime_in_file, sumarea, filter, &
+             'npp for broadleaf evergreen tropical tree','m2/m2')
+
+         ! 4: npp to leafc ebf trop
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_ebftrop, &
+             a_npptoleafc_ebftrop, file_hist, 'f_npptoleafc_ebftrop', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf evergreen tropical tree','m2/m2')
 
          ! 5: gpp ebf temp
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_ebftemp, &
@@ -1987,6 +2058,21 @@ ENDIF
              a_leafc_ebftemp, file_hist, 'f_leafc_ebftemp', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf evergreen temperate tree','gC/m2')
 
+         ! 5: leaf area index ebf temp
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_ebftemp, &
+             a_lai_ebftemp, file_hist, 'f_lai_ebftemp', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf evergreen temperate tree','m2/m2')
+
+         ! 5: npp ebf temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_ebftemp, &
+             a_npp_ebftemp, file_hist, 'f_npp_ebftemp', itime_in_file, sumarea, filter, &
+             'npp for broadleaf evergreen temperate tree','m2/m2')
+
+         ! 5: npp to leafc ebf temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_ebftemp, &
+             a_npptoleafc_ebftemp, file_hist, 'f_npptoleafc_ebftemp', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf evergreen temperate tree','m2/m2')
+
          ! 6: gpp dbf trop
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_dbftrop, &
              a_gpp_dbftrop, file_hist, 'f_gpp_dbftrop', itime_in_file, sumarea, filter, &
@@ -1996,6 +2082,21 @@ ENDIF
          CALL write_history_variable_2d ( DEF_hist_vars%leafc_dbftrop, &
              a_leafc_dbftrop, file_hist, 'f_leafc_dbftrop', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf deciduous tropical tree','gC/m2')
+
+         ! 6: leaf area index dbf trop
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_dbftrop, &
+             a_lai_dbftrop, file_hist, 'f_lai_dbftrop', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf evergreen temperate tree','m2/m2')
+
+         ! 6: npp dbf trop
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_dbftrop, &
+             a_npp_dbftrop, file_hist, 'f_npp_dbftrop', itime_in_file, sumarea, filter, &
+             'npp for broadleaf evergreen temperate tree','m2/m2')
+
+         ! 6: npp to leafc dbf trop
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_dbftrop, &
+             a_npptoleafc_dbftrop, file_hist, 'f_npptoleafc_dbftrop', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf evergreen temperate tree','m2/m2')
 
          ! 7: gpp dbf temp
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_dbftemp, &
@@ -2007,6 +2108,21 @@ ENDIF
              a_leafc_dbftemp, file_hist, 'f_leafc_dbftemp', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf deciduous temperate tree','gC/m2')
 
+         ! 7: leaf area index dbf temp
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_dbftemp, &
+             a_lai_dbftemp, file_hist, 'f_lai_dbftemp', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf decidous temperate tree','m2/m2')
+
+         ! 7: npp dbf temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_dbftemp, &
+             a_npp_dbftemp, file_hist, 'f_npp_dbftemp', itime_in_file, sumarea, filter, &
+             'npp for broadleaf decidous temperate tree','m2/m2')
+
+         ! 7: npp to leafc dbf temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_dbftemp, &
+             a_npptoleafc_dbftemp, file_hist, 'f_npptoleafc_dbftemp', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf decidous temperate tree','m2/m2')
+
          ! 8: gpp dbf boreal
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_dbfboreal, &
              a_gpp_dbfboreal, file_hist, 'f_gpp_dbfboreal', itime_in_file, sumarea, filter, &
@@ -2016,6 +2132,21 @@ ENDIF
          CALL write_history_variable_2d ( DEF_hist_vars%leafc_dbfboreal, &
              a_leafc_dbfboreal, file_hist, 'f_leafc_dbfboreal', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf deciduous boreal tree','gC/m2')
+
+         ! 8: leaf area index dbf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_dbfboreal, &
+             a_lai_dbfboreal, file_hist, 'f_lai_dbfboreal', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf decidous boreal tree','m2/m2')
+
+         ! 8: npp dbf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_dbfboreal, &
+             a_npp_dbfboreal, file_hist, 'f_npp_dbfboreal', itime_in_file, sumarea, filter, &
+             'npp for broadleaf decidous boreal tree','m2/m2')
+
+         ! 8: npp to leafc dbf boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_dbfboreal, &
+             a_npptoleafc_dbfboreal, file_hist, 'f_npptoleafc_dbfboreal', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf decidous boreal tree','m2/m2')
 
          ! 9: gpp ebs temp
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_ebstemp, &
@@ -2027,6 +2158,21 @@ ENDIF
              a_leafc_ebstemp, file_hist, 'f_leafc_ebstemp', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf evergreen temperate shrub','gC/m2')
 
+         ! 9: leaf area index ebs temp
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_ebstemp, &
+             a_lai_ebstemp, file_hist, 'f_lai_ebstemp', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf evergreen temperate shrub','m2/m2')
+
+         ! 9: npp ebs temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_ebstemp, &
+             a_npp_ebstemp, file_hist, 'f_npp_ebstemp', itime_in_file, sumarea, filter, &
+             'npp for broadleaf evergreen temperate shrub','m2/m2')
+
+         ! 9: npp to leafc ebs temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_ebstemp, &
+             a_npptoleafc_ebstemp, file_hist, 'f_npptoleafc_ebstemp', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf evergreen temperate shrub','m2/m2')
+
          ! 10: gpp dbs temp
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_dbstemp, &
              a_gpp_dbstemp, file_hist, 'f_gpp_dbstemp', itime_in_file, sumarea, filter, &
@@ -2036,6 +2182,21 @@ ENDIF
          CALL write_history_variable_2d ( DEF_hist_vars%leafc_dbstemp, &
              a_leafc_dbstemp, file_hist, 'f_leafc_dbstemp', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf deciduous temperate shrub','gC/m2')
+
+         ! 10: leaf area index dbs temp
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_dbstemp, &
+             a_lai_dbstemp, file_hist, 'f_lai_dbstemp', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf deciduous temperate shrub','m2/m2')
+
+         ! 10: npp dbs temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_dbstemp, &
+             a_npp_dbstemp, file_hist, 'f_npp_dbstemp', itime_in_file, sumarea, filter, &
+             'npp for broadleaf deciduous temperate shrub','m2/m2')
+
+         ! 10: npp to leafc dbs temp
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_dbstemp, &
+             a_npptoleafc_dbstemp, file_hist, 'f_npptoleafc_dbstemp', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf deciduous temperate shrub','m2/m2')
 
          ! 11: gpp dbs boreal
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_dbsboreal, &
@@ -2047,15 +2208,45 @@ ENDIF
              a_leafc_dbsboreal, file_hist, 'f_leafc_dbsboreal', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for broadleaf deciduous boreal shrub','gC/m2')
 
+         ! 11: leaf area index dbs boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_dbsboreal, &
+             a_lai_dbsboreal, file_hist, 'f_lai_dbsboreal', itime_in_file, sumarea, filter, &
+             'leaf area index for broadleaf deciduous boreal shrub','m2/m2')
+
+         ! 11: npp dbs boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_dbsboreal, &
+             a_npp_dbsboreal, file_hist, 'f_npp_dbsboreal', itime_in_file, sumarea, filter, &
+             'npp for broadleaf deciduous boreal shrub','m2/m2')
+
+         ! 11: npp to leafc dbs boreal
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_dbsboreal, &
+             a_npptoleafc_dbsboreal, file_hist, 'f_npptoleafc_dbsboreal', itime_in_file, sumarea, filter, &
+             'npp to leafc for broadleaf deciduous boreal shrub','m2/m2')
+
          ! 12: gpp arctic c3 grass
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_c3arcgrass, &
              a_gpp_c3arcgrass, file_hist, 'f_gpp_c3arcgrass', itime_in_file, sumarea, filter, &
              'gross primary productivity for c3 arctic grass','gC/m2/s')
 
-         ! 12: leaf carbon display pool c3 grass
-         CALL write_history_variable_2d ( DEF_hist_vars%leafc_c3grass, &
-             a_leafc_c3grass, file_hist, 'f_leafc_c3grass', itime_in_file, sumarea, filter, &
-             'leaf carbon display pool for c3 grass','gC/m2')
+         ! 12: leaf carbon display pool c3 arctic grass
+         CALL write_history_variable_2d ( DEF_hist_vars%leafc_c3arcgrass, &
+             a_leafc_c3arcgrass, file_hist, 'f_leafc_c3arcgrass', itime_in_file, sumarea, filter, &
+             'leaf carbon display pool for c3 arctic grass','gC/m2')
+
+         ! 12: leaf area index c3 arctic grass
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_c3arcgrass, &
+             a_lai_c3arcgrass, file_hist, 'f_lai_c3arcgrass', itime_in_file, sumarea, filter, &
+             'leaf area index for c3 arctic grass','gC/m2')
+
+         ! 12: npp c3 arctic grass
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_c3arcgrass, &
+             a_npp_c3arcgrass, file_hist, 'f_npp_c3arcgrass', itime_in_file, sumarea, filter, &
+             'npp for c3 arctic grass','gC/m2')
+
+         ! 12: npp to leafc c3 arctic grass
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_c3arcgrass, &
+             a_npptoleafc_c3arcgrass, file_hist, 'f_npptoleafc_c3arcgrass', itime_in_file, sumarea, filter, &
+             'npp to leafc for c3 arctic grass','gC/m2')
 
          ! 13: gpp c3 grass
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_c3grass, &
@@ -2067,6 +2258,21 @@ ENDIF
              a_leafc_c3grass, file_hist, 'f_leafc_c3grass', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for c3 arctic grass','gC/m2')
 
+         ! 13: leaf area index arctic c3 grass
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_c3grass, &
+             a_lai_c3grass, file_hist, 'f_lai_c3grass', itime_in_file, sumarea, filter, &
+             'leaf area index for c3 arctic grass','gC/m2')
+
+         ! 13: npp arctic c3 grass
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_c3grass, &
+             a_npp_c3grass, file_hist, 'f_npp_c3grass', itime_in_file, sumarea, filter, &
+             'npp for c3 arctic grass','gC/m2')
+
+         ! 13: npp to leafc arctic c3 grass
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_c3grass, &
+             a_npptoleafc_c3grass, file_hist, 'f_npptoleafc_c3grass', itime_in_file, sumarea, filter, &
+             'npp to leafc for c3 arctic grass','gC/m2')
+
          ! 14: gpp c4 grass
          CALL write_history_variable_2d ( DEF_hist_vars%gpp_c4grass, &
              a_gpp_c4grass, file_hist, 'f_gpp_c4grass', itime_in_file, sumarea, filter, &
@@ -2076,6 +2282,21 @@ ENDIF
          CALL write_history_variable_2d ( DEF_hist_vars%leafc_c4grass, &
              a_leafc_c4grass, file_hist, 'f_leafc_c4grass', itime_in_file, sumarea, filter, &
              'leaf carbon display pool for c4 arctic grass','gC/m2')
+
+         ! 14: leaf area index arctic c4 grass
+         CALL write_history_variable_2d ( DEF_hist_vars%lai_c4grass, &
+             a_lai_c4grass, file_hist, 'f_lai_c4grass', itime_in_file, sumarea, filter, &
+             'leaf area index for c4 arctic grass','gC/m2')
+
+         ! 14: npp arctic c4 grass
+         CALL write_history_variable_2d ( DEF_hist_vars%npp_c4grass, &
+             a_npp_c4grass, file_hist, 'f_npp_c4grass', itime_in_file, sumarea, filter, &
+             'npp for c4 arctic grass','gC/m2')
+
+         ! 14: npp to leafc arctic c4 grass
+         CALL write_history_variable_2d ( DEF_hist_vars%npptoleafc_c4grass, &
+             a_npptoleafc_c4grass, file_hist, 'f_npptoleafc_c4grass', itime_in_file, sumarea, filter, &
+             'npp to leafc for c4 arctic grass','gC/m2')
 
 #ifdef CROP
 !*****************************************
@@ -4304,6 +4525,10 @@ ENDIF
 
 #ifdef CatchLateralFlow
          CALL hist_basin_out (file_hist, idate)
+#endif
+
+#ifdef GridRiverLakeFlow
+         CALL hist_grid_riverlake_out (file_hist, idate, itime_in_file)
 #endif
 
          IF (allocated(filter    )) deallocate (filter    )

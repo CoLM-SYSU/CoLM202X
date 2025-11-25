@@ -179,6 +179,7 @@ CONTAINS
 
                ithis = ithis + 1
                b_up2down(ithis) = i
+               iups_nst(i) = -1
 
                j = basindown(i)
                DO WHILE (j > 0)
@@ -188,6 +189,8 @@ CONTAINS
                   IF (iups_nst(j) == nups_nst(j)) THEN
                      ithis = ithis + 1
                      b_up2down(ithis) = j
+                     iups_nst(j) = -1
+
                      j = basindown(j)
                   ELSE
                      EXIT

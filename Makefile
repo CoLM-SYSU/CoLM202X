@@ -49,6 +49,7 @@ OBJS_SHARED =    \
 				  MOD_NetCDFVector.o           \
 				  MOD_RangeCheck.o             \
 				  MOD_SpatialMapping.o         \
+				  MOD_WorkerPushData.o         \
 				  MOD_AggregationRequestData.o \
 				  MOD_PixelsetShared.o         \
 				  MOD_LandElm.o                \
@@ -106,10 +107,13 @@ mksrfdata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
 # ----- End of Target 1 mksrfdata ----
 
 OBJS_BASIC =    \
+				 MOD_Vector_ReadWrite.o         \
 				 MOD_Catch_BasinNetwork.o       \
-				 MOD_Catch_IO.o                 \
 				 MOD_Catch_Vars_TimeVariables.o \
 				 MOD_Catch_Vars_1DFluxes.o      \
+				 MOD_Grid_RiverLakeNetwork.o    \
+				 MOD_Grid_Reservoir.o           \
+				 MOD_Grid_RiverLakeTimeVars.o   \
 				 MOD_BGC_Vars_1DFluxes.o        \
 				 MOD_BGC_Vars_1DPFTFluxes.o     \
 				 MOD_BGC_Vars_PFTimeVariables.o \
@@ -189,10 +193,13 @@ mkinidata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MKINIDAT
 	@echo ''
 # ----- End of Target 2 mkinidata ----
 
-DEF  = $(shell grep -i cama_flood include/define.h)
-CaMa = $(word 1, ${DEF})
-ifeq (${CaMa},\#define)# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
-
+CaMa = $(shell \
+	CAMA_INIT=$$(grep -E '^\#(define|undef)[[:space:]]+CaMa_Flood' $(HEADER) | head -1 | grep -q 'define' && echo 1 || echo 0); \
+	SP=$$(grep -E '^\#(define|undef)[[:space:]]+SinglePoint' $(HEADER) | tail -1 | grep -q 'define' && echo 1 || echo 0); \
+	MP=$$(if [ $$SP -eq 1 ]; then echo 0; else grep -E '^\#(define|undef)[[:space:]]+USEMPI' $(HEADER) | head -1 | grep -q 'define' && echo 1 || echo 0; fi); \
+	if [ $$CAMA_INIT -eq 0 ]; then echo NO; elif [ $$SP -eq 1 ] || [ $$MP -eq 0 ]; then echo NO; else echo YES; fi)
+ifeq (${CaMa},YES)# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
+#
 OBJECTS_CAMA=\
 				  parkind1.o              \
 				  yos_cmf_input.o         \
@@ -314,11 +321,13 @@ OBJS_MAIN = \
 				MOD_HistGridded.o                         \
 				MOD_HistVector.o                          \
 				MOD_HistSingle.o                          \
+				MOD_Grid_RiverLakeHist.o                  \
 				MOD_Hist.o                                \
 				MOD_CheckEquilibrium.o                    \
 				MOD_LightningData.o                       \
 				MOD_CaMa_colmCaMa.o                       \
 				MOD_Catch_LateralFlow.o                   \
+				MOD_Grid_RiverLakeFlow.o                  \
 				MOD_Urban_Longwave.o                      \
 				MOD_Urban_NetSolar.o                      \
 				MOD_Urban_Flux.o                          \
@@ -352,7 +361,7 @@ OBJS_MAIN_T = $(addprefix .bld/,${OBJS_MAIN})
 
 # ------ Target 3: main --------
 
-ifneq (${CaMa},\#define)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
+ifneq (${CaMa},YES)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
 
 colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
