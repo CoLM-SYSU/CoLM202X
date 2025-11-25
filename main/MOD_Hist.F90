@@ -84,7 +84,7 @@ CONTAINS
 #endif
 
 #ifdef GridRiverLakeFlow
-      CALL hist_grid_riverlake_init ()
+      CALL hist_grid_riverlake_init (HistForm)
 #endif
 
    END SUBROUTINE hist_init
@@ -173,7 +173,9 @@ CONTAINS
    type(block_data_real8_2d) :: sumarea
    type(block_data_real8_2d) :: sumarea_dt
    type(block_data_real8_2d) :: sumarea_urb
+   type(block_data_real8_2d) :: sumarea_one
    real(r8), allocatable ::  vecacc     (:)
+   real(r8), allocatable ::  nac_one    (:)
    logical,  allocatable ::  filter     (:)
    logical,  allocatable ::  filter_dt  (:)
 
@@ -4528,7 +4530,48 @@ ENDIF
 #endif
 
 #ifdef GridRiverLakeFlow
-         CALL hist_grid_riverlake_out (file_hist, idate, itime_in_file)
+         CALL hist_grid_riverlake_out (file_hist, HistForm, idate, &
+            itime_in_file, trim(file_hist)/=trim(file_last))
+
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               allocate (nac_one (numpatch))
+               nac_one = 1.
+            ENDIF
+         ENDIF
+
+         IF (p_is_io) CALL allocate_block_data (ghist, sumarea_one)
+         IF (p_is_io) CALL flush_block_data (sumarea_one, 1.)
+
+         CALL write_history_variable_2d ( DEF_hist_vars%riv_height, a_wdsrf_ucat_pch,   &
+            file_hist, 'f_wdpth_ucat_regrid', itime_in_file, sumarea_ucat, filter_ucat, &
+            'regridded deepest water depth in river and flood plain', 'm', nac_one)
+
+         CALL write_history_variable_2d ( DEF_hist_vars%riv_veloct, a_veloc_riv_pch,    &
+            file_hist, 'f_veloc_riv_regrid', itime_in_file, sumarea_ucat, filter_ucat,  &
+            'regridded water velocity in river', 'm/s', nac_one)
+
+         CALL write_history_variable_2d ( DEF_hist_vars%discharge, a_discharge_pch,     &
+            file_hist, 'f_discharge', itime_in_file, sumarea_one, filter_ucat,          &
+            'regridded discharge in river and flood plain', 'm^3/s',                    &
+            nac_one, input_mode = 'total')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%discharge, a_dis_rmth_pch,      &
+            file_hist, 'f_discharge_rivermouth_regrid', itime_in_file, sumarea_one,     &
+            filter_ucat, 'regridded river mouth discharge into ocean', 'm^3/s',         &
+            nac_one, input_mode = 'total')
+
+         CALL write_history_variable_2d ( DEF_hist_vars%floodfrc, a_floodfrc_pch,       &
+            file_hist, 'f_floodfrc', itime_in_file, sumarea_inpm, filter_inpm,          &
+            'flooded area fraction', '100%', nac_one)
+
+         IF (trim(HistForm) == 'Gridded') THEN
+            CALL write_history_variable_2d ( DEF_hist_vars%floodarea, a_floodfrc_pch,   &
+               file_hist, 'f_floodarea', itime_in_file, sumarea_one, filter_inpm,       &
+               'flooded area', 'km^2', nac_one)
+         ENDIF
+
+         IF (allocated(nac_one   )) deallocate (nac_one   )
 #endif
 
          IF (allocated(filter    )) deallocate (filter    )
@@ -4554,7 +4597,7 @@ ENDIF
 
    SUBROUTINE write_history_variable_2d ( is_hist, &
          acc_vec, file_hist, varname, itime_in_file, sumarea, filter, &
-         longname, units, acc_num)
+         longname, units, acc_num, input_mode)
 
    USE MOD_Vars_1DAccFluxes, only: nac
 
@@ -4572,6 +4615,8 @@ ENDIF
    type(block_data_real8_2d), intent(in) :: sumarea
    logical, intent(in) :: filter(:)
    real(r8), intent(in), optional  :: acc_num(:)
+
+   character(len=*), intent(in), optional :: input_mode
 
       IF (.not. is_hist) RETURN
 
@@ -4593,12 +4638,22 @@ ENDIF
 
       select CASE (HistForm)
       CASE ('Gridded')
-         CALL flux_map_and_write_2d ( &
-            acc_vec, file_hist, varname, itime_in_file, sumarea, filter, longname, units)
+         IF (present(input_mode)) THEN
+            CALL flux_map_and_write_2d ( &
+               acc_vec, file_hist, varname, itime_in_file, sumarea, filter, longname, units, input_mode)
+         ELSE
+            CALL flux_map_and_write_2d ( &
+               acc_vec, file_hist, varname, itime_in_file, sumarea, filter, longname, units)
+         ENDIF
 #if (defined UNSTRUCTURED || defined CATCHMENT)
       CASE ('Vector')
-         CALL aggregate_to_vector_and_write_2d ( &
-            acc_vec, file_hist, varname, itime_in_file, filter, longname, units)
+         IF (present(input_mode)) THEN
+            CALL aggregate_to_vector_and_write_2d ( &
+               acc_vec, file_hist, varname, itime_in_file, filter, longname, units, input_mode)
+         ELSE
+            CALL aggregate_to_vector_and_write_2d ( &
+               acc_vec, file_hist, varname, itime_in_file, filter, longname, units)
+         ENDIF
 #endif
 #ifdef SinglePoint
       CASE ('Single')

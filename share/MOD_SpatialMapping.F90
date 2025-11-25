@@ -511,7 +511,13 @@ CONTAINS
       ENDIF
 
       IF (p_is_io) CALL allocate_block_data (fgrid, this%areagrid)
-      CALL this%get_sumarea (this%areagrid)
+      IF (p_is_worker) THEN
+         IF (this%npset > 0) THEN
+            allocate (msk (this%npset))
+            msk = pixelset%ipxstt > 0 .and. pixelset%ipxend > 0
+         ENDIF
+      ENDIF
+      CALL this%get_sumarea (this%areagrid, msk)
 
 
 #ifdef USEMPI
@@ -936,7 +942,13 @@ CONTAINS
       ENDIF
 
       IF (p_is_io)  CALL allocate_block_data (fgrid, this%areagrid)
-      CALL this%get_sumarea (this%areagrid)
+      IF (p_is_worker) THEN
+         IF (this%npset > 0) THEN
+            allocate (msk (this%npset))
+            msk = pixelset%ipxstt > 0 .and. pixelset%ipxend > 0
+         ENDIF
+      ENDIF
+      CALL this%get_sumarea (this%areagrid, msk)
 
 
       IF (allocated(this%grid%lat_s)) deallocate(this%grid%lat_s)
@@ -1087,7 +1099,7 @@ CONTAINS
    END SUBROUTINE spatial_mapping_set_missing_value
 
    !-----------------------------------------------------
-   SUBROUTINE spatial_mapping_pset2grid_2d (this, pdata, gdata, spv, msk)
+   SUBROUTINE spatial_mapping_pset2grid_2d (this, pdata, gdata, spv, msk, input_mode)
 
    USE MOD_Precision
    USE MOD_Grid
@@ -1103,14 +1115,21 @@ CONTAINS
    real(r8), intent(in), optional :: spv
    logical,  intent(in), optional :: msk(:)
 
+   character(len=*), intent(in), optional :: input_mode
+
    ! Local variables
    integer :: iproc, idest, isrc
    integer :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset, ipart
 
    real(r8), allocatable :: gbuff(:)
    type(pointer_real8_1d), allocatable :: pbuff(:)
+   character(len=256) :: inmode
+   real(r8) :: sumwt
 
       IF (p_is_worker) THEN
+
+         inmode = 'average'
+         IF (present(input_mode)) inmode = trim(input_mode)
 
          allocate (pbuff (0:p_np_io-1))
 
@@ -1136,6 +1155,12 @@ CONTAINS
                IF (.not. msk(iset)) CYCLE
             ENDIF
 
+            IF ((this%npart(iset) > 0) .and. (trim(inmode) == 'total')) THEN
+               sumwt = sum(this%areapart(iset)%val)
+            ELSE
+               sumwt = 1.
+            ENDIF
+
             DO ipart = 1, this%npart(iset)
                iproc = this%address(iset)%val(1,ipart)
                iloc  = this%address(iset)%val(2,ipart)
@@ -1143,14 +1168,14 @@ CONTAINS
                IF (present(spv)) THEN
                   IF (pbuff(iproc)%val(iloc) /= spv) THEN
                      pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
-                        + pdata(iset) * this%areapart(iset)%val(ipart)
+                        + pdata(iset)/sumwt * this%areapart(iset)%val(ipart)
                   ELSE
                      pbuff(iproc)%val(iloc) = &
-                        pdata(iset) * this%areapart(iset)%val(ipart)
+                        pdata(iset)/sumwt * this%areapart(iset)%val(ipart)
                   ENDIF
                ELSE
                   pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
-                     + pdata(iset) * this%areapart(iset)%val(ipart)
+                     + pdata(iset)/sumwt * this%areapart(iset)%val(ipart)
                ENDIF
             ENDDO
          ENDDO

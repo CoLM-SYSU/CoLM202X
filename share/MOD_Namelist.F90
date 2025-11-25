@@ -930,6 +930,7 @@ MODULE MOD_Namelist
       logical :: riv_veloct                       = .true.
       logical :: discharge                        = .true.
       logical :: floodarea                        = .true.
+      logical :: floodfrc                         = .true.
       logical :: wdsrf_hru                        = .true.
       logical :: veloc_hru                        = .true.
       logical :: volresv                          = .true.
@@ -2285,6 +2286,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%discharge   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%floodarea   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%floodfrc    , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%volresv     , set_defaults)

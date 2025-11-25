@@ -275,7 +275,8 @@ PROGRAM CoLM
 #endif
 
 #ifdef GridRiverLakeFlow
-      CALL grid_riverlake_flow_init ()
+      CALL build_riverlake_network ()
+      IF (DEF_Reservoir_Method > 0) CALL reservoir_init ()
 #endif
 #endif
 
@@ -383,6 +384,9 @@ PROGRAM CoLM
 
 #if (defined CatchLateralFlow)
       CALL lateral_flow_init (lc_year)
+#endif
+#ifdef GridRiverLakeFlow
+      CALL grid_riverlake_flow_init ()
 #endif
 
 #ifdef DataAssimilation
