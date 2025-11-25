@@ -1495,7 +1495,7 @@ ENDIF
             wdsrf_bsn_prev(i) = wdsrf_bsn(i)
          ENDDO
 
-         CALL worker_push_subset_data (iam_bsn, iam_elm, basin_hru, elm_hru, wdsrf_bsnhru, wdsrf_hru)
+         CALL worker_push_data (push_bsnhru2elmhru, wdsrf_bsnhru, wdsrf_hru, spval)
 
          ! adjust "wdsrf" according to river and lake water depth
          DO i = 1, numhru

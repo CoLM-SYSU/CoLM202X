@@ -35,16 +35,16 @@ CONTAINS
    ! -- write history time --
    SUBROUTINE hist_vector_write_time (filename, filelast, dataname, time, itime_in_file)
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: filelast
-      character (len=*), intent(in) :: dataname
-      integer, intent(in)  :: time(3)
-      integer, intent(out) :: itime_in_file
+   character (len=*), intent(in) :: filename
+   character (len=*), intent(in) :: filelast
+   character (len=*), intent(in) :: dataname
+   integer, intent(in)  :: time(3)
+   integer, intent(out) :: itime_in_file
 
-      ! Local Variables
-      logical :: fexists
+   ! Local Variables
+   logical :: fexists
 
       IF (p_is_master) THEN
 
@@ -83,30 +83,33 @@ CONTAINS
 
    SUBROUTINE aggregate_to_vector_and_write_2d ( &
          acc_vec_patch, file_hist, varname, itime_in_file, filter, &
-         longname, units)
+         longname, units, input_mode)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_LandPatch
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_LandPatch
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: acc_vec_patch (:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer,          intent(in) :: itime_in_file
-      logical, intent(in) :: filter(:)
+   real(r8), intent(in) :: acc_vec_patch (:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer,          intent(in) :: itime_in_file
+   logical, intent(in) :: filter(:)
 
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
-      logical,  allocatable :: mask(:)
-      real(r8), allocatable :: frac(:)
-      real(r8), allocatable :: acc_vec(:), rcache(:)
-      real(r8) :: sumwt
+   character(len=*), intent(in), optional :: input_mode
+
+   ! Local variables
+   integer :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
+   logical,  allocatable :: mask(:)
+   real(r8), allocatable :: frac(:)
+   real(r8), allocatable :: acc_vec(:), rcache(:)
+   real(r8) :: sumwt
+   character(len=256) :: inmode
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -118,6 +121,9 @@ CONTAINS
 #else
          numset = numelm
 #endif
+
+         inmode = 'average'
+         IF (present(input_mode)) inmode = trim(input_mode)
 
          IF (numset > 0) THEN
 
@@ -138,14 +144,18 @@ CONTAINS
                   allocate (frac(istt:iend))
                   mask = (acc_vec_patch(istt:iend) /= spval) .and. filter(istt:iend)
                   IF (any(mask)) THEN
+                     IF (trim(inmode) == 'average') THEN
 #ifdef CATCHMENT
-                     frac = hru_patch%subfrc(istt:iend)
+                        frac = hru_patch%subfrc(istt:iend)
 #else
-                     frac = elm_patch%subfrc(istt:iend)
+                        frac = elm_patch%subfrc(istt:iend)
 #endif
-                     sumwt = sum(frac, mask = mask)
-                     acc_vec(iset) = sum(frac * acc_vec_patch(istt:iend), mask = mask)
-                     acc_vec(iset) = acc_vec(iset) / sumwt
+                        sumwt = sum(frac, mask = mask)
+                        acc_vec(iset) = sum(frac * acc_vec_patch(istt:iend), mask = mask)
+                        acc_vec(iset) = acc_vec(iset) / sumwt
+                     ELSE
+                        acc_vec(iset) = sum(acc_vec_patch(istt:iend), mask = mask)
+                     ENDIF
                   ENDIF
                   deallocate(mask)
                   deallocate(frac)
@@ -208,15 +218,24 @@ CONTAINS
       IF (p_is_master) THEN
 
          compress = DEF_HIST_CompressLevel
-#ifdef CATCHMENT
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'hydrounit', 'time', compress)
-#else
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'element', 'time', compress)
-#endif
 
-         IF (itime_in_file == 1) THEN
+         IF (itime_in_file >= 1) THEN
+#ifdef CATCHMENT
+            CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
+               'hydrounit', 'time', compress)
+#else
+            CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
+               'element', 'time', compress)
+#endif
+         ELSE
+#ifdef CATCHMENT
+            CALL ncio_write_serial (file_hist, varname, acc_vec, 'hydrounit', compress)
+#else
+            CALL ncio_write_serial (file_hist, varname, acc_vec, 'element', compress)
+#endif
+         ENDIF
+
+         IF (itime_in_file <= 1) THEN
             CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
             CALL ncio_put_attr (file_hist, varname, 'units', units)
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
@@ -237,33 +256,33 @@ CONTAINS
          acc_vec_patch, file_hist, varname, itime_in_file, dim1name, lb1, ndim1, filter, &
          longname, units)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_LandPatch
-      USE MOD_Vars_1DAccFluxes,  only: nac
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_LandPatch
+   USE MOD_Vars_1DAccFluxes,  only: nac
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: acc_vec_patch (lb1:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer,          intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name
-      integer,          intent(in) :: lb1, ndim1
+   real(r8), intent(in) :: acc_vec_patch (lb1:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer,          intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name
+   integer,          intent(in) :: lb1, ndim1
 
-      logical, intent(in) :: filter(:)
+   logical, intent(in) :: filter(:)
 
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
-      integer :: ub1, i1
-      logical,  allocatable :: mask(:)
-      real(r8), allocatable :: frac(:)
-      real(r8), allocatable :: acc_vec(:,:), rcache(:,:)
-      real(r8) :: sumwt
+   ! Local variables
+   integer :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
+   integer :: ub1, i1
+   logical,  allocatable :: mask(:)
+   real(r8), allocatable :: frac(:)
+   real(r8), allocatable :: acc_vec(:,:), rcache(:,:)
+   real(r8) :: sumwt
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -377,15 +396,26 @@ CONTAINS
          CALL ncio_define_dimension (file_hist, dim1name, ndim1)
 
          compress = DEF_HIST_CompressLevel
-#ifdef CATCHMENT
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, 'hydrounit', 'time', compress)
-#else
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, 'element', 'time', compress)
-#endif
 
-         IF (itime_in_file == 1) THEN
+         IF (itime_in_file >= 1) THEN
+#ifdef CATCHMENT
+            CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
+               dim1name, 'hydrounit', 'time', compress)
+#else
+            CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
+               dim1name, 'element', 'time', compress)
+#endif
+         ELSE
+#ifdef CATCHMENT
+            CALL ncio_write_serial (file_hist, varname, acc_vec, &
+               dim1name, 'hydrounit', compress)
+#else
+            CALL ncio_write_serial (file_hist, varname, acc_vec, &
+               dim1name, 'element', compress)
+#endif
+         ENDIF
+
+         IF (itime_in_file <= 1) THEN
             CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
             CALL ncio_put_attr (file_hist, varname, 'units', units)
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
@@ -407,32 +437,32 @@ CONTAINS
          dim1name, lb1, ndim1, dim2name, lb2, ndim2, filter, &
          longname, units)
 
-      USE MOD_Precision
-      USE MOD_SPMD_Task
-      USE MOD_Namelist
-      USE MOD_LandPatch
-      USE MOD_Vars_Global, only: spval
-      IMPLICIT NONE
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_LandPatch
+   USE MOD_Vars_Global, only: spval
+   IMPLICIT NONE
 
-      real(r8), intent(in) :: acc_vec_patch (lb1:,lb2:,:)
-      character(len=*), intent(in) :: file_hist
-      character(len=*), intent(in) :: varname
-      integer,          intent(in) :: itime_in_file
-      character(len=*), intent(in) :: dim1name, dim2name
-      integer,          intent(in) :: lb1, ndim1, lb2, ndim2
+   real(r8), intent(in) :: acc_vec_patch (lb1:,lb2:,:)
+   character(len=*), intent(in) :: file_hist
+   character(len=*), intent(in) :: varname
+   integer,          intent(in) :: itime_in_file
+   character(len=*), intent(in) :: dim1name, dim2name
+   integer,          intent(in) :: lb1, ndim1, lb2, ndim2
 
-      logical, intent(in) :: filter(:)
+   logical, intent(in) :: filter(:)
 
-      character(len=*), intent(in) :: longname
-      character(len=*), intent(in) :: units
+   character(len=*), intent(in) :: longname
+   character(len=*), intent(in) :: units
 
-      ! Local variables
-      integer :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
-      integer :: ub1, i1, ub2, i2
-      logical,  allocatable :: mask(:)
-      real(r8), allocatable :: frac(:)
-      real(r8), allocatable :: acc_vec(:,:,:), rcache(:,:,:)
-      real(r8) :: sumwt
+   ! Local variables
+   integer :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
+   integer :: ub1, i1, ub2, i2
+   logical,  allocatable :: mask(:)
+   real(r8), allocatable :: frac(:)
+   real(r8), allocatable :: acc_vec(:,:,:), rcache(:,:,:)
+   real(r8) :: sumwt
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -553,15 +583,26 @@ CONTAINS
          CALL ncio_define_dimension (file_hist, dim2name, ndim2)
 
          compress = DEF_HIST_CompressLevel
-#ifdef CATCHMENT
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, dim2name, 'hydrounit', 'time', compress)
-#else
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, dim2name, 'element', 'time', compress)
-#endif
 
-         IF (itime_in_file == 1) THEN
+         IF (itime_in_file >= 1) THEN
+#ifdef CATCHMENT
+            CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
+               dim1name, dim2name, 'hydrounit', 'time', compress)
+#else
+            CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
+               dim1name, dim2name, 'element', 'time', compress)
+#endif
+         ELSE
+#ifdef CATCHMENT
+            CALL ncio_write_serial (file_hist, varname, acc_vec, &
+               dim1name, dim2name, 'hydrounit', compress)
+#else
+            CALL ncio_write_serial (file_hist, varname, acc_vec, &
+               dim1name, dim2name, 'element', compress)
+#endif
+         ENDIF
+
+         IF (itime_in_file <= 1) THEN
             CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
             CALL ncio_put_attr (file_hist, varname, 'units', units)
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
