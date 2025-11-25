@@ -122,13 +122,13 @@ OBJS_BASIC =    \
 				 MOD_Urban_Vars_1DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
+				 MOD_DA_Vars_1DFluxes.o         \
 				 MOD_Vars_TimeInvariants.o      \
+				 MOD_DA_Vars_TimeVariables.o    \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \
 				 MOD_Vars_1DFluxes.o            \
 				 MOD_Vars_1DForcing.o           \
-				 MOD_DA_Vars_1DFluxes.o         \
-				 MOD_DA_Vars_TimeVariables.o    \
 				 MOD_Hydro_SoilFunction.o       \
 				 MOD_Hydro_SoilWater.o          \
 				 MOD_Eroot.o                    \
@@ -277,15 +277,13 @@ OBJS_MAIN = \
 				MOD_UserSpecifiedForcing.o                \
 				MOD_ForcingDownscaling.o                  \
 				MOD_Forcing.o                             \
-				MOD_DA_GRACE.o                            \
+				MOD_DA_TWS.o                              \
 				MOD_DA_Const.o                            \
-				MOD_DA_ObsOperator.o                      \
+				MOD_DA_RTM.o                              \
 				MOD_DA_EnKF.o                             \
-				MOD_DA_SMAP.o                             \
-				MOD_DA_FY3D.o                             \
-				MOD_DA_Main.o                             \
+				MOD_DA_SM.o                               \
 				MOD_DA_Ensemble.o                         \
-				MOD_DA_Driver.o                           \
+				MOD_DA_Main.o                             \
 				MOD_AssimStomataConductance.o             \
 				MOD_PlantHydraulic.o                      \
 				MOD_FrictionVelocity.o                    \

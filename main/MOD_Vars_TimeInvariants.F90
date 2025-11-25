@@ -205,6 +205,9 @@ MODULE MOD_Vars_TimeInvariants
    real(r8), allocatable :: wf_sand      (:,:)  !gravimetric fraction of sand
    real(r8), allocatable :: wf_clay      (:,:)  !gravimetric fraction of clay
    real(r8), allocatable :: wf_om        (:,:)  !gravimetric fraction of om
+#ifdef DataAssimilation
+   real(r8), allocatable :: wf_silt      (:,:)  !gravimetric fraction of silt
+#endif
    real(r8), allocatable :: OM_density   (:,:)  !OM density (kg/m3)
    real(r8), allocatable :: BD_all       (:,:)  !bulk density of soil (GRAVELS + ORGANIC MATTER + Mineral Soils,kg/m3)
 
@@ -337,6 +340,9 @@ CONTAINS
             allocate (wf_sand      (nl_soil,numpatch))
             allocate (wf_clay      (nl_soil,numpatch))
             allocate (wf_om        (nl_soil,numpatch))
+#ifdef DataAssimilation
+            allocate (wf_silt      (nl_soil,numpatch))
+#endif
             allocate (OM_density   (nl_soil,numpatch))
             allocate (BD_all       (nl_soil,numpatch))
             allocate (wfc          (nl_soil,numpatch))
@@ -490,6 +496,9 @@ CONTAINS
       CALL ncio_read_vector (file_restart, 'n_vgm    ' ,   nl_soil, landpatch, n_vgm     ) ! a shape parameter [dimensionless]
       CALL ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    ) ! saturation at the air entry value in the classical vanGenuchten model [-]
       CALL ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]
+#endif
+#ifdef DataAssimilation
+      IF (numpatch > 0 .and. p_is_worker) wf_silt = 1.0_r8 - wf_gravels - wf_sand - wf_clay - wf_om
 #endif
 
       CALL ncio_read_vector (file_restart, 'soiltext', landpatch, soiltext, defval = 0    )
@@ -847,6 +856,9 @@ CONTAINS
             deallocate (wf_sand        )
             deallocate (wf_clay        )
             deallocate (wf_om          )
+#ifdef DataAssimilation
+            deallocate (wf_silt        )
+#endif
             deallocate (OM_density     )
             deallocate (BD_all         )
             deallocate (wfc            )

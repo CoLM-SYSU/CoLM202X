@@ -7,7 +7,7 @@ MODULE MOD_SoilSnowHydrology
    USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR,     &
                            DEF_URBAN_RUN,           DEF_USE_IRRIGATION, &
                            DEF_SPLIT_SOILSNOW,      DEF_Runoff_SCHEME,  &
-                           DEF_DA_GRACE
+                           DEF_DA_TWS_GRACE
 #if (defined CaMa_Flood)
    USE YOS_CMF_INPUT,      only: LWINFILT
 #endif
@@ -544,7 +544,7 @@ ENDIF
    USE MOD_Vars_TimeInvariants, only: vic_b_infilt, vic_Dsmax, vic_Ds, vic_Ws, vic_c
    USE MOD_Vars_1DFluxes,       only: fevpg
 #ifdef DataAssimilation
-   USE MOD_DA_GRACE, only: fslp_k
+   USE MOD_DA_TWS, only: fslp_k
 #endif
 #ifdef CROP
    USE MOD_Vars_Global, only : irrig_method_paddy, pondmxc
@@ -848,7 +848,7 @@ IF((patchtype<=1) .or. is_dry_lake)THEN   ! soil ground only
          ENDIF
 
 #ifdef DataAssimilation
-         IF (DEF_DA_GRACE) THEN
+         IF (DEF_DA_TWS_GRACE) THEN
             rsur = max(min(rsur * fslp_k(ipatch), gwat), 0.)
             rsubst = rsubst * fslp_k(ipatch)
          ENDIF
