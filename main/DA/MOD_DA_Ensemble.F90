@@ -31,27 +31,27 @@ MODULE MOD_DA_Ensemble
    integer,  parameter :: nvar = 4                                   ! number of pertutated forcing variables
    real(r8), parameter :: tau_ar = 24.0                              ! correlation time scale in hours
 
-   real(r8) :: dt   ! time step in hours
-   real(r8) :: phi                  ! AR(1) autocorrelation coefficient consider time scale
-   real(r8) :: sigma_eps            ! standard deviation of noise in AR(1) process
+   real(r8) :: dt                                                    ! time step in hours
+   real(r8) :: phi                                                   ! AR(1) autocorrelation coefficient consider time scale
+   real(r8) :: sigma_eps                                             ! standard deviation of noise in AR(1) process
    real(r8), dimension(nvar) :: sigma = (/0.5, 0.3, 20.0, 1.0/)      ! standard deviation of perturbed forcing variables (prcp, sw, lw, t)
    real(r8), dimension(nvar, nvar) :: C = reshape([ &
          1.0, -0.8,  0.5, 0.0, &
         -0.8,  1.0, -0.5, 0.4, &
          0.5, -0.5,  1.0, 0.4, &
          0.0,  0.4,  0.4, 1.0], shape=[nvar, nvar])                  ! cross-correlation matrix between perturbed forcing variables
-   real(r8), allocatable :: r_prev(:,:,:)                      ! previous perturbation (numpatch, nvar, DEF_DA_ENS_NUM)
-   real(r8), allocatable :: r_curr(:,:,:)                      ! current perturbation (numpatch, nvar, DEF_DA_ENS_NUM)
-   logical :: initialized = .false.                            ! flag to indicate if is initialized
+   real(r8), allocatable :: r_prev(:,:,:)                            ! previous perturbation (numpatch, nvar, DEF_DA_ENS_NUM)
+   real(r8), allocatable :: r_curr(:,:,:)                            ! current perturbation (numpatch, nvar, DEF_DA_ENS_NUM)
+   logical :: initialized = .false.                                  ! flag to indicate if is initialized
 
    ! soil moisture [default set 0.002 m3/m3 disterbulance]
    integer,  parameter :: nvar_sm = 2                                ! number of pertutated soil moisture layers
    real(r8), parameter :: tau_sm = 3.0                               ! correlation time scale in hours
-   real(r8) :: phi_sm                   ! AR(1) autocorrelation coefficient consider time scale
-   real(r8) :: sigma_eps_sm       ! standard deviation of noise in AR(1) process
+   real(r8) :: phi_sm                                                ! AR(1) autocorrelation coefficient consider time scale
+   real(r8) :: sigma_eps_sm                                          ! standard deviation of noise in AR(1) process
    real(r8), dimension(nvar_sm) :: sigma_sm = (/0.035, 0.0552/)      ! standard deviation of perturbed soil moisture (equal to 0.002 m3/m3)
-   real(r8), allocatable :: r_prev_sm(:,:,:)                   ! previous perturbation (numpatch, nvar_sm, DEF_DA_ENS_NUM)
-   real(r8), allocatable :: r_curr_sm(:,:,:)                   ! current perturbation (numpatch, nvar_sm, DEF_DA_ENS_NUM)
+   real(r8), allocatable :: r_prev_sm(:,:,:)                         ! previous perturbation (numpatch, nvar_sm, DEF_DA_ENS_NUM)
+   real(r8), allocatable :: r_curr_sm(:,:,:)                         ! current perturbation (numpatch, nvar_sm, DEF_DA_ENS_NUM)
 
 !-----------------------------------------------------------------------
 
@@ -69,22 +69,22 @@ CONTAINS
 !------------------------ Local Variables ------------------------------
       integer  ::  np, i, j
 
-      real(r8) :: cov_matrix(nvar, nvar)              ! covariance matrix between perturbed forcing variables
-      real(r8) :: L(nvar, nvar)                       ! Cholesky decomposition of correlation matrix
-      integer  :: info                                ! info flag for Cholesky decomposition
+      real(r8) :: cov_matrix(nvar, nvar)                      ! covariance matrix between perturbed forcing variables
+      real(r8) :: L(nvar, nvar)                               ! Cholesky decomposition of correlation matrix
+      integer  :: info                                        ! info flag for Cholesky decomposition
       real(r8) :: u1(DEF_DA_ENS_NUM/2), u2(DEF_DA_ENS_NUM/2)  ! uniform random variables
-      real(r8) :: z(nvar, DEF_DA_ENS_NUM)                 ! standard normal random variables
-      real(r8) :: mean_z(nvar)                        ! mean of perturbation (nvar)
-      real(r8) :: std_z(nvar)                         ! std of perturbation (nvar)
-      real(r8) :: zxL(nvar, DEF_DA_ENS_NUM)               ! correlated random variables (nvar, DEF_DA_ENS_NUM)
+      real(r8) :: z(nvar, DEF_DA_ENS_NUM)                     ! standard normal random variables
+      real(r8) :: mean_z(nvar)                                ! mean of perturbation (nvar)
+      real(r8) :: std_z(nvar)                                 ! std of perturbation (nvar)
+      real(r8) :: zxL(nvar, DEF_DA_ENS_NUM)                   ! correlated random variables (nvar, DEF_DA_ENS_NUM)
 
-      real(r8) :: z_sm(DEF_DA_ENS_NUM)                    ! standard normal random variables
-      real(r8) :: mean_z_sm                          ! mean of perturbation
-      real(r8) :: std_z_sm                           ! std of perturbation
-      real(r8) :: mean_r_sm(nvar_sm)                  ! mean of perturbation for soil moisture (nvar_sm)
-      real(r8) :: std_r_sm(nvar_sm)                   ! std of perturbation for soil moisture (nvar_sm)
-      real(r8) :: a1(DEF_DA_ENS_NUM)                      ! temporary disturbed variable for soil moisture layer 1
-      real(r8) :: a2(DEF_DA_ENS_NUM)                      ! temporary disturbed variable for soil moisture layer 2
+      real(r8) :: z_sm(DEF_DA_ENS_NUM)                        ! standard normal random variables
+      real(r8) :: mean_z_sm                                   ! mean of perturbation
+      real(r8) :: std_z_sm                                    ! std of perturbation
+      real(r8) :: mean_r_sm(nvar_sm)                          ! mean of perturbation for soil moisture (nvar_sm)
+      real(r8) :: std_r_sm(nvar_sm)                           ! std of perturbation for soil moisture (nvar_sm)
+      real(r8) :: a1(DEF_DA_ENS_NUM)                          ! temporary disturbed variable for soil moisture layer 1
+      real(r8) :: a2(DEF_DA_ENS_NUM)                          ! temporary disturbed variable for soil moisture layer 2
 
 !-----------------------------------------------------------------------
 

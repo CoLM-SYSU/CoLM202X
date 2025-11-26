@@ -74,14 +74,14 @@ MODULE MOD_DA_SM
    real(r8) :: eff_porsl                                     ! effective porosity of each soil layer
    integer :: end_idx(3)
 
-   real(r8), allocatable :: pred_obs_p_ens(:,:)                ! predicted observations on each patch
-   real(r8), allocatable :: obs_p(:)                          ! observations on each patch
-   real(r8), allocatable :: obs_err_p(:)                      ! observation errors on each patch
+   real(r8), allocatable :: pred_obs_p_ens(:,:)              ! predicted observations on each patch
+   real(r8), allocatable :: obs_p(:)                         ! observations on each patch
+   real(r8), allocatable :: obs_err_p(:)                     ! observation errors on each patch
 
-   real(r8), allocatable :: smap_err(:)                        ! observation errors for SMAP TB
-   real(r8), allocatable :: fy3d_err(:)                        ! observation errors for FY3D TB
-   real(r8), allocatable :: synop_tref_err(:)                  ! observation errors for SYNOP 2m temperature
-   real(r8), allocatable :: synop_qref_err(:)                  ! observation errors for SYNOP 2m humidity
+   real(r8), allocatable :: smap_err(:)                      ! observation errors for SMAP TB
+   real(r8), allocatable :: fy3d_err(:)                      ! observation errors for FY3D TB
+   real(r8), allocatable :: synop_tref_err(:)                ! observation errors for SYNOP 2m temperature
+   real(r8), allocatable :: synop_qref_err(:)                ! observation errors for SYNOP 2m humidity
 
 !#############################################################################
 ! For SMAP L1C brightness temperature
@@ -152,7 +152,7 @@ MODULE MOD_DA_SM
 
    ! parameters for distance calculation
    real(r8), allocatable :: d_smap_p(:)                      ! distance between obs and patch center
-   real(r8), parameter   :: static_smap_err = 0.1                   ! static observation error
+   real(r8), parameter   :: static_smap_err = 0.1            ! static observation error
 
 !#############################################################################
 ! For FY3D L1 brightness temperature
@@ -222,7 +222,7 @@ MODULE MOD_DA_SM
 
    ! parameters for distance calculation
    real(r8), allocatable :: d_fy3d_p(:)                      ! distance between obs and patch center
-   real(r8), parameter   :: static_fy3d_err = 10.0                  ! static observation error
+   real(r8), parameter   :: static_fy3d_err = 10.0           ! static observation error
 
 !#############################################################################
 ! For SYNOP 2m temperature and humidity observations
@@ -291,8 +291,8 @@ MODULE MOD_DA_SM
 
    ! parameters for distance calculation
    real(r8), allocatable :: d_synop_p(:)                     ! distance between obs and patch center
-   real(r8), parameter   :: static_synop_tref_err = 1.0             ! static observation error (2m temperature)
-   real(r8), parameter   :: static_synop_qref_err = 0.04            ! static observation error (2m humidity)
+   real(r8), parameter   :: static_synop_tref_err = 1.0      ! static observation error (2m temperature)
+   real(r8), parameter   :: static_synop_qref_err = 0.04     ! static observation error (2m humidity)
 
 !-----------------------------------------------------------------------------
 
@@ -597,9 +597,7 @@ CONTAINS
          ! check SMAP brightness temperature observations
          IF (DEF_DA_SM_SMAP) THEN
             ! file path of SMAP
-            ! file_smap = trim(DEF_DA_obsdir)//'/SMAP_L1C_D/'//'/SMAP_L1C_TB_'// &
-            !    trim(yearstr)//'_'//trim(monthstr)//'_'//trim(daystr)//'_'//trim(hourstr)//'.nc'
-            file_smap = trim(DEF_DA_obsdir)//'/SMAP_L1C_plus_mean_diel_1_rough_1/'//'/SMAP_L1C_TB_'// &
+            file_smap = trim(DEF_DA_obsdir)//'/SMAP_L1C_D/'//'/SMAP_L1C_TB_'// &
                trim(yearstr)//'_'//trim(monthstr)//'_'//trim(daystr)//'_'//trim(hourstr)//'.nc'
             inquire (file=trim(file_smap), exist=has_smap_file)
 
@@ -638,10 +636,8 @@ CONTAINS
          ! check FY brightness temperature observations
          IF (DEF_DA_SM_FY) THEN
             ! file path of FY3D
-            file_fy3d = trim(DEF_DA_obsdir)//'/FY3D_L1_plus_mean/'//'/FY3D_L1_TB_'// &
+            file_fy3d = trim(DEF_DA_obsdir)//'/FY3D_L1/'//'/FY3D_L1_TB_'// &
                trim(yearstr)//'_'//trim(monthstr)//'_'//trim(daystr)//'_'//trim(hourstr)//'.nc'
-            ! file_fy3d = trim(DEF_DA_obsdir)//'/FY3D_L1/'//'/FY3D_L1_TB_'// &
-            !    trim(yearstr)//'_'//trim(monthstr)//'_'//trim(daystr)//'_'//trim(hourstr)//'.nc'
             inquire (file=trim(file_fy3d), exist=has_fy3d_file)
 
             ! whether have obs at this time interval
