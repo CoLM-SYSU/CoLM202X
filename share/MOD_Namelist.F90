@@ -435,13 +435,17 @@ MODULE MOD_Namelist
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 13: data assimilation -----
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   character(len=256) :: DEF_DA_obsdir  = 'null'
-   logical            :: DEF_DA_GRACE   = .false.
-   logical            :: DEF_DA_SMAP    = .false.
-   logical            :: DEF_DA_CMEM    = .false.
-   logical            :: DEF_DA_FY3D    = .false.
-   logical            :: DEF_DA_SYNOP   = .false.
-   integer            :: DEF_DA_ENS     = 20
+   character(len=256) :: DEF_DA_obsdir     = 'null'
+   logical            :: DEF_DA_TWS        = .false.
+   logical            :: DEF_DA_TWS_GRACE  = .false.
+   logical            :: DEF_DA_SM         = .false.
+   integer            :: DEF_DA_ENS_NUM    = 20
+   logical            :: DEF_DA_ENS_SM     = .false.
+   logical            :: DEF_DA_SM_SMAP    = .false.
+   logical            :: DEF_DA_SM_FY      = .false.
+   logical            :: DEF_DA_SM_SYNOP   = .false.
+   integer            :: DEF_DA_RTM_diel   = 0
+   integer            :: DEF_DA_RTM_rough  = 0
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! ----- Part 14: history and restart -----
@@ -861,6 +865,23 @@ MODULE MOD_Namelist
       logical :: t_lake                           = .true.
       logical :: lake_icefrac                     = .true.
 
+      logical :: DA_wliq_h2osoi_5cm               = .true.
+      logical :: DA_wliq_h2osoi_5cm_a             = .true.
+      logical :: DA_t_soisno_5cm                  = .true.
+      logical :: DA_t_soisno_5cm_a                = .true.
+      logical :: DA_wliq_soisno_ens               = .true.
+      logical :: DA_t_soisno_ens                  = .true.
+      logical :: DA_wliq_soisno_5cm_ens_std       = .true.
+      logical :: DA_t_soisno_5cm_ens_std          = .true.
+      logical :: DA_t_brt_smap                    = .true.
+      logical :: DA_t_brt_smap_a                  = .true.
+      logical :: DA_t_brt_smap_ens                = .true.
+      logical :: DA_t_brt_smap_ens_std            = .true.
+      logical :: DA_t_brt_fy3d                    = .true.
+      logical :: DA_t_brt_fy3d_a                  = .true.
+      logical :: DA_t_brt_fy3d_ens                = .true.
+      logical :: DA_t_brt_fy3d_ens_std            = .true.
+
       logical :: litr1c_vr                        = .true.
       logical :: litr2c_vr                        = .true.
       logical :: litr3c_vr                        = .true.
@@ -1106,12 +1127,16 @@ CONTAINS
       DEF_ReservoirPara_file,                 &
 
       DEF_DA_obsdir,                          &
-      DEF_DA_GRACE,                           &
-      DEF_DA_SMAP,                            &
-      DEF_DA_CMEM,                            &
-      DEF_DA_FY3D,                            &
-      DEF_DA_SYNOP,                           &
-      DEF_DA_ENS,                             &
+      DEF_DA_TWS,                             &
+      DEF_DA_TWS_GRACE,                       &
+      DEF_DA_SM,                              &
+      DEF_DA_ENS_NUM,                         &
+      DEF_DA_ENS_SM,                          &
+      DEF_DA_SM_SMAP,                         &
+      DEF_DA_SM_FY,                           &
+      DEF_DA_SM_SYNOP,                        &
+      DEF_DA_RTM_diel,                        &
+      DEF_DA_RTM_rough,                       &
 
       DEF_forcing_namelist,                   &
 
@@ -1671,12 +1696,16 @@ CONTAINS
       CALL mpi_bcast (DEF_ReservoirPara_file                 ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_DA_obsdir                          ,256 ,mpi_character ,p_address_master ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DA_GRACE                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DA_SMAP                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DA_CMEM                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DA_FY3D                            ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DA_SYNOP                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
-      CALL mpi_bcast (DEF_DA_ENS                             ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_TWS                             ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_TWS_GRACE                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_SM                              ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_ENS_NUM                         ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_ENS_SM                          ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_SM_SMAP                         ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_SM_FY                           ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_SM_SYNOP                        ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_RTM_diel                        ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
+      CALL mpi_bcast (DEF_DA_RTM_rough                       ,1   ,mpi_integer   ,p_address_master ,p_comm_glb ,p_err)
 
       CALL mpi_bcast (DEF_Aerosol_Readin                     ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
       CALL mpi_bcast (DEF_Aerosol_Clim                       ,1   ,mpi_logical   ,p_address_master ,p_comm_glb ,p_err)
@@ -2206,6 +2235,25 @@ CONTAINS
          CALL sync_hist_vars_one (DEF_hist_vars%o3uptakesun                  , set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%o3uptakesha                  , set_defaults)
       ENDIF
+
+#ifdef DataAssimilation
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_wliq_h2osoi_5cm        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_wliq_h2osoi_5cm_a      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_soisno_5cm           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_soisno_5cm_a         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_wliq_soisno_ens        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_soisno_ens           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_wliq_soisno_5cm_ens_std, set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_soisno_5cm_ens_std   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_smap             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_smap_a           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_smap_ens         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_smap_ens_std     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_fy3d             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_fy3d_a           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_fy3d_ens         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%DA_t_brt_fy3d_ens_std     , set_defaults)
+#endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wliq_soisno , set_defaults)

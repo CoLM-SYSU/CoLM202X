@@ -4,26 +4,14 @@
 MODULE MOD_DA_Const
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
-! 1. Define constants (do not rely on satellite parameters) used in DA.
-! 2. Build look up table for constant used in radiative transfer model
-! Convert CoLM land classification to ECOCLIMAP land classification (from L-MEB)
+! 1. Define constants (do not rely on satellite parameters) used in RTM.
+! 2. Define parameters (IGBP) used in RTM.
 !
 ! REFERENCES:
-!   [1] Drusch, M., Holmes, T., de Rosnay, P., Balsamo, G., 2009.
-!       Comparing ERA-40 based L-band brightness temperatures with Skylab observations:
-!       a calibration/validationstudy using the Community Microwave Emission Model. J. Hydrometeorol.
-!       doi: 10.1175/2008JHM964.1
-
-!   [2] de Rosnay, P., Drusch, M., Boone, A., Balsamo, G., Decharme, B., Harris, P., Kerr,
-!       Y.,Pellarin, T., Polcher, J., Wigneron, J.-P., 2009a. Microwave land surface modellingevaluation
-!       against AMSR-E data over West Africa. The AMMA land surface modelintercomparison
-!       experiment coupled to the community microwave emission model(ALMIP-MEM).
-!       J. Geophys. Res. 114. doi: 10.1029/2008JD010724
-
-!   [3] Wang, S.; Wigneron, J.-P.; Jiang, L.M.; Parrens, M. Global-scale evaluation of roughness
-!       effects on C-Band AMSR-E observations. Remote Sens. 2015, 7, 5734–5757 doi: 10.3390/rs70505734
+!   [1] L-band Microwave Emission of the Biosphere (L-MEB) Model:  Description 
+!       and calibration against experimental data sets over crop fields.
 !
-!   [4] Wigneron, J. P., Jackson, T. J., O'neill, P., De Lannoy, G., de Rosnay, P., Walker,
+!   [2] Wigneron, J. P., Jackson, T. J., O'neill, P., De Lannoy, G., de Rosnay, P., Walker,
 !       J. P., ... & Kerr, Y. (2017). Modelling the passive microwave signature from land surfaces:
 !       A review of recent results and application to the L-band SMOS & SMAP soil moisture retrieval algorithms.
 !       Remote Sensing of Environment, 192, 238-262.
@@ -47,11 +35,10 @@ MODULE MOD_DA_Const
    real(r8), parameter :: eps_0 = 8.854e-12     ! dielectric constant of free space (Klein and Swift 1977) [Farads/meter]
    real(r8), parameter :: rho_soil = 2.66       ! soil specific density (g/cm3)
    real(r8), parameter :: f0w = 9.              ! relaxation frequency of liquid water (GHz)
-   real(r8), parameter :: rgh_surf = 2.2d0      ! soil surface roughness (cm)
+   real(r8), parameter :: rgh_surf = 2.2        ! soil surface roughness (cm)
    complex(r8), parameter :: jj = (0., 1.)      ! imaginary unit for complex number
 
 
-!//TODO(Lu Li): support other land cover classification system
 #ifdef LULC_IGBP
 
    ! MODIS IGBP Land Use/Land Cover System Legend
@@ -75,78 +62,80 @@ MODULE MOD_DA_Const
    !16  Barren                              !  裸地
    !17  Water Bodies                        !  水体
 
-   ! ECOCLIMAP Land Use/Land Cover System Legend
-   !---------------------------
-   ! 0 bare soil                        !  裸地
-   ! 1 decidious forests                !  落叶林
-   ! 2 coniferous forests               !  针叶林
-   ! 3 rain forests                     !  热带雨林
-   ! 4 C3 grasslands                    !  C3型草地
-   ! 5 C4 grasslands                    !  C4型草地
-   ! 6 C3 crops                         !  C3型作物
-   ! 7 C4 crops                         !  C4型作物
+   ! empirical parameters to account for the dependence of optical depth on incidence angle [1]
+   real(r8), parameter, dimension(N_land_classification) :: tth &
+      = (/0.80, 1.00, 0.80, 0.49, 0.49, &
+          1.00, 1.00, 1.00, 1.00, 1.00,  &
+          1.00, 1.00, 1.00, 1.00, 1.00,  &
+          1.00, 2.00/)
+   real(r8), parameter, dimension(N_land_classification) :: ttv &
+      = (/0.80, 1.00, 0.80, 0.46, 0.46, &
+          1.00, 1.00, 1.00, 1.00, 1.00,  &
+          1.00, 2.00, 1.00, 2.00, 1.00,  &
+          1.00, 1.00/)
 
-   ! index map IGBP to ECOCLIMAP
-   integer, parameter, dimension(N_land_classification) :: igbp2eco &
-      = (/2, 3, 2, 1, 1, 4, 4, 4, 4, 4, 0, 6, 0, 6, 0, 0, 0/)
-
-   ! b parameters for Wigneron vegetation model (//TODO:ref?)
-   real(r8), parameter, dimension(N_land_classification) :: b1 &  
-      = (/0.260, 0.226, 0.260, 0.226, 0.226, &
-      0.0375, 0.0375, 0.0375, 0.0375, 0.0375, &
-      0.0, 0.05, 0.0, 0.05, 0.0, 0.0, 0.05/)
-   real(r8), parameter, dimension(N_land_classification) :: b2 &  
-      = (/0.006, 0.001, 0.006, 0.001, 0.001, &
-      0.05, 0.05, 0.05, 0.05, 0.05, &
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
-   real(r8), parameter, dimension(N_land_classification) :: b3 &  
-      = (/0.69, 0.7, 0.69, 0.7, 0.7, &
-      0.0, 0.0, 0.0, 0.0, 0.0, &
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
-
-   ! soil roughness parameters for H and V polarization (from CMEM)
-   real(r8), parameter, dimension(N_land_classification) :: nrh &  
-      = (/0.00, 0.00, 0.00, 0.00, 0.00, &
-      0.00, 0.00, 0.00, 0.00, 0.00, &
-      0.00, 0.00, 0.00, 0.00, 0.00, &
-      0.00, 0.00/)           
-   real(r8), parameter, dimension(N_land_classification) :: nrv &  
-      = (/0.00, 0.00, 0.00, 0.00, 0.00, &
-      0.00, 0.00, 0.00, 0.00, 0.00, &
-      0.00, 0.00, 0.00, 0.00, 0.00, &
-      0.00, 0.00/)
-
-   ! empirical parameters to account for incidence angle
-   ! in vegetation opacity calculation for H polarization (from L-MEB model)
-   real(r8), parameter, dimension(N_land_classification) :: tth &  
-      = (/0.8, 1.0, 0.8, 0.49, 0.49, &
-      1.0, 1.0, 1.0, 1.0, 1.0, &
-      1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0/)
-   real(r8), parameter, dimension(N_land_classification) :: ttv &  
-      = (/0.8, 1.0, 0.8, 0.46, 0.46, &
-      1.0, 1.0, 1.0, 1.0, 1.0, &
-      1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0/)
-
-   ! empirical roughness parameters (Table 2 in Wigneron et al. 2017)
-   ! (Note: CMEM uses a function based on satellite parameters,
-   !        see `hr` defined in MOD_DA_ObsOperator.F90)
-   real(r8), parameter, dimension(N_land_classification) :: hr_Wigneron &
+   ! empirical roughness parameters (Table 2 in [2])
+   real(r8), parameter, dimension(N_land_classification) :: hr_SMAP &
       = (/0.160, 0.160, 0.160, 0.160, 0.160, &
           0.110, 0.110, 0.125, 0.156, 0.156, &
           0.100, 0.108, 0.000, 0.130, 0.000, &
           0.150, 0.000/)
 
-   ! effective diffusion albedo (Table 3 in Wigneron et al. 2017)
-   real(r8), parameter, dimension(N_land_classification) :: w_Wigneron &
+   real(r8), parameter, dimension(N_land_classification) :: hr_SMOS &
+      = (/0.300, 0.300, 0.300, 0.300, 0.300, &
+          0.100, 0.100, 0.100, 0.100, 0.100, &
+          0.100, 0.100, 0.100, 0.100, 0.000, &
+          0.100, 0.000/)
+
+   real(r8), parameter, dimension(N_land_classification) :: hr_P16  &
+      = (/0.350, 0.460, 0.430, 0.450, 0.410, &
+          0.260, 0.170, 0.350, 0.230, 0.130, &
+          0.020, 0.170, 0.190, 0.220, 0.000, &
+          0.020, 0.000/)
+
+   ! b parameters for Wigneron vegetation model (ref?)
+   real(r8), parameter, dimension(N_land_classification) :: b1 &
+      = (/0.2600, 0.2260, 0.2600, 0.2260, 0.2260, &
+          0.0375, 0.0375, 0.0375, 0.0375, 0.0375, &
+          0.0000, 0.0500, 0.0000, 0.0500, 0.0000, &
+          0.0000, 0.0500/)
+
+   real(r8), parameter, dimension(N_land_classification) :: b2 &
+      = (/0.0060, 0.0010, 0.0060, 0.0010, 0.0010, &
+          0.0500, 0.0500, 0.0500, 0.0500, 0.0500, &
+          0.0000, 0.0000, 0.0000, 0.0000, 0.0000, &
+          0.0000, 0.0000/)
+
+   real(r8), parameter, dimension(N_land_classification) :: b3 &
+      = (/0.6900, 0.7000, 0.6900, 0.7000, 0.7000, &
+          0.0000, 0.0000, 0.0000, 0.0000, 0.0000, &
+          0.0000, 0.0000, 0.0000, 0.0000, 0.0000, &
+          0.0000, 0.0000/)
+
+   ! effective diffusion albedo (Table 3 in [2])
+   real(r8), parameter, dimension(N_land_classification) :: w_SMAPL2 &
       = (/0.050, 0.050, 0.050, 0.050, 0.050, &
           0.050, 0.050, 0.050, 0.080, 0.050, &
           0.050, 0.000, 0.065, 0.000, 0.000, &
           0.000, 0.000/)
-   real(r8), parameter, dimension(N_land_classification) :: w_CMEM & 
+
+   real(r8), parameter, dimension(N_land_classification) :: w_CMEM &
       = (/0.080, 0.095, 0.080, 0.070, 0.070, &
-      0.050, 0.050, 0.050, 0.050, 0.050, &
-      0.000, 0.000, 0.000, 0.000, 0.000, &
-      0.000, 0.050/)
+          0.050, 0.050, 0.050, 0.050, 0.050, &
+          0.000, 0.000, 0.000, 0.000, 0.000, &
+          0.000, 0.000/)
+
+   real(r8), parameter, dimension(N_land_classification) :: w_K16 &
+      = (/0.050, 0.050, 0.060, 0.030, 0.050, &
+          0.030, 0.050, 0.040, 0.020, 0.030, &
+          0.000, 0.040, 0.000, 0.020, 0.000, &
+          0.000, 0.000/)
+   
+   real(r8), parameter, dimension(N_land_classification) :: w_SMAPL4 &
+      = (/0.120, 0.080, 0.120, 0.100, 0.120, &
+          0.140, 0.110, 0.130, 0.120, 0.070, &
+          0.000, 0.120, 0.000, 0.150, 0.000, &
+          0.000, 0.000/)  
 #endif
 
 END MODULE MOD_DA_Const

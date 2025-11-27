@@ -110,10 +110,13 @@ MODULE MOD_Vars_1DAccFluxes
 
 #ifdef DataAssimilation
    real(r8), allocatable :: a_h2osoi_ens     (:,:,:)
-   real(r8), allocatable :: a_t_brt_ens      (:,:,:)
-   real(r8), allocatable :: a_t_brt            (:,:)
+   real(r8), allocatable :: a_t_brt_smap_ens (:,:,:)
+   real(r8), allocatable :: a_t_brt_fy3d_ens (:,:,:)
+   real(r8), allocatable :: a_t_brt_smap       (:,:)
+   real(r8), allocatable :: a_t_brt_fy3d       (:,:)
    real(r8), allocatable :: a_wliq_soisno_ens(:,:,:)
    real(r8), allocatable :: a_wice_soisno_ens(:,:,:)
+   real(r8), allocatable :: a_t_soisno_ens   (:,:,:)
 #endif
 
 #ifdef URBAN_MODEL
@@ -581,11 +584,14 @@ CONTAINS
             allocate (a_o3uptakesha(numpatch))
 
 #ifdef DataAssimilation
-            allocate (a_h2osoi_ens            (1:nl_soil,DEF_DA_ENS,numpatch))
-            allocate (a_t_brt_ens                     (2,DEF_DA_ENS,numpatch))
-            allocate (a_t_brt                                    (2,numpatch))
-            allocate (a_wliq_soisno_ens(maxsnl+1:nl_soil,DEF_DA_ENS,numpatch))
-            allocate (a_wice_soisno_ens(maxsnl+1:nl_soil,DEF_DA_ENS,numpatch))
+            allocate (a_h2osoi_ens            (1:nl_soil,DEF_DA_ENS_NUM,numpatch))
+            allocate (a_t_brt_smap_ens                (2,DEF_DA_ENS_NUM,numpatch))
+            allocate (a_t_brt_fy3d_ens                (2,DEF_DA_ENS_NUM,numpatch))
+            allocate (a_t_brt_smap                                   (2,numpatch))
+            allocate (a_t_brt_fy3d                                   (2,numpatch))
+            allocate (a_wliq_soisno_ens(maxsnl+1:nl_soil,DEF_DA_ENS_NUM,numpatch))
+            allocate (a_wice_soisno_ens(maxsnl+1:nl_soil,DEF_DA_ENS_NUM,numpatch))
+            allocate (a_t_soisno_ens   (maxsnl+1:nl_soil,DEF_DA_ENS_NUM,numpatch))
 #endif
 
 #ifdef URBAN_MODEL
@@ -1061,10 +1067,13 @@ CONTAINS
 
 #ifdef DataAssimilation
             deallocate (a_h2osoi_ens     )
-            deallocate (a_t_brt_ens      )
-            deallocate (a_t_brt          )
+            deallocate (a_t_brt_smap_ens )
+            deallocate (a_t_brt_fy3d_ens )
+            deallocate (a_t_brt_fy3d     )
+            deallocate (a_t_brt_smap     )
             deallocate (a_wliq_soisno_ens)
             deallocate (a_wice_soisno_ens)
+            deallocate (a_t_soisno_ens   )
 #endif
 
 #ifdef URBAN_MODEL
@@ -1542,10 +1551,13 @@ CONTAINS
 
 #ifdef DataAssimilation
             a_h2osoi_ens     (:,:,:) = spval
-            a_t_brt_ens      (:,:,:) = spval
-            a_t_brt            (:,:) = spval
+            a_t_brt_smap_ens (:,:,:) = spval
+            a_t_brt_fy3d_ens (:,:,:) = spval
+            a_t_brt_fy3d       (:,:) = spval
+            a_t_brt_smap       (:,:) = spval
             a_wliq_soisno_ens(:,:,:) = spval
             a_wice_soisno_ens(:,:,:) = spval
+            a_t_soisno_ens   (:,:,:) = spval
 #endif
 
 #ifdef URBAN_MODEL
@@ -2147,10 +2159,13 @@ CONTAINS
 
 #ifdef DataAssimilation
             CALL acc3d (h2osoi_ens     , a_h2osoi_ens     )
-            CALL acc3d (t_brt_ens      , a_t_brt_ens      )
-            CALL acc2d (t_brt          , a_t_brt          )
+            CALL acc3d (t_brt_smap_ens , a_t_brt_smap_ens )
+            CALL acc2d (t_brt_smap     , a_t_brt_smap     )
+            CALL acc3d (t_brt_fy3d_ens , a_t_brt_fy3d_ens )
+            CALL acc2d (t_brt_fy3d     , a_t_brt_fy3d     )
             CALL acc3d (wliq_soisno_ens, a_wliq_soisno_ens)
             CALL acc3d (wice_soisno_ens, a_wice_soisno_ens)
+            CALL acc3d (t_soisno_ens   , a_t_soisno_ens   )
 #endif
 
 #ifdef URBAN_MODEL

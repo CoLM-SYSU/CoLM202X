@@ -405,6 +405,9 @@ MODULE MOD_Vars_TimeVariables
 #ifdef EXTERNAL_LAKE
    USE MOD_Lake_TimeVars
 #endif
+#ifdef DataAssimilation
+   USE MOD_DA_Vars_TimeVariables
+#endif
 
    IMPLICIT NONE
    SAVE
@@ -777,6 +780,10 @@ CONTAINS
       CALL allocate_LakeTimeVars
 #endif
 
+#ifdef DataAssimilation
+      CALL allocate_DATimeVariables
+#endif
+
    END SUBROUTINE allocate_TimeVariables
 
 
@@ -973,6 +980,10 @@ CONTAINS
 
 #ifdef EXTERNAL_LAKE
       CALL deallocate_LakeTimeVars
+#endif
+
+#ifdef DataAssimilation
+      CALL deallocate_DATimeVariables
 #endif
 
    END SUBROUTINE deallocate_TimeVariables
@@ -1216,6 +1227,10 @@ ENDIF
       CALL WRITE_LakeTimeVars (idate, lc_year, site, dir_restart)
 #endif
 
+#ifdef DataAssimilation
+      CALL WRITE_DATimeVariables (idate, lc_year, site, dir_restart)
+#endif
+
    END SUBROUTINE WRITE_TimeVariables
 
 
@@ -1401,6 +1416,10 @@ ENDIF
       CALL READ_LakeTimeVars(idate, lc_year, site, dir_restart)
 #endif
 
+#ifdef DataAssimilation
+      CALL READ_DATimeVariables (idate, lc_year, site, dir_restart)
+#endif
+
 #ifdef RangeCheck
       CALL check_TimeVariables
 #endif
@@ -1539,6 +1558,10 @@ ENDIF
 
 #ifdef EXTERNAL_LAKE
       CALL CHECK_LakeTimeVars
+#endif
+
+#ifdef DataAssimilation
+      IF (DEF_DA_ENS_NUM > 1) CALL check_DATimeVariables
 #endif
 
 #ifdef USEMPI

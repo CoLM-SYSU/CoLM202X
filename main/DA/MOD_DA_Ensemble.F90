@@ -7,23 +7,51 @@ MODULE MOD_DA_Ensemble
 !    Provide functions to generate ensemble samples for data assimilation
 !
 ! REFERENCES:
-!    [1] SMOS brightness temperature assimilation into the Community Land Model
-!        Hydrol. Earth Syst. Sci., 21, 5929–5951, 2017,
-!        https://doi.org/10.5194/hess-21-5929-2017
+!    [1] Algorithm Theoretical Basis Document Level 4 Surface and Root
+!        Zone Soil Moisture (L4_SM) Data Product
+!
 ! AUTHOR:
 !   Lu Li, 12/2024: Initial version
+!   Lu Li, 10/2025: Consider correlation & AR(1) process
 !-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_Vars_TimeVariables
+   USE MOD_DA_Vars_TimeVariables
+   USE MOD_Vars_1DForcing
+   USE MOD_LandPatch
    IMPLICIT NONE
    SAVE
 
    ! public functions
-   PUBLIC :: disturb_forc_ens
+   PUBLIC :: ensemble
 
    ! local parameters
-   real(r8) :: std_sr = 0.3 ! multiplicative noise
-   real(r8) :: std_ta = 2.5 ! additive noise
-   real(r8) :: std_p  = 0.3 ! multiplicative noise, log-normal noise
+   ! forcing [parameters used here is consistent with SMAP L4 (Table 4 in [1])]
+   integer,  parameter :: nvar = 4                                   ! number of pertutated forcing variables
+   real(r8), parameter :: tau_ar = 24.0                              ! correlation time scale in hours
+
+   real(r8) :: dt                                                    ! time step in hours
+   real(r8) :: phi                                                   ! AR(1) autocorrelation coefficient consider time scale
+   real(r8) :: sigma_eps                                             ! standard deviation of noise in AR(1) process
+   real(r8), dimension(nvar) :: sigma = (/0.5, 0.3, 20.0, 1.0/)      ! standard deviation of perturbed forcing variables (prcp, sw, lw, t)
+   real(r8), dimension(nvar, nvar) :: C = reshape([ &
+         1.0, -0.8,  0.5, 0.0, &
+        -0.8,  1.0, -0.5, 0.4, &
+         0.5, -0.5,  1.0, 0.4, &
+         0.0,  0.4,  0.4, 1.0], shape=[nvar, nvar])                  ! cross-correlation matrix between perturbed forcing variables
+   real(r8), allocatable :: r_prev(:,:,:)                            ! previous perturbation (numpatch, nvar, DEF_DA_ENS_NUM)
+   real(r8), allocatable :: r_curr(:,:,:)                            ! current perturbation (numpatch, nvar, DEF_DA_ENS_NUM)
+   logical :: initialized = .false.                                  ! flag to indicate if is initialized
+
+   ! soil moisture [default set 0.002 m3/m3 disterbulance]
+   integer,  parameter :: nvar_sm = 2                                ! number of pertutated soil moisture layers
+   real(r8), parameter :: tau_sm = 3.0                               ! correlation time scale in hours
+   real(r8) :: phi_sm                                                ! AR(1) autocorrelation coefficient consider time scale
+   real(r8) :: sigma_eps_sm                                          ! standard deviation of noise in AR(1) process
+   real(r8), dimension(nvar_sm) :: sigma_sm = (/0.035, 0.0552/)      ! standard deviation of perturbed soil moisture (equal to 0.002 m3/m3)
+   real(r8), allocatable :: r_prev_sm(:,:,:)                         ! previous perturbation (numpatch, nvar_sm, DEF_DA_ENS_NUM)
+   real(r8), allocatable :: r_curr_sm(:,:,:)                         ! current perturbation (numpatch, nvar_sm, DEF_DA_ENS_NUM)
 
 !-----------------------------------------------------------------------
 
@@ -31,126 +59,208 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE disturb_ens(num_ens, type, rand_seed, A, mu, sigma, A_ens)
+   SUBROUTINE ensemble(deltim)
 
 !-----------------------------------------------------------------------
-      USE MOD_Vars_Global, only: pi
       IMPLICIT NONE
 
-!------------------------ Dummy Argument ------------------------------
-      integer, intent(in)  :: num_ens
-      integer, intent(in)  :: rand_seed
-      integer, intent(in)  :: type
-      real(r8), intent(in)  :: A
-      real(r8), intent(in)  :: mu
-      real(r8), intent(in)  :: sigma
-      real(r8), intent(out) :: A_ens(num_ens)
+      real(r8), intent(in) :: deltim
 
 !------------------------ Local Variables ------------------------------
-      real(r8) :: u1, u2
-      real(r8) :: z(num_ens)
-      real(r8) :: mean_z
-      integer  :: i
-      integer  :: seed_size
-      integer, allocatable :: seed(:)
+      integer  ::  np, i, j
+
+      real(r8) :: cov_matrix(nvar, nvar)                      ! covariance matrix between perturbed forcing variables
+      real(r8) :: L(nvar, nvar)                               ! Cholesky decomposition of correlation matrix
+      integer  :: info                                        ! info flag for Cholesky decomposition
+      real(r8) :: u1(DEF_DA_ENS_NUM/2), u2(DEF_DA_ENS_NUM/2)  ! uniform random variables
+      real(r8) :: z(nvar, DEF_DA_ENS_NUM)                     ! standard normal random variables
+      real(r8) :: mean_z(nvar)                                ! mean of perturbation (nvar)
+      real(r8) :: std_z(nvar)                                 ! std of perturbation (nvar)
+      real(r8) :: zxL(nvar, DEF_DA_ENS_NUM)                   ! correlated random variables (nvar, DEF_DA_ENS_NUM)
+
+      real(r8) :: z_sm(DEF_DA_ENS_NUM)                        ! standard normal random variables
+      real(r8) :: mean_z_sm                                   ! mean of perturbation
+      real(r8) :: std_z_sm                                    ! std of perturbation
+      real(r8) :: mean_r_sm(nvar_sm)                          ! mean of perturbation for soil moisture (nvar_sm)
+      real(r8) :: std_r_sm(nvar_sm)                           ! std of perturbation for soil moisture (nvar_sm)
+      real(r8) :: a1(DEF_DA_ENS_NUM)                          ! temporary disturbed variable for soil moisture layer 1
+      real(r8) :: a2(DEF_DA_ENS_NUM)                          ! temporary disturbed variable for soil moisture layer 2
 
 !-----------------------------------------------------------------------
 
-      ! initialize random number generator
-      CALL random_seed(size=seed_size)
-      allocate (seed(seed_size))
-      seed = rand_seed
-      CALL random_seed(put=seed)
-
-      ! generate disturbance ensemble samples ~ N(mu, sigma)
-      DO i = 1, num_ens
-         CALL random_number(u1)
-         CALL random_number(u2)
-         u1 = max(u1, 1e-10)
-         u2 = max(u2, 1e-10)
-         z(i) = sqrt(-2.0*log(u1))*cos(2.0*pi*u2)
-      ENDDO
-      z = sigma*z + mu
-
-      ! normalize the disturbance ensemble samples to mean 0
-      mean_z = sum(z)/num_ens
-      DO i = 1, num_ens
-         z(i) = z(i) - mean_z
-      ENDDO
-
-      ! generate ensemble samples according different types (0: additive, 1: multiplicative)
-      IF (type == 0) THEN ! additive normal
-         DO i = 1, num_ens
-            A_ens(i) = A + z(i)
-         ENDDO
-      ELSEIF (type == 1) THEN ! multiplicative normal
-         DO i = 1, num_ens
-            A_ens(i) = A*(1.0 + z(i))
-         ENDDO
-      ELSEIF (type == 2) THEN ! multiplicative log-normal
-         DO i = 1, num_ens
-            A_ens(i) = A*exp(z(i))
-         ENDDO
+      ! initialize persistent variables
+      IF (.not. initialized) THEN
+         allocate(r_prev(numpatch, nvar, DEF_DA_ENS_NUM))
+         allocate(r_curr(numpatch, nvar, DEF_DA_ENS_NUM))
+         allocate(r_prev_sm(numpatch, nvar_sm, DEF_DA_ENS_NUM))
+         allocate(r_curr_sm(numpatch, nvar_sm, DEF_DA_ENS_NUM))
+         r_prev = 0.0_r8
+         r_curr = 0.0_r8
+         r_prev_sm = 0.0_r8
+         r_curr_sm = 0.0_r8
+         initialized = .true.
       ENDIF
 
-      deallocate (seed)
+      ! calculate AR(1) parameters
+      dt = deltim/3600
+      phi = exp(-dt/tau_ar)
+      sigma_eps = sqrt(1.0 - phi**2)
+      phi_sm = exp(-dt/tau_sm)
+      sigma_eps_sm = sqrt(1.0 - phi_sm**2)
 
-   END SUBROUTINE disturb_ens
+      ! calculate covariance matrix by cross-correlation matrix and standard deviation
+      cov_matrix = 0.0_r8
+      DO i = 1, nvar
+         DO j = 1, nvar
+            cov_matrix(i,j) = C(i,j) * sigma(i) * sigma(j)
+         ENDDO
+      ENDDO
 
-!-----------------------------------------------------------------------
+      ! perform Cholesky decomposition of covariance matrix
+      L = cov_matrix
+      CALL dpotrf('L', nvar, L, nvar, info)
+      DO i = 1, nvar
+         DO j = i+1, nvar
+            L(i,j) = 0.0_r8
+         ENDDO
+      ENDDO
+      IF (info /= 0) THEN
+         print *, 'Error: Cholesky decomposition failed'
+         stop
+      ENDIF
 
-   SUBROUTINE disturb_forc_ens( &
-      idate, &
-      num_ens, &
-      forc_t, &
-      forc_prc, forc_prl, &
-      forc_sols, forc_soll, forc_solsd, forc_solld, &
-      forc_t_ens, &
-      forc_prc_ens, forc_prl_ens, &
-      forc_sols_ens, forc_soll_ens, forc_solsd_ens, forc_solld_ens)
+      ! Generate ensemble samples for forcing variables
+      DO np = 1, numpatch
+         ! generate disturbance ensemble samples ~ N(0, I)
+         CALL random_seed()
+         CALL random_number(u1)
+         CALL random_number(u2)
+         DO i = 1, DEF_DA_ENS_NUM/2
+            u1(i) = max(u1(i), 1e-10)  ! ensure u1 is not zero
+            z(1,i*2-1) = sqrt(-2.0*log(u1(i))) * cos(2.0*pi*u2(i))
+            z(1,i*2)   = sqrt(-2.0*log(u1(i))) * sin(2.0*pi*u2(i))
+         ENDDO
+         CALL random_seed()
+         CALL random_number(u1)
+         CALL random_number(u2)
+         DO i = 1, DEF_DA_ENS_NUM/2
+            u1(i) = max(u1(i), 1e-10)
+            z(2,i*2-1) = sqrt(-2.0*log(u1(i))) * cos(2.0*pi*u2(i))
+            z(2,i*2)   = sqrt(-2.0*log(u1(i))) * sin(2.0*pi*u2(i))
+         ENDDO
+         CALL random_seed()
+         CALL random_number(u1)
+         CALL random_number(u2)
+         DO i = 1, DEF_DA_ENS_NUM/2
+            u1(i) = max(u1(i), 1e-10)
+            z(3,i*2-1) = sqrt(-2.0*log(u1(i))) * cos(2.0*pi*u2(i))
+            z(3,i*2)   = sqrt(-2.0*log(u1(i))) * sin(2.0*pi*u2(i))
+         ENDDO
+         CALL random_seed()
+         CALL random_number(u1)
+         CALL random_number(u2)
+         DO i = 1, DEF_DA_ENS_NUM/2
+            u1(i) = max(u1(i), 1e-10)
+            z(4,i*2-1) = sqrt(-2.0*log(u1(i))) * cos(2.0*pi*u2(i))
+            z(4,i*2)   = sqrt(-2.0*log(u1(i))) * sin(2.0*pi*u2(i))
+         ENDDO
 
-!-----------------------------------------------------------------------
-      USE MOD_TimeManager, only: minutes_since_1900
-      IMPLICIT NONE
+         ! normalize z to mean 0 and std 1
+         DO i = 1, nvar
+            mean_z(i) = sum(z(i, :))/DEF_DA_ENS_NUM
+            std_z(i) = sqrt(sum((z(i, :) - mean_z(i))**2)/(DEF_DA_ENS_NUM - 1))
+         ENDDO
+         DO i = 1, nvar
+            z(i,:) = (z(i,:)-mean_z(i))/std_z(i)
+         ENDDO
 
-!------------------------ Dummy Argument ------------------------------
-      integer, intent(in) :: num_ens
-      integer, intent(in) :: idate(3)  
-      real(r8), intent(in) :: &
-         forc_t, &
-         forc_prc, &
-         forc_prl, &
-         forc_sols, &
-         forc_soll, &
-         forc_solsd, &
-         forc_solld
+         ! multiply by Cholesky factor to introduce correlation (z*L)
+         CALL dgemm('N', 'N', nvar, DEF_DA_ENS_NUM, nvar, 1.0_r8, L, nvar, z, nvar, 0.0_r8, zxL, nvar)
 
-      real(r8), intent(out) :: &
-         forc_t_ens(num_ens), &
-         forc_prc_ens(num_ens), &
-         forc_prl_ens(num_ens), &
-         forc_sols_ens(num_ens), &
-         forc_soll_ens(num_ens), &
-         forc_solsd_ens(num_ens), &
-         forc_solld_ens(num_ens)
+         ! introduce correlation using AR(1) process
+         DO i = 1, nvar
+            DO j = 1, DEF_DA_ENS_NUM
+               r_curr(np,i,j) = phi * r_prev(np,i,j) + sigma_eps * zxL(i,j)
+            ENDDO
+         ENDDO
+         ! no AR(1) process, directly use correlated random variables
+         ! r_curr(np,:,:) = zxL
 
-!------------------------ Local Variables ------------------------------
-      integer  ::  rand_seed
+         ! normalize the disturbance ensemble samples to mean 0
+         mean_z = sum(r_curr(np,:,:), dim=2)/DEF_DA_ENS_NUM
+         DO i = 1, nvar
+            DO j = 1, DEF_DA_ENS_NUM
+               r_curr(np,i,j) = r_curr(np,i,j) - mean_z(i)
+            ENDDO
+         ENDDO
 
-!-----------------------------------------------------------------------
-      ! to guarantee reproducibility, all random processes are initialized with a fixed seed.
-      rand_seed = minutes_since_1900(idate(1), idate(2), idate(3))
+         ! save current perturbation as previous perturbation for next time step
+         r_prev = r_curr
 
-      ! generate ensemble samples for forcing variables
-      CALL disturb_ens(num_ens, 0, rand_seed + 0, forc_t,     0.0, std_ta, forc_t_ens)
-      CALL disturb_ens(num_ens, 2, rand_seed + 1, forc_prc,   0.0, std_p,  forc_prc_ens)
-      CALL disturb_ens(num_ens, 2, rand_seed + 2, forc_prl,   0.0, std_p,  forc_prl_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 3, forc_sols,  0.0, std_sr, forc_sols_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 4, forc_soll,  0.0, std_sr, forc_soll_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 5, forc_solsd, 0.0, std_sr, forc_solsd_ens)
-      CALL disturb_ens(num_ens, 1, rand_seed + 6, forc_solld, 0.0, std_sr, forc_solld_ens)
+         ! generate ensemble samples according different types
+         DO j = 1, DEF_DA_ENS_NUM
+            forc_prc_ens(j,np) = forc_prc(np) * exp(r_curr(np,1,j) - 0.5 * sigma(1)**2)
+            forc_prl_ens(j,np) = forc_prl(np) * exp(r_curr(np,1,j) - 0.5 * sigma(1)**2)
+            forc_sols_ens(j,np) = forc_sols(np) * exp(r_curr(np,2,j) - 0.5 * sigma(2)**2)
+            forc_soll_ens(j,np) = forc_soll(np) * exp(r_curr(np,2,j) - 0.5 * sigma(2)**2)
+            forc_solsd_ens(j,np) = forc_solsd(np) * exp(r_curr(np,2,j) - 0.5 * sigma(2)**2)
+            forc_solld_ens(j,np) = forc_solld(np) * exp(r_curr(np,2,j) - 0.5 * sigma(2)**2)
+            forc_frl_ens(j,np) = forc_frl(np) + r_curr(np,3,j)
+            forc_t_ens(j,np) = forc_t(np) + r_curr(np,4,j)
+         ENDDO
 
-   END SUBROUTINE disturb_forc_ens
+         IF (DEF_DA_ENS_SM) THEN
+            ! generate ensemble samples (0, I) for soil moisture
+            CALL random_seed()
+            CALL random_number(u1)
+            CALL random_number(u2)
+            DO i = 1, DEF_DA_ENS_NUM/2
+               u1(i) = max(u1(i), 1e-10)
+               z_sm(i*2-1) = sqrt(-2.0*log(u1(i))) * cos(2.0*pi*u2(i))
+               z_sm(i*2)   = sqrt(-2.0*log(u1(i))) * sin(2.0*pi*u2(i))
+            ENDDO
+            mean_z_sm = sum(z_sm)/DEF_DA_ENS_NUM
+            std_z_sm = sqrt(sum((z_sm - mean_z_sm)**2)/(DEF_DA_ENS_NUM - 1))
+            z_sm = (z_sm - mean_z_sm)/std_z_sm
+
+            ! introduce correlation using AR(1) process
+            DO i = 1, nvar_sm
+               DO j = 1, DEF_DA_ENS_NUM
+                  r_curr_sm(np,i,j) = phi_sm * r_prev_sm(np,i,j) + sigma_eps_sm * sigma_sm(i) * z_sm(j)
+               ENDDO
+            ENDDO
+
+            ! normalize the disturbance ensemble samples to mean 0
+            mean_r_sm = sum(r_curr_sm(np,:,:), dim=2)/DEF_DA_ENS_NUM
+            DO i = 1, nvar_sm
+               DO j = 1, DEF_DA_ENS_NUM
+                  r_curr_sm(np,i,j) = r_curr_sm(np,i,j) - mean_r_sm(i)
+               ENDDO
+            ENDDO
+
+            ! save current perturbation as previous perturbation for next time step
+            r_prev_sm = r_curr_sm
+
+            ! generate ensemble samples according different types
+            DO j = 1, DEF_DA_ENS_NUM
+               a1(j) = wliq_soisno_ens(1,j,np) + r_curr_sm(np,1,j)
+               a2(j) = wliq_soisno_ens(2,j,np) + r_curr_sm(np,2,j)
+            ENDDO
+            DO j = 1, DEF_DA_ENS_NUM
+               a1(j) = max(1e-10, a1(j))
+               a2(j) = max(1e-10, a2(j))
+            ENDDO
+
+            ! move residual water to water table
+            DO j = 1, DEF_DA_ENS_NUM
+               wa_ens(j, np) = wa_ens(j, np) - (sum(wliq_soisno_ens(1:2, j, np)) - a1(j) - a2(j))
+               wliq_soisno_ens(1, j, np) = a1(j)
+               wliq_soisno_ens(2, j, np) = a2(j)
+            ENDDO
+         ENDIF
+      ENDDO
+
+   END SUBROUTINE ensemble
 
 !-----------------------------------------------------------------------
 END MODULE MOD_DA_Ensemble

@@ -4,13 +4,14 @@
 MODULE MOD_DA_EnKF
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
-!    ensemble Kalman filter (EnKF)
+!    ensemble Kalman filter (EnKF) types
 !
 ! AUTHOR:
 !   Lu Li, 12/2024: Initial version
 !   Zhilong Fan, Lu Li, 03/2024: Debug and clean codes
 !-----------------------------------------------------------------------------
     USE MOD_Precision
+    USE MOD_SPMD_Task
     IMPLICIT NONE
     SAVE
 
@@ -24,9 +25,9 @@ CONTAINS
 
 !-----------------------------------------------------------------------------
 
-    SUBROUTINE letkf ( &
+    SUBROUTINE letkf (&
         num_ens, num_obs, &
-        HA, y, R, loc_d, loc_r, infl, &
+        HA, y, R, infl, &
         trans)
 
 !-----------------------------------------------------------------------------
@@ -45,8 +46,6 @@ CONTAINS
     real(r8), intent(in)    :: HA(num_obs, num_ens)                 ! ensemble predicted observation matrix
     real(r8), intent(in)    :: y(num_obs)                           ! observation vector
     real(r8), intent(in)    :: R(num_obs)                           ! observation error variance
-    real(r8), intent(in)    :: loc_d(num_obs)                       ! localization distance
-    real(r8), intent(in)    :: loc_r                                ! localization radius
     real(r8), intent(in)    :: infl                                 ! inflation factor
     real(r8), intent(out)   :: trans(num_ens, num_ens)              ! transform matrix (k x k)
 
@@ -84,7 +83,7 @@ CONTAINS
         ! calculate C, intermediate matrix in localized observation
         dHA_t = transpose(dHA) !(kxl)
         DO j = 1, num_obs
-            C(:,j) = dHA_t(:,j) / (R(j))!*(exp((-loc_d(j)**2)/(2*loc_r**2)))) !(kxl) !//TODO: Lu Li: add localization
+            C(:,j) = dHA_t(:,j) / (R(j)) !(kxl)
         ENDDO
 
         ! calculate C*dHA, intermediate matrix in background error M1

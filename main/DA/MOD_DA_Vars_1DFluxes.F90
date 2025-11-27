@@ -4,37 +4,31 @@
 MODULE MOD_DA_Vars_1DFluxes
 !-----------------------------------------------------------------------------
 ! DESCRIPTION:
-!    Process fluxes variables for diagnostic for data assimilation
+!   Process fluxes variables for diagnostic for data assimilation
 !
 ! AUTHOR:
 !   Lu Li, 07/2025: Initial version
 !-----------------------------------------------------------------------------
    USE MOD_Precision
-   USE MOD_Namelist, only: DEF_DA_ENS
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   USE MOD_Vars_1DPFTFluxes
-#endif
-#ifdef BGC
-   USE MOD_BGC_Vars_1DFluxes
-#endif
-#ifdef CatchLateralFlow
-   USE MOD_Catch_Vars_1DFluxes
-#endif
-#ifdef URBAN_MODEL
-   USE MOD_Urban_Vars_1DFluxes
-#endif
+   USE MOD_Namelist, only: DEF_DA_ENS_NUM
    IMPLICIT NONE
    SAVE
 
    ! public functions
-   PUBLIC :: allocate_1D_Fluxes_ens
-   PUBLIC :: deallocate_1D_Fluxes_ens
+   PUBLIC :: allocate_1D_DAFluxes
+   PUBLIC :: deallocate_1D_DAFluxes
 
    ! define variables
-   real(r8), allocatable :: fsena_ens  (:,:) !sensible heat from canopy height to atmosphere [W/m2]
-   real(r8), allocatable :: lfevpa_ens (:,:) !latent heat flux from canopy height to atmosphere [W/m2]
-   real(r8), allocatable :: fevpa_ens  (:,:) !evapotranspiration from canopy to atmosphere [mm/s]
-   real(r8), allocatable :: rsur_ens   (:,:) !surface runoff (mm h2o/s)
+   real(r8), allocatable :: fsena_ens  (:,:) ! sensible heat from canopy height to atmosphere [W/m2]
+   real(r8), allocatable :: lfevpa_ens (:,:) ! latent heat flux from canopy height to atmosphere [W/m2]
+   real(r8), allocatable :: fevpa_ens  (:,:) ! evapotranspiration from canopy to atmosphere [mm/s]
+   real(r8), allocatable :: rsur_ens   (:,:) ! surface runoff (mm h2o/s)
+
+   ! save for analysis increment
+   real(r8), allocatable :: fsena_a      (:) ! 
+   real(r8), allocatable :: fevpa_a      (:) !
+   real(r8), allocatable :: lfevpa_a     (:) ! 
+   real(r8), allocatable :: rsur_a       (:) !
 
 !-----------------------------------------------------------------------------
 
@@ -42,7 +36,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------------
 
-   SUBROUTINE allocate_1D_Fluxes_ens()
+   SUBROUTINE allocate_1D_DAFluxes ()
 
 !-----------------------------------------------------------------------------
       USE MOD_Precision
@@ -54,34 +48,23 @@ CONTAINS
 !-----------------------------------------------------------------------------
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
-            allocate ( fsena_ens  (DEF_DA_ENS, numpatch) )  ; fsena_ens  (:,:) = spval 
-            allocate ( lfevpa_ens (DEF_DA_ENS, numpatch) )  ; lfevpa_ens (:,:) = spval 
-            allocate ( fevpa_ens  (DEF_DA_ENS, numpatch) )  ; fevpa_ens  (:,:) = spval 
-            allocate ( rsur_ens   (DEF_DA_ENS, numpatch) )  ; rsur_ens   (:,:) = spval 
+            allocate ( fsena_ens  (DEF_DA_ENS_NUM, numpatch) )  ; fsena_ens  (:,:) = spval 
+            allocate ( lfevpa_ens (DEF_DA_ENS_NUM, numpatch) )  ; lfevpa_ens (:,:) = spval 
+            allocate ( fevpa_ens  (DEF_DA_ENS_NUM, numpatch) )  ; fevpa_ens  (:,:) = spval 
+            allocate ( rsur_ens   (DEF_DA_ENS_NUM, numpatch) )  ; rsur_ens   (:,:) = spval 
+
+            allocate ( fsena_a                (numpatch) )  ; fsena_a      (:) = spval
+            allocate ( fevpa_a                (numpatch) )  ; fevpa_a      (:) = spval
+            allocate ( lfevpa_a               (numpatch) )  ; lfevpa_a     (:) = spval
+            allocate ( rsur_a                 (numpatch) )  ; rsur_a       (:) = spval
          ENDIF
       ENDIF
 
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      CALL allocate_1D_PFTFluxes
-#endif
-
-#ifdef BGC
-      CALL allocate_1D_BGCFluxes
-#endif
-
-#ifdef CatchLateralFlow
-      CALL allocate_1D_CatchFluxes
-#endif
-
-#ifdef URBAN_MODEL
-      CALL allocate_1D_UrbanFluxes
-#endif
-
-   END SUBROUTINE allocate_1D_Fluxes_ens
+   END SUBROUTINE allocate_1D_DAFluxes
 
 !-----------------------------------------------------------------------------
 
-   SUBROUTINE deallocate_1D_Fluxes_ens()
+   SUBROUTINE deallocate_1D_DAFluxes()
 
 !-----------------------------------------------------------------------------
       USE MOD_SPMD_Task
@@ -94,26 +77,15 @@ CONTAINS
             deallocate ( lfevpa_ens )
             deallocate ( fevpa_ens  )
             deallocate ( rsur_ens   )
+
+            deallocate ( fsena_a    )
+            deallocate ( fevpa_a    )
+            deallocate ( lfevpa_a   )
+            deallocate ( rsur_a     )
          ENDIF
       ENDIF
 
-#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      CALL deallocate_1D_PFTFluxes
-#endif
-
-#ifdef BGC
-      CALL deallocate_1D_BGCFluxes
-#endif
-
-#ifdef CatchLateralFlow
-      CALL deallocate_1D_CatchFluxes
-#endif
-
-#ifdef URBAN_MODEL
-      CALL deallocate_1D_UrbanFluxes
-#endif
-
-   END SUBROUTINE deallocate_1D_Fluxes_ens
+   END SUBROUTINE deallocate_1D_DAFluxes
 
 !-----------------------------------------------------------------------------
 END MODULE MOD_DA_Vars_1DFluxes

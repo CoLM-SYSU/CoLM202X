@@ -98,8 +98,6 @@ PROGRAM CoLM
 
 #ifdef DataAssimilation
    USE MOD_DA_Main
-   USE MOD_DA_Vars_TimeVariables
-   USE MOD_DA_Vars_1DFluxes
 #endif
 
 #ifdef USEMPI
@@ -307,12 +305,6 @@ PROGRAM CoLM
       CALL allocate_TimeVariables  ()
       CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
 
-      ! Read in the model time varying data (model state variables) for ensemble
-#ifdef DataAssimilation
-      CALL allocate_TimeVariables_ens()
-      CALL READ_TimeVariables_ens(jdate, lc_year, casename, dir_restart)
-#endif
-
       ! Read in SNICAR optical and aging parameters
       IF (DEF_USE_SNICAR) THEN
          CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
@@ -332,9 +324,6 @@ PROGRAM CoLM
       ! Initialize history data module
       CALL hist_init (dir_hist)
       CALL allocate_1D_Fluxes ()
-#ifdef DataAssimilation
-      CALL allocate_1D_Fluxes_ens ()
-#endif
 
       CALL CheckEqb_init ()
 
@@ -416,7 +405,6 @@ PROGRAM CoLM
             ENDIF
          ENDIF
 
-
          Julian_1day_p = int(calendarday(jdate)-1)/1*1 + 1
          Julian_8day_p = int(calendarday(jdate)-1)/8*8 + 1
 
@@ -478,17 +466,11 @@ PROGRAM CoLM
          ENDIF
 #endif
 
-
          ! Call CoLM driver
          ! ----------------------------------------------------------------------
          IF (p_is_worker) THEN
-#ifdef DataAssimilation
-            CALL DADRIVER (idate, deltim, dolai, doalb, dosst, oroflag)
-#else
             CALL CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
-#endif
          ENDIF
-
 
 #if (defined CatchLateralFlow)
          CALL lateral_flow (idate(1), deltim)
@@ -509,7 +491,7 @@ PROGRAM CoLM
 #endif
 
 #ifdef DataAssimilation
-         CALL run_DA (idate, deltim)
+         CALL run_DA (idate, deltim, dolai, doalb, dosst, oroflag)
 #endif
 
          ! Write out the model histroy file
@@ -527,9 +509,6 @@ PROGRAM CoLM
             ! Deallocate all Forcing and Fluxes variable of last year
             CALL deallocate_1D_Forcing
             CALL deallocate_1D_Fluxes
-#ifdef DataAssimilation
-            CALL deallocate_1D_Fluxes_ens
-#endif
 
             CALL forcing_final ()
             CALL hist_final    ()
@@ -595,9 +574,7 @@ PROGRAM CoLM
 #else
             CALL WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
 #endif
-#ifdef DataAssimilation
-            CALL WRITE_TimeVariables_ens (jdate, lc_year, casename, dir_restart)
-#endif
+
 #if (defined CaMa_Flood)
 #ifdef USEMPI
             CALL mpi_barrier (p_comm_glb, p_err)
@@ -613,9 +590,6 @@ PROGRAM CoLM
 
 #ifdef RangeCheck
          CALL check_TimeVariables ()
-#ifdef DataAssimilation
-         CALL check_TimeVariables_ens()
-#endif
 #endif
 
 #ifdef USEMPI
@@ -655,16 +629,15 @@ PROGRAM CoLM
 
       CALL deallocate_TimeInvariants ()
       CALL deallocate_TimeVariables  ()
-#ifdef DataAssimilation
-      CALL deallocate_TimeVariables_ens()
-      CALL end_DA()
-#endif
       CALL deallocate_1D_Forcing     ()
       CALL deallocate_1D_Fluxes      ()
       CALL mesh_free_mem             ()
 
 #if (defined CatchLateralFlow)
       CALL lateral_flow_final ()
+#endif
+#ifdef DataAssimilation
+      CALL end_DA()
 #endif
 
 #if (defined GridRiverLakeFlow)

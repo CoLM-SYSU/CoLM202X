@@ -18,6 +18,9 @@ MODULE MOD_Vars_1DFluxes
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_1DFluxes
 #endif
+#ifdef DataAssimilation
+   USE MOD_DA_Vars_1DFluxes
+#endif
    IMPLICIT NONE
    SAVE
 
@@ -177,6 +180,10 @@ CONTAINS
       CALL allocate_1D_UrbanFluxes
 #endif
 
+#ifdef DataAssimilation
+      CALL allocate_1D_DAFluxes
+#endif
+
    END SUBROUTINE allocate_1D_Fluxes
 
    SUBROUTINE deallocate_1D_Fluxes ()
@@ -260,6 +267,10 @@ CONTAINS
 
 #ifdef URBAN_MODEL
       CALL deallocate_1D_UrbanFluxes
+#endif
+
+#ifdef DataAssimilation
+      CALL deallocate_1D_DAFluxes
 #endif
 
    END SUBROUTINE deallocate_1D_Fluxes
